@@ -1,0 +1,34 @@
+{
+  "name": "@sabap/ui",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint src/",
+    "clean": "rimraf dist"
+  },
+  "peerDependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "dependencies": {
+    "@sabap/utils": "workspace:*",
+    "@mui/material": "^5.15.11",
+    "@mui/icons-material": "^5.15.11",
+    "@emotion/react": "^11.11.3",
+    "@emotion/styled": "^11.11.0",
+    "clsx": "^2.1.0",
+    "tailwind-merge": "^2.2.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.55",
+    "@types/react-dom": "^18.2.19",
+    "tsup": "^8.0.2",
+    "rimraf": "^5.0.5",
+    "typescript": "^5.3.3"
+  }
+} 

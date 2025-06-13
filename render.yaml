@@ -1,0 +1,29 @@
+services:
+  # ბექენდის სერვისი
+  - type: web
+    name: saba-api
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: cd apps/backend && pnpm install && pnpm build
+    startCommand: cd apps/backend && pnpm start
+    envVars:
+      - key: PORT
+        value: 3003
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+    healthCheckPath: /api/health
+
+  # ფრონტენდის სერვისი
+  - type: web
+    name: saba-app
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: cd apps/frontend && pnpm install && pnpm build
+    startCommand: cd apps/frontend && pnpm start
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        value: https://saba-api.onrender.com/api 

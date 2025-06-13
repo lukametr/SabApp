@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-rgb: 255, 255, 255;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: rgb(var(--background-rgb));
+}
+
+@layer components {
+  .document-list-item {
+    @apply transition-colors duration-200;
+  }
+
+  .document-list-item.selected {
+    @apply bg-blue-50;
+  }
+
+  .document-list-item.favorite {
+    @apply bg-yellow-50;
+  }
+
+  .document-list-item.warning-light {
+    @apply bg-warning-light;
+  }
+
+  .document-list-item.warning-dark {
+    @apply bg-warning-dark;
+  }
+} 
