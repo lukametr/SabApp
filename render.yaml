@@ -10,11 +10,14 @@ services:
     envVars:
       - key: PORT
         value: 3003
+      - key: NODE_ENV
+        value: production
       - key: MONGO_URI
         sync: false
       - key: JWT_SECRET
         sync: false
     healthCheckPath: /api/health
+    autoDeploy: true
 
   # ფრონტენდის სერვისი
   - type: web
@@ -25,5 +28,9 @@ services:
     buildCommand: cd apps/frontend && pnpm install && pnpm build
     startCommand: cd apps/frontend && pnpm start
     envVars:
+      - key: NODE_ENV
+        value: production
       - key: NEXT_PUBLIC_API_URL
-        value: https://saba-api.onrender.com/api 
+        value: https://saba-api.onrender.com/api
+    healthCheckPath: /
+    autoDeploy: true 

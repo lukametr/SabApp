@@ -15,10 +15,13 @@ const nextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: 'http://localhost:3000/api/:path*',
+        destination: process.env.NODE_ENV === 'production'
+          ? 'https://saba-api.onrender.com/api/:path*'
+          : 'http://localhost:3003/api/:path*',
       },
     ];
   },
+  output: 'standalone',
 };
 
 module.exports = nextConfig; 

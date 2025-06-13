@@ -12,22 +12,38 @@ const app = express();
 const port = process.env.PORT || 3003;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? 'https://saba-app.onrender.com' 
+    : 'http://localhost:3000',
+  credentials: true
+}));
 app.use(express.json());
 
 // მონაცემთა ბაზასთან დაკავშირება
-connectMongo().then(() => {
-  console.log('მონაცემთა ბაზასთან დაკავშირება წარმატებულია');
-}).catch((error) => {
-  console.error('მონაცემთა ბაზასთან დაკავშირების შეცდომა:', error);
-  process.exit(1);
-});
+const startServer = async () => {
+  try {
+    await connectMongo();
+    console.log('მონაცემთა ბაზასთან დაკავშირება წარმატებულია');
+    
+    // მარშრუტები
+    app.use('/api', documentRoutes);
+    app.use('/api', healthRoutes);
 
-// მარშრუტები
-app.use('/api', documentRoutes);
-app.use('/api', healthRoutes);
+    // Error handling
+    app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+      console.error(err.stack);
+      res.status(500).json({ error: 'სერვერის შეცდომა' });
+    });
 
-// სერვერის გაშვება
-app.listen(port, () => {
-  console.log(`🚀 სერვერი გაშვებულია პორტზე ${port}`);
-}); 
+    // სერვერის გაშვება
+    app.listen(port, () => {
+      console.log(`🚀 სერვერი გაშვებულია პორტზე ${port}`);
+    });
+  } catch (error) {
+    console.error('სერვერის გაშვების შეცდომა:', error);
+    process.exit(1);
+  }
+};
+
+startServer(); 
