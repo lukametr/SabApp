@@ -19,11 +19,13 @@ import { DocumentsModule } from './documents/documents.module';
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => {
         const uri = configService.get<string>('MONGODB_URI');
-        console.log('MongoDB URI:', uri); // დროებითი დებაგინგისთვის
+        if (!uri) {
+          throw new Error('MONGODB_URI is not defined in environment variables');
+        }
         return {
           uri,
-          useNewUrlParser: true,
-          useUnifiedTopology: true,
+          retryAttempts: 5,
+          retryDelay: 3000,
         };
       },
       inject: [ConfigService],
