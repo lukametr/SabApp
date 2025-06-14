@@ -1,7 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Document } from './schemas/document.schema';
+import { Document, DocumentDocument } from './schemas/document.schema';
+import { CreateDocumentDto } from './dto/create-document.dto';
+import { UpdateDocumentDto } from './dto/update-document.dto';
+import { UserDocument } from '../users/schemas/user.schema';
 import * as fs from 'fs';
 import * as path from 'path';
 import archiver from 'archiver';
@@ -9,31 +12,38 @@ import archiver from 'archiver';
 @Injectable()
 export class DocumentsService {
   constructor(
-    @InjectModel(Document.name) private documentModel: Model<Document>,
+    @InjectModel(Document.name) private documentModel: Model<DocumentDocument>
   ) {}
 
-  async create(createDocumentDto: any): Promise<Document> {
-    const document = new this.documentModel(createDocumentDto);
-    return document.save();
+  async create(createDocumentDto: CreateDocumentDto, user: UserDocument): Promise<DocumentDocument> {
+    const createdDocument = new this.documentModel({
+      ...createDocumentDto,
+      authorId: user._id
+    });
+    return createdDocument.save();
   }
 
-  async findAll(): Promise<Document[]> {
+  async findAll(): Promise<DocumentDocument[]> {
     return this.documentModel.find().exec();
   }
 
-  async findByAuthor(authorId: string): Promise<Document[]> {
-    return this.documentModel.find({ authorId }).exec();
-  }
-
-  async findOne(id: string): Promise<Document> {
+  async findOne(id: string): Promise<DocumentDocument> {
     const document = await this.documentModel.findById(id).exec();
     if (!document) {
-      throw new NotFoundException(`Document with ID ${id} not found`);
+      throw new NotFoundException('დოკუმენტი ვერ მოიძებნა');
     }
     return document;
   }
 
-  async update(id: string, updateDocumentDto: any): Promise<Document> {
+  async remove(id: string): Promise<DocumentDocument> {
+    const deletedDocument = await this.documentModel.findByIdAndDelete(id).exec();
+    if (!deletedDocument) {
+      throw new NotFoundException('დოკუმენტი ვერ მოიძებნა');
+    }
+    return deletedDocument;
+  }
+
+  async update(id: string, updateDocumentDto: UpdateDocumentDto): Promise<DocumentDocument> {
     const document = await this.documentModel
       .findByIdAndUpdate(id, updateDocumentDto, { new: true })
       .exec();
@@ -43,24 +53,7 @@ export class DocumentsService {
     return document;
   }
 
-  async remove(id: string): Promise<void> {
-    const document = await this.documentModel.findById(id).exec();
-    if (!document) {
-      throw new NotFoundException(`Document with ID ${id} not found`);
-    }
-
-    // წავშალოთ ფაილი თუ არსებობს
-    if (document.filePath) {
-      const filePath = path.join(process.cwd(), 'uploads', document.filePath);
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
-    }
-
-    await this.documentModel.findByIdAndDelete(id).exec();
-  }
-
-  async toggleFavorite(id: string): Promise<Document> {
+  async toggleFavorite(id: string): Promise<DocumentDocument> {
     const document = await this.documentModel.findById(id).exec();
     if (!document) {
       throw new NotFoundException(`Document with ID ${id} not found`);
@@ -75,7 +68,7 @@ export class DocumentsService {
     assessmentA: number,
     assessmentSh: number,
     assessmentR: number,
-  ): Promise<Document> {
+  ): Promise<DocumentDocument> {
     const document = await this.documentModel.findById(id).exec();
     if (!document) {
       throw new NotFoundException(`Document with ID ${id} not found`);
@@ -154,7 +147,7 @@ export class DocumentsService {
     });
   }
 
-  async deletePhoto(id: string, photoName: string): Promise<Document> {
+  async deletePhoto(id: string, photoName: string): Promise<DocumentDocument> {
     const document = await this.documentModel.findById(id).exec();
     if (!document) {
       throw new NotFoundException(`Document with ID ${id} not found`);
