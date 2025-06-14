@@ -13,12 +13,19 @@ import { DocumentsModule } from './documents/documents.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: '.env',
     }),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        uri: configService.get<string>('MONGODB_URI'),
-      }),
+      useFactory: async (configService: ConfigService) => {
+        const uri = configService.get<string>('MONGODB_URI');
+        console.log('MongoDB URI:', uri); // დროებითი დებაგინგისთვის
+        return {
+          uri,
+          useNewUrlParser: true,
+          useUnifiedTopology: true,
+        };
+      },
       inject: [ConfigService],
     }),
     ServeStaticModule.forRoot({
