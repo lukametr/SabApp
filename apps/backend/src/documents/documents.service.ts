@@ -5,7 +5,6 @@ import { Document } from './schemas/document.schema';
 import * as fs from 'fs';
 import * as path from 'path';
 import archiver from 'archiver';
-import { Request } from 'express';
 
 @Injectable()
 export class DocumentsService {
