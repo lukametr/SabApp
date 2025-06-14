@@ -12,9 +12,9 @@ if (!MONGO_URI) {
 export const connectMongo = async () => {
   try {
     await mongoose.connect(MONGO_URI);
-    console.log('MongoDB-სთან დაკავშირება წარმატებულია');
+    console.log('✅ MongoDB-სთან დაკავშირება წარმატებულია');
   } catch (error) {
-    console.error('MongoDB-სთან დაკავშირების შეცდომა:', error);
+    console.error('❌ MongoDB-სთან დაკავშირების შეცდომა:', error);
     throw error;
   }
 }; 
