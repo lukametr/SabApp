@@ -59,9 +59,9 @@ export const documentApi = {
     const document = response.data;
     return {
       ...document,
-      id: document._id,
+      id: document.id,
       date: new Date(document.date),
-      reviewDate: new Date(document.reviewDate),
+      reviewDate: new Date(document.reviewDate), 
       createdAt: new Date(document.createdAt),
       updatedAt: new Date(document.updatedAt)
     };
