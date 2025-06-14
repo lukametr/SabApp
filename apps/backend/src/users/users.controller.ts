@@ -1,17 +1,24 @@
-import { Controller, Get, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { UserDocument } from './schemas/user.schema';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { IUser } from '../models/User';
 
 @ApiTags('users')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @Post()
+  create(@Body() createUserDto: CreateUserDto) {
+    return this.usersService.create(createUserDto);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get()
   @ApiOperation({ summary: 'ყველა მომხმარებლის მიღება' })
   @ApiResponse({ status: 200, description: 'წარმატებული მიღება' })
@@ -19,6 +26,7 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
   @ApiOperation({ summary: 'მომხმარებლის მიღება ID-ით' })
   @ApiResponse({ status: 200, description: 'წარმატებული მიღება' })
@@ -27,14 +35,16 @@ export class UsersController {
     return this.usersService.findOne(id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Patch(':id')
   @ApiOperation({ summary: 'მომხმარებლის განახლება' })
   @ApiResponse({ status: 200, description: 'წარმატებული განახლება' })
   @ApiResponse({ status: 404, description: 'მომხმარებელი ვერ მოიძებნა' })
-  update(@Param('id') id: string, @Body() updateUserDto: any) {
+  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.usersService.update(id, updateUserDto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
   @ApiOperation({ summary: 'მომხმარებლის წაშლა' })
   @ApiResponse({ status: 200, description: 'წარმატებული წაშლა' })
