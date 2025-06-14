@@ -8,24 +8,20 @@ import { UpdateUserDto } from './dto/update-user.dto';
 @Injectable()
 export class UsersService {
   constructor(
-    @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
+    @InjectModel(User.name) private userModel: Model<UserDocument>
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<UserDocument> {
-    const existingUser = await this.findByEmail(createUserDto.email);
-    if (existingUser) {
-      throw new Error('მომხმარებელი ამ ელ-ფოსტით უკვე არსებობს');
-    }
-    const newUser = new this.userModel(createUserDto);
-    return newUser.save();
+    const createdUser = new this.userModel(createUserDto);
+    return createdUser.save();
   }
 
   async findAll(): Promise<UserDocument[]> {
-    return this.userModel.find().select('-password').exec();
+    return this.userModel.find().exec();
   }
 
   async findOne(id: string): Promise<UserDocument> {
-    const user = await this.userModel.findById(id).select('-password').exec();
+    const user = await this.userModel.findById(id).exec();
     if (!user) {
       throw new NotFoundException('მომხმარებელი ვერ მოიძებნა');
     }
@@ -37,19 +33,20 @@ export class UsersService {
   }
 
   async update(id: string, updateUserDto: UpdateUserDto): Promise<UserDocument> {
-    const user = await this.userModel.findById(id);
-    if (!user) {
+    const updatedUser = await this.userModel
+      .findByIdAndUpdate(id, updateUserDto, { new: true })
+      .exec();
+    if (!updatedUser) {
       throw new NotFoundException('მომხმარებელი ვერ მოიძებნა');
     }
-    Object.assign(user, updateUserDto);
-    return user.save();
+    return updatedUser;
   }
 
-  async delete(id: string): Promise<UserDocument> {
-    const user = await this.userModel.findByIdAndDelete(id);
-    if (!user) {
+  async remove(id: string): Promise<UserDocument> {
+    const deletedUser = await this.userModel.findByIdAndDelete(id).exec();
+    if (!deletedUser) {
       throw new NotFoundException('მომხმარებელი ვერ მოიძებნა');
     }
-    return user;
+    return deletedUser;
   }
 } 

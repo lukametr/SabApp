@@ -21,9 +21,7 @@ export class User {
   @Prop({ default: false })
   isAdmin: boolean;
 
-  async comparePassword(candidatePassword: string): Promise<boolean> {
-    return bcrypt.compare(candidatePassword, this.password);
-  }
+  comparePassword: (candidatePassword: string) => Promise<boolean>;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
@@ -39,4 +37,9 @@ UserSchema.pre('save', async function(next) {
   } catch (error) {
     next(error);
   }
-}); 
+});
+
+// Add comparePassword method to schema
+UserSchema.methods.comparePassword = async function(candidatePassword: string): Promise<boolean> {
+  return bcrypt.compare(candidatePassword, this.password);
+}; 
