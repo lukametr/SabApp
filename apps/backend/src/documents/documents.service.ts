@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Document, DocumentDocument } from './schemas/document.schema';
+import { Document } from './schemas/document.schema';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
 import { UserDocument } from '../users/schemas/user.schema';
@@ -12,10 +12,10 @@ import archiver from 'archiver';
 @Injectable()
 export class DocumentsService {
   constructor(
-    @InjectModel(Document.name) private documentModel: Model<DocumentDocument>
+    @InjectModel(Document.name) private documentModel: Model<Document>
   ) {}
 
-  async create(createDocumentDto: CreateDocumentDto, user: UserDocument): Promise<DocumentDocument> {
+  async create(createDocumentDto: CreateDocumentDto, user: UserDocument): Promise<Document> {
     const createdDocument = new this.documentModel({
       ...createDocumentDto,
       authorId: user._id
@@ -23,11 +23,11 @@ export class DocumentsService {
     return createdDocument.save();
   }
 
-  async findAll(): Promise<DocumentDocument[]> {
+  async findAll(): Promise<Document[]> {
     return this.documentModel.find().exec();
   }
 
-  async findOne(id: string): Promise<DocumentDocument> {
+  async findOne(id: string): Promise<Document> {
     const document = await this.documentModel.findById(id).exec();
     if (!document) {
       throw new NotFoundException('დოკუმენტი ვერ მოიძებნა');
@@ -35,7 +35,7 @@ export class DocumentsService {
     return document;
   }
 
-  async remove(id: string): Promise<DocumentDocument> {
+  async remove(id: string): Promise<Document> {
     const deletedDocument = await this.documentModel.findByIdAndDelete(id).exec();
     if (!deletedDocument) {
       throw new NotFoundException('დოკუმენტი ვერ მოიძებნა');
@@ -43,7 +43,7 @@ export class DocumentsService {
     return deletedDocument;
   }
 
-  async update(id: string, updateDocumentDto: UpdateDocumentDto): Promise<DocumentDocument> {
+  async update(id: string, updateDocumentDto: UpdateDocumentDto): Promise<Document> {
     const document = await this.documentModel
       .findByIdAndUpdate(id, updateDocumentDto, { new: true })
       .exec();
@@ -53,7 +53,7 @@ export class DocumentsService {
     return document;
   }
 
-  async toggleFavorite(id: string): Promise<DocumentDocument> {
+  async toggleFavorite(id: string): Promise<Document> {
     const document = await this.documentModel.findById(id).exec();
     if (!document) {
       throw new NotFoundException(`Document with ID ${id} not found`);
@@ -68,7 +68,7 @@ export class DocumentsService {
     assessmentA: number,
     assessmentSh: number,
     assessmentR: number,
-  ): Promise<DocumentDocument> {
+  ): Promise<Document> {
     const document = await this.documentModel.findById(id).exec();
     if (!document) {
       throw new NotFoundException(`Document with ID ${id} not found`);
@@ -147,7 +147,7 @@ export class DocumentsService {
     });
   }
 
-  async deletePhoto(id: string, photoName: string): Promise<DocumentDocument> {
+  async deletePhoto(id: string, photoName: string): Promise<Document> {
     const document = await this.documentModel.findById(id).exec();
     if (!document) {
       throw new NotFoundException(`Document with ID ${id} not found`);
