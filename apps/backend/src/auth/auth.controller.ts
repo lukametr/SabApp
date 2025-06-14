@@ -1,8 +1,10 @@
 import { Controller, Post, Body, UseGuards, Request, Get } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LocalAuthGuard } from './guards/local-auth.guard';
+import { LocalAuthGuard } from './local-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { Request as ExpressRequest } from 'express';
+import { IUser } from '../models/User';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -14,7 +16,7 @@ export class AuthController {
   @ApiOperation({ summary: 'მომხმარებლის ავტორიზაცია' })
   @ApiResponse({ status: 200, description: 'წარმატებული ავტორიზაცია' })
   @ApiResponse({ status: 401, description: 'არაავტორიზებული' })
-  async login(@Request() req) {
+  async login(@Request() req: { user: IUser }) {
     return this.authService.login(req.user);
   }
 
@@ -31,7 +33,7 @@ export class AuthController {
   @ApiOperation({ summary: 'მომხმარებლის პროფილის მიღება' })
   @ApiResponse({ status: 200, description: 'წარმატებული მიღება' })
   @ApiResponse({ status: 401, description: 'არაავტორიზებული' })
-  getProfile(@Request() req) {
+  getProfile(@Request() req: ExpressRequest) {
     return req.user;
   }
 } 

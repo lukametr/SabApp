@@ -4,7 +4,8 @@ import { Model } from 'mongoose';
 import { Document } from './schemas/document.schema';
 import * as fs from 'fs';
 import * as path from 'path';
-import * as archiver from 'archiver';
+import archiver from 'archiver';
+import { Request } from 'express';
 
 @Injectable()
 export class DocumentsService {
@@ -139,7 +140,9 @@ export class DocumentsService {
     }
 
     files.forEach(file => {
-      archive.file(file.path, { name: file.name });
+      if (file) {
+        archive.file(file.path, { name: file.name });
+      }
     });
 
     archive.finalize();
@@ -185,5 +188,26 @@ export class DocumentsService {
     }
 
     return fs.readFileSync(filePath);
+  }
+
+  async createZip(files: Express.Multer.File[]): Promise<Buffer> {
+    return new Promise((resolve, reject) => {
+      const chunks: Buffer[] = [];
+      const archive = archiver('zip', {
+        zlib: { level: 9 }
+      });
+
+      archive.on('data', (chunk: Buffer) => chunks.push(chunk));
+      archive.on('end', () => resolve(Buffer.concat(chunks)));
+      archive.on('error', (err: Error) => reject(err));
+
+      files.forEach(file => {
+        if (file && file.path && file.originalname) {
+          archive.file(file.path, { name: file.originalname });
+        }
+      });
+
+      archive.finalize();
+    });
   }
 } 

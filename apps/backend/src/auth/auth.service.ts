@@ -1,7 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
-import * as bcryptjs from 'bcryptjs';
+import { IUser } from '../models/User';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
@@ -10,29 +11,26 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async validateUser(email: string, password: string): Promise<any> {
+  async validateUser(email: string, password: string): Promise<IUser | null> {
     const user = await this.usersService.findByEmail(email);
-    if (user && await bcryptjs.compare(password, user.password)) {
-      const { password, ...result } = user;
-      return result;
+    if (user && await user.comparePassword(password)) {
+      return user;
     }
     return null;
   }
 
-  async login(user: any) {
-    const payload = { email: user.email, sub: user.id };
+  async login(user: IUser): Promise<{ access_token: string }> {
+    const payload = { email: user.email, sub: user._id };
     return {
       access_token: this.jwtService.sign(payload),
     };
   }
 
-  async register(userData: any) {
-    const hashedPassword = await bcryptjs.hash(userData.password, 10);
-    const user = await this.usersService.create({
+  async register(userData: { email: string; password: string; firstName: string; lastName: string }): Promise<IUser> {
+    const hashedPassword = await bcrypt.hash(userData.password, 10);
+    return this.usersService.create({
       ...userData,
       password: hashedPassword,
     });
-    const { password, ...result } = user.toObject();
-    return this.login(result);
   }
 } 

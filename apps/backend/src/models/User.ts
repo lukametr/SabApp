@@ -1,39 +1,42 @@
-import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs';
+import mongoose, { Document, Schema } from 'mongoose';
+import bcrypt from 'bcrypt';
 
-export interface IUser extends mongoose.Document {
+export interface IUser extends Document {
+  _id: mongoose.Types.ObjectId;
   email: string;
-  name: string;
   password: string;
+  firstName: string;
+  lastName: string;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
-const userSchema = new mongoose.Schema(
-  {
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-      trim: true,
-      lowercase: true,
-    },
-    name: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    password: {
-      type: String,
-      required: true,
-      minlength: 6,
-    },
+const userSchema = new Schema<IUser>({
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true,
+    lowercase: true
   },
-  {
-    timestamps: true,
+  password: {
+    type: String,
+    required: true
+  },
+  firstName: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  lastName: {
+    type: String,
+    required: true,
+    trim: true
   }
-);
+}, {
+  timestamps: true
+});
 
 // პაროლის ჰეშირება შენახვამდე
 userSchema.pre('save', async function (next) {
@@ -43,8 +46,8 @@ userSchema.pre('save', async function (next) {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
     next();
-  } catch (error: any) {
-    next(error);
+  } catch (error) {
+    next(error as Error);
   }
 });
 

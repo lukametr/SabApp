@@ -1,7 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { IUser } from '../models/User';
 
 @ApiTags('users')
 @ApiBearerAuth()
@@ -39,5 +41,42 @@ export class UsersController {
   @ApiResponse({ status: 404, description: 'მომხმარებელი ვერ მოიძებნა' })
   remove(@Param('id') id: string) {
     return this.usersService.remove(id);
+  }
+
+  @Get('profile')
+  @UseGuards(JwtAuthGuard)
+  async getProfile(@Request() req: { user: IUser }): Promise<{
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+  }> {
+    const user = await this.usersService.findOne(req.user._id.toString());
+    return {
+      id: user._id.toString(),
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName
+    };
+  }
+
+  @Patch('profile')
+  @UseGuards(JwtAuthGuard)
+  async updateProfile(
+    @Request() req: { user: IUser },
+    @Body() updateUserDto: UpdateUserDto
+  ): Promise<{
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+  }> {
+    const user = await this.usersService.update(req.user._id.toString(), updateUserDto);
+    return {
+      id: user._id.toString(),
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName
+    };
   }
 } 

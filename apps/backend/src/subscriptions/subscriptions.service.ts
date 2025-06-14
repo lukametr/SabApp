@@ -1,111 +1,106 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
-import { Subscription, SubscriptionDocument } from './schemas/subscription.schema';
-import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
+import { IUser } from '../models/User';
+import { Subscription } from './schemas/subscription.schema';
 
 @Injectable()
 export class SubscriptionsService {
   private stripe: Stripe;
 
   constructor(
-    @InjectModel(Subscription.name)
-    private subscriptionModel: Model<SubscriptionDocument>,
-    private configService: ConfigService,
+    @InjectModel(Subscription.name) private subscriptionModel: Model<Subscription>,
+    private configService: ConfigService
   ) {
-    this.stripe = new Stripe(this.configService.get('subscription.stripeSecretKey'), {
-      apiVersion: '2023-10-16',
+    const stripeSecretKey = this.configService.get<string>('stripe.secretKey');
+    if (!stripeSecretKey) {
+      throw new Error('Stripe secret key is not defined');
+    }
+    this.stripe = new Stripe(stripeSecretKey, {
+      apiVersion: '2023-10-16'
     });
   }
 
-  async createSubscription(userId: string, paymentMethodId: string): Promise<Subscription> {
-    // შევქმნათ ან ვიპოვოთ Stripe კლიენტი
-    const user = await this.subscriptionModel.findOne({ userId });
-    let customerId: string;
-
-    if (user?.stripeCustomerId) {
-      customerId = user.stripeCustomerId;
-    } else {
-      const customer = await this.stripe.customers.create({
-        payment_method: paymentMethodId,
-        invoice_settings: {
-          default_payment_method: paymentMethodId,
+  async createCheckoutSession(user: IUser): Promise<Stripe.Checkout.Session> {
+    const priceId = this.configService.get<string>('stripe.priceId');
+    const frontendUrl = this.configService.get<string>('frontend.url');
+    return this.stripe.checkout.sessions.create({
+      customer_email: user.email,
+      line_items: [
+        {
+          price: priceId,
+          quantity: 1,
         },
-      });
-      customerId = customer.id;
-    }
-
-    // შევქმნათ აბონემენტი
-    const subscription = await this.stripe.subscriptions.create({
-      customer: customerId,
-      items: [{ price: this.configService.get('subscription.monthlyPriceId') }],
-      expand: ['latest_invoice.payment_intent'],
+      ],
+      mode: 'subscription',
+      success_url: `${frontendUrl}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${frontendUrl}/subscription/cancel`,
+      metadata: {
+        userId: user._id.toString(),
+      },
     });
-
-    // შევინახოთ აბონემენტი ბაზაში
-    const newSubscription = new this.subscriptionModel({
-      userId,
-      stripeCustomerId: customerId,
-      stripeSubscriptionId: subscription.id,
-      status: subscription.status,
-      currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-      cancelAtPeriodEnd: subscription.cancel_at_period_end,
-    });
-
-    return newSubscription.save();
   }
 
-  async getSubscription(userId: string): Promise<Subscription> {
-    const subscription = await this.subscriptionModel.findOne({ userId });
+  async getSubscriptionStatus(user: IUser): Promise<{ status: string }> {
+    const subscription = await this.subscriptionModel.findOne({ userId: user._id });
     if (!subscription) {
-      throw new NotFoundException('აბონემენტი ვერ მოიძებნა');
+      return { status: 'inactive' };
     }
-    return subscription;
+    if (subscription.cancelAtPeriodEnd) {
+      return { status: 'cancelling' };
+    }
+    return { status: subscription.status };
   }
 
-  async cancelSubscription(userId: string): Promise<Subscription> {
-    const subscription = await this.getSubscription(userId);
+  async cancelSubscription(user: IUser): Promise<void> {
+    const subscription = await this.subscriptionModel.findOne({ userId: user._id });
+    if (!subscription) {
+      throw new Error('Subscription not found');
+    }
     await this.stripe.subscriptions.update(subscription.stripeSubscriptionId, {
       cancel_at_period_end: true,
     });
-    subscription.cancelAtPeriodEnd = true;
-    return this.subscriptionModel.findByIdAndUpdate((subscription as any)._id, { cancelAtPeriodEnd: true }, { new: true });
+    await this.subscriptionModel.findByIdAndUpdate(subscription._id, {
+      cancelAtPeriodEnd: true,
+    });
   }
 
-  async handleWebhook(event: Stripe.Event): Promise<void> {
+  async handleWebhook(signature: string, payload: Buffer): Promise<void> {
+    const webhookSecret = this.configService.get<string>('stripe.webhookSecret');
+    const event = this.stripe.webhooks.constructEvent(payload, signature, webhookSecret!);
     switch (event.type) {
+      case 'customer.subscription.created':
       case 'customer.subscription.updated':
-      case 'customer.subscription.deleted': {
-        const subscription = event.data.object as Stripe.Subscription;
-        await this.subscriptionModel.findOneAndUpdate(
-          { stripeSubscriptionId: subscription.id },
-          {
-            status: subscription.status,
-            currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-            cancelAtPeriodEnd: subscription.cancel_at_period_end,
-          },
-        );
+        await this.handleSubscriptionChange(event.data.object as Stripe.Subscription);
         break;
-      }
+      case 'customer.subscription.deleted':
+        await this.handleSubscriptionDeletion(event.data.object as Stripe.Subscription);
+        break;
     }
+  }
+
+  private async handleSubscriptionChange(subscription: Stripe.Subscription): Promise<void> {
+    const userId = subscription.metadata.userId;
+    await this.subscriptionModel.findOneAndUpdate(
+      { userId },
+      {
+        stripeSubscriptionId: subscription.id,
+        status: subscription.status,
+        cancelAtPeriodEnd: subscription.cancel_at_period_end,
+      },
+      { upsert: true }
+    );
+  }
+
+  private async handleSubscriptionDeletion(subscription: Stripe.Subscription): Promise<void> {
+    const userId = subscription.metadata.userId;
+    await this.subscriptionModel.findOneAndDelete({ userId });
   }
 
   async isSubscriptionActive(userId: string): Promise<boolean> {
-    try {
-      const subscription = await this.getSubscription(userId);
-      return subscription.status === 'active' && !subscription.cancelAtPeriodEnd;
-    } catch {
-      return false;
-    }
-  }
-
-  async update(id: string, updateSubscriptionDto: any) {
-    const subscription = await this.subscriptionModel.findById(id);
-    if (!subscription) {
-      throw new NotFoundException('Subscription not found');
-    }
-    return this.subscriptionModel.findByIdAndUpdate(id, updateSubscriptionDto, { new: true });
+    const subscription = await this.subscriptionModel.findOne({ userId });
+    return subscription?.status === 'active' && !subscription?.cancelAtPeriodEnd;
   }
 } 

@@ -4,74 +4,78 @@ import { User } from '../models/User';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
-export const register = async (req: Request, res: Response) => {
+export const register = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { email, name, password } = req.body;
+    const { email, password, firstName, lastName } = req.body;
 
-    // შევამოწმოთ არსებობს თუ არა მომხმარებელი
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: 'მომხმარებელი უკვე არსებობს' });
+      res.status(400).json({ message: 'მომხმარებელი უკვე არსებობს' });
+      return;
     }
 
-    // შევქმნათ ახალი მომხმარებელი
     const user = new User({
       email,
-      name,
       password,
+      firstName,
+      lastName
     });
 
     await user.save();
 
-    // შევქმნათ JWT ტოკენი
-    const token = jwt.sign({ userId: user._id }, JWT_SECRET, {
-      expiresIn: '7d',
-    });
+    const token = jwt.sign(
+      { userId: user._id },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
 
     res.status(201).json({
+      token,
       user: {
         id: user._id,
         email: user.email,
-        name: user.name,
-      },
-      token,
+        firstName: user.firstName,
+        lastName: user.lastName
+      }
     });
   } catch (error) {
-    res.status(500).json({ message: 'შეცდომა რეგისტრაციის დროს' });
+    res.status(500).json({ message: 'სერვერის შეცდომა' });
   }
 };
 
-export const login = async (req: Request, res: Response) => {
+export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
 
-    // ვიპოვოთ მომხმარებელი
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(401).json({ message: 'არასწორი ელ-ფოსტა ან პაროლი' });
+      res.status(401).json({ message: 'არასწორი ელ-ფოსტა ან პაროლი' });
+      return;
     }
 
-    // შევამოწმოთ პაროლი
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      return res.status(401).json({ message: 'არასწორი ელ-ფოსტა ან პაროლი' });
+    const isValidPassword = await user.comparePassword(password);
+    if (!isValidPassword) {
+      res.status(401).json({ message: 'არასწორი ელ-ფოსტა ან პაროლი' });
+      return;
     }
 
-    // შევქმნათ JWT ტოკენი
-    const token = jwt.sign({ userId: user._id }, JWT_SECRET, {
-      expiresIn: '7d',
-    });
+    const token = jwt.sign(
+      { userId: user._id },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
 
     res.json({
+      token,
       user: {
         id: user._id,
         email: user.email,
-        name: user.name,
-      },
-      token,
+        firstName: user.firstName,
+        lastName: user.lastName
+      }
     });
   } catch (error) {
-    res.status(500).json({ message: 'შეცდომა შესვლის დროს' });
+    res.status(500).json({ message: 'სერვერის შეცდომა' });
   }
 };
 

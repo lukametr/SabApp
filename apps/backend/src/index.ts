@@ -1,7 +1,11 @@
 import express from 'express';
+import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { connectMongo } from './db';
+import * as path from 'path';
+import * as fs from 'fs';
+
+import authRoutes from './routes/auth';
 import documentRoutes from './routes/documents';
 import healthRoutes from './routes/health';
 
@@ -9,41 +13,37 @@ import healthRoutes from './routes/health';
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 3003;
 
-// Middleware
-app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? 'https://saba-app.onrender.com' 
-    : 'http://localhost:3000',
-  credentials: true
-}));
+// მონგო დაკავშირება
+mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/saba')
+  .then(() => console.log('MongoDB დაკავშირებულია'))
+  .catch(err => console.error('MongoDB დაკავშირების შეცდომა:', err));
+
+// მიდლვეარები
+app.use(cors());
 app.use(express.json());
 
-// მონაცემთა ბაზასთან დაკავშირება
-const startServer = async () => {
-  try {
-    await connectMongo();
-    console.log('მონაცემთა ბაზასთან დაკავშირება წარმატებულია');
-    
-    // მარშრუტები
-    app.use('/api', documentRoutes);
-    app.use('/api', healthRoutes);
+// შევქმნათ uploads დირექტორია თუ არ არსებობს
+const uploadsDir = path.join(__dirname, '..', 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
-    // Error handling
-    app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-      console.error(err.stack);
-      res.status(500).json({ error: 'სერვერის შეცდომა' });
-    });
+// სტატიკური ფაილების მიწოდება
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
-    // სერვერის გაშვება
-    app.listen(port, () => {
-      console.log(`🚀 სერვერი გაშვებულია პორტზე ${port}`);
-    });
-  } catch (error) {
-    console.error('სერვერის გაშვების შეცდომა:', error);
-    process.exit(1);
-  }
-};
+// მარშრუტები
+app.use('/api/auth', authRoutes);
+app.use('/api/documents', documentRoutes);
+app.use('/api', healthRoutes);
 
-startServer(); 
+// შეცდომების დამუშავება
+app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error(err.stack);
+  res.status(500).send('Something broke!');
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`სერვერი გაშვებულია პორტზე ${PORT}`);
+}); 

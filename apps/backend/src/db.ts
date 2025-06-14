@@ -1,18 +1,20 @@
 import mongoose from 'mongoose';
+import dotenv from 'dotenv';
 
-const connectMongo = async () => {
+dotenv.config();
+
+const MONGO_URI = process.env.MONGO_URI;
+
+if (!MONGO_URI) {
+  throw new Error('MONGO_URI გარემოს ცვლადი არ არის განსაზღვრული');
+}
+
+export const connectMongo = async () => {
   try {
-    const mongoUri = process.env.MONGO_URI;
-    if (!mongoUri) {
-      throw new Error('MONGO_URI არ არის განსაზღვრული');
-    }
-
-    await mongoose.connect(mongoUri);
-    console.log('✅ MongoDB Atlas-ზე წარმატებით დავუკავშირდით');
+    await mongoose.connect(MONGO_URI);
+    console.log('MongoDB-სთან დაკავშირება წარმატებულია');
   } catch (error) {
-    console.error('❌ შეცდომა MongoDB Atlas-თან კავშირში:', error);
-    process.exit(1);
+    console.error('MongoDB-სთან დაკავშირების შეცდომა:', error);
+    throw error;
   }
-};
-
-export default connectMongo; 
+}; 

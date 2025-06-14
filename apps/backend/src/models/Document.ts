@@ -1,73 +1,61 @@
-import mongoose, { Schema, Document as MongooseDocument } from 'mongoose';
+import mongoose, { Document as MongooseDocument, Schema } from 'mongoose';
 
 export interface IDocument extends MongooseDocument {
-  authorId: string;
-  evaluatorName: string;
-  evaluatorLastName: string;
-  objectName: string;
-  workDescription: string;
-  date: Date;
-  time: string;
-  hazardIdentification: string;
-  filePath?: string;
-  affectedPersons: string[];
-  injuryDescription: string;
-  existingControlMeasures: string;
-  initialRisk: {
-    probability: number;
-    severity: number;
-    total: number;
-  };
-  additionalControlMeasures: string;
-  residualRisk: {
-    probability: number;
-    severity: number;
-    total: number;
-  };
-  requiredMeasures: string;
-  responsiblePerson: string;
-  reviewDate: Date;
+  _id: mongoose.Types.ObjectId;
+  userId: mongoose.Types.ObjectId;
+  title: string;
+  content: string;
   isFavorite: boolean;
-  assessmentA: number;
-  assessmentSh: number;
-  assessmentR: number;
+  riskAssessment: {
+    probability: number;
+    severity: number;
+    total: number;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
 
-const DocumentSchema = new Schema({
-  authorId: { type: String, required: true },
-  evaluatorName: { type: String, required: true },
-  evaluatorLastName: { type: String, required: true },
-  objectName: { type: String, required: true },
-  workDescription: { type: String, required: true },
-  date: { type: Date, required: true },
-  time: { type: String, required: true },
-  hazardIdentification: { type: String, required: true },
-  filePath: { type: String },
-  affectedPersons: [{ type: String }],
-  injuryDescription: { type: String, required: true },
-  existingControlMeasures: { type: String, required: true },
-  initialRisk: {
-    probability: { type: Number, required: true },
-    severity: { type: Number, required: true },
-    total: { type: Number, required: true }
+const documentSchema = new Schema<IDocument>({
+  userId: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
   },
-  additionalControlMeasures: { type: String, required: true },
-  residualRisk: {
-    probability: { type: Number, required: true },
-    severity: { type: Number, required: true },
-    total: { type: Number, required: true }
+  title: {
+    type: String,
+    required: true,
+    trim: true
   },
-  requiredMeasures: { type: String, required: true },
-  responsiblePerson: { type: String, required: true },
-  reviewDate: { type: Date, required: true },
-  isFavorite: { type: Boolean, default: false },
-  assessmentA: { type: Number, default: 0 },
-  assessmentSh: { type: Number, default: 0 },
-  assessmentR: { type: Number, default: 0 }
+  content: {
+    type: String,
+    required: true
+  },
+  isFavorite: {
+    type: Boolean,
+    default: false
+  },
+  riskAssessment: {
+    probability: {
+      type: Number,
+      required: true,
+      min: 1,
+      max: 5
+    },
+    severity: {
+      type: Number,
+      required: true,
+      min: 1,
+      max: 5
+    },
+    total: {
+      type: Number,
+      required: true,
+      min: 1,
+      max: 25
+    }
+  }
 }, {
   timestamps: true
 });
 
-export const Document = mongoose.model<IDocument>('Document', DocumentSchema); 
+export const Document = mongoose.model<IDocument>('Document', documentSchema); 
