@@ -5,13 +5,13 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  
+
   // Enable CORS
   app.enableCors();
-  
+
   // Enable validation
   app.useGlobalPipes(new ValidationPipe());
-  
+
   // Setup Swagger
   const config = new DocumentBuilder()
     .setTitle('SabApp API')
@@ -21,9 +21,10 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
-  
+
   try {
-    await app.listen(process.env.PORT || 3000);
+    const port = process.env.PORT || 3000;
+    await app.listen(port, '0.0.0.0'); // ← აუცილებელი ცვლილება
     console.log(`Application is running on: ${await app.getUrl()}`);
   } catch (error) {
     console.error('Failed to start application:', error);
