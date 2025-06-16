@@ -23,8 +23,9 @@ const nextConfig = {
   },
   output: 'standalone',
   experimental: {
-    appDir: true,
-  },
+    optimizeCss: true,
+    optimizePackageImports: ['@mui/material', '@mui/icons-material']
+  }
 };
 
 module.exports = nextConfig; 
