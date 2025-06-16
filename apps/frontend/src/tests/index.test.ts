@@ -6,6 +6,7 @@ import { DocumentList } from '@/components/DocumentList';
 import { LoginPage } from '@/app/auth/login/page';
 import { RegisterPage } from '@/app/auth/register/page';
 import { DocumentsPage } from '@/app/documents/page';
+import '@testing-library/jest-dom';
 
 // Mock the auth context
 jest.mock('@/contexts', () => ({

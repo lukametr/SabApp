@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
-export function Navigation() {
+export default function Navigation() {
   const { user, logout } = useAuth()
   const pathname = usePathname()
 
