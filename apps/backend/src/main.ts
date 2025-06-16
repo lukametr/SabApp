@@ -23,12 +23,24 @@ async function bootstrap() {
   SwaggerModule.setup('api', app, document);
 
   try {
-    const port = process.env.PORT || 3000;
+    const portEnv = process.env.PORT;
+    if (!portEnv) {
+      console.error('❌ PORT env var missing');
+      process.exit(1);
+    }
+
+    const port = parseInt(portEnv, 10);
+    if (isNaN(port)) {
+      console.error('❌ Invalid PORT value:', portEnv);
+      process.exit(1);
+    }
+
     await app.listen(port, '0.0.0.0');
-    console.log(`Application is running on: http://0.0.0.0:${port}`);
+    console.log(`✅ Application is running on: http://0.0.0.0:${port}`);
   } catch (error) {
-    console.error('Failed to start application:', error);
+    console.error('❌ Failed to start application:', error);
     process.exit(1);
   }
 }
+
 bootstrap();
