@@ -108,4 +108,6 @@ export const documentApi = {
     });
     return response.data;
   },
-}; 
+};
+
+export default api; 
