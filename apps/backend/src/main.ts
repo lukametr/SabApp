@@ -2,11 +2,14 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { ConfigService } from '@nestjs/config';
 import * as express from 'express';
 import { join } from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const configService = app.get(ConfigService);
+  const port = configService.get<number>('PORT') || 3000;
   
   // Enable CORS
   app.enableCors();
@@ -27,11 +30,9 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
   
-  const port = process.env.PORT || 3000;
-  
   try {
     await app.listen(port);
-    console.log(`Application is running on: http://localhost:${port}`);
+    console.log(`Application is running on: ${await app.getUrl()}`);
   } catch (error) {
     console.error('Failed to start application:', error);
     process.exit(1);
