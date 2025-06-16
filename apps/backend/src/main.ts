@@ -24,8 +24,8 @@ async function bootstrap() {
 
   try {
     const port = process.env.PORT || 3000;
-    await app.listen(port, '0.0.0.0'); // ← აუცილებელი ცვლილება
-    console.log(`Application is running on: ${await app.getUrl()}`);
+    await app.listen(port, '0.0.0.0');
+    console.log(`Application is running on: http://0.0.0.0:${port}`);
   } catch (error) {
     console.error('Failed to start application:', error);
     process.exit(1);
