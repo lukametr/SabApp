@@ -12,7 +12,7 @@
     "start": "pnpm run --parallel start",
     "lint": "pnpm run --parallel lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
-    "postinstall": "prisma generate"
+    "clean": "pnpm run --parallel clean"
   },
   "devDependencies": {
     "@types/node": "^20.19.0",

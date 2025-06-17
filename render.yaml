@@ -27,7 +27,8 @@ services:
       npm install -g pnpm@8
       pnpm install --frozen-lockfile
       cd apps/frontend
-      rm -rf .next
+      rm -rf .next node_modules
+      pnpm install
       pnpm build
     startCommand: cd apps/frontend && pnpm start
     envVars:
