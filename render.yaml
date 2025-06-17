@@ -24,9 +24,10 @@ services:
     name: saba-frontend
     env: node
     buildCommand: |
-      npm install -g pnpm
-      pnpm install
-      cd apps/frontend && pnpm build
+      npm install -g pnpm@8
+      pnpm install --frozen-lockfile
+      cd apps/frontend
+      pnpm build
     startCommand: cd apps/frontend && pnpm start
     envVars:
       - key: NODE_ENV
