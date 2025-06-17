@@ -4,11 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3002",
-    "build": "NEXT_TELEMETRY_DISABLED=1 next build",
+    "build": "next build",
     "start": "next start -p ${PORT:-3002}",
     "lint": "next lint",
-    "postinstall": "next telemetry disable",
-    "clean": "rm -rf .next"
+    "clean": "rm -rf .next node_modules"
   },
   "dependencies": {
     "@emotion/react": "^11.11.3",
