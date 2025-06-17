@@ -1,14 +1,9 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
-    "skipLibCheck": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
-    "noEmit": true,
+    "skipLibCheck": true,
     "esModuleInterop": true,
-    "module": "esnext",
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
@@ -16,8 +11,9 @@
     "incremental": true,
     "baseUrl": ".",
     "paths": {
-      "@sabap/*": ["packages/*/src"]
+      "@/*": ["./apps/frontend/src/*"]
     }
   },
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules"],
+  "include": ["apps/frontend/**/*.ts", "apps/frontend/**/*.tsx"]
 } 
