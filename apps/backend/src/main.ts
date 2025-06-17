@@ -6,8 +6,13 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Enable CORS
-  app.enableCors();
+  // CORS კონფიგურაცია
+  app.enableCors({
+    origin: ['https://saba-app.onrender.com', 'http://localhost:3000'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+  });
 
   // Enable validation
   app.useGlobalPipes(new ValidationPipe());
