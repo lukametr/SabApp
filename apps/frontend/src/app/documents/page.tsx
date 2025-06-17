@@ -1,44 +1,123 @@
 'use client';
 
-import { useState } from 'react';
-import { DocumentForm } from '@/components/DocumentForm';
-import { DocumentList } from '@/components/DocumentList';
-import { useAuth } from '@/contexts/AuthContext';
+import React, { useState, useEffect } from 'react';
+import { Box, Button, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import { Add as AddIcon } from '@mui/icons-material';
+import { DocumentList } from '../../components/DocumentList';
+import { DocumentForm } from '../../components/DocumentForm';
+import { useDocumentStore } from '../../store/documentStore';
+import { Document } from '../../types/document';
 
 export default function DocumentsPage() {
-  const [showForm, setShowForm] = useState(false);
-  const { user } = useAuth();
+  const { documents, fetchDocuments, createDocument, updateDocument, deleteDocument } = useDocumentStore();
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [documentToDelete, setDocumentToDelete] = useState<Document | null>(null);
 
-  if (!user) {
-    return (
-      <div className="text-center py-8">
-        <h2 className="text-2xl font-bold mb-4">ავტორიზაცია საჭიროა</h2>
-        <p className="text-gray-600">
-          დოკუმენტების სანახავად და მართვისთვის გთხოვთ გაიაროთ ავტორიზაცია.
-        </p>
-      </div>
-    );
-  }
+  useEffect(() => {
+    fetchDocuments();
+  }, [fetchDocuments]);
+
+  const handleCreate = async (data: any) => {
+    await createDocument(data);
+    setIsFormOpen(false);
+  };
+
+  const handleUpdate = async (data: any) => {
+    if (selectedDocument) {
+      await updateDocument({ ...data, id: selectedDocument.id });
+      setSelectedDocument(null);
+      setIsFormOpen(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (documentToDelete) {
+      await deleteDocument(documentToDelete.id);
+      setDocumentToDelete(null);
+      setIsDeleteDialogOpen(false);
+    }
+  };
+
+  const handleEdit = (document: Document) => {
+    setSelectedDocument(document);
+    setIsFormOpen(true);
+  };
+
+  const handleDeleteClick = (document: Document) => {
+    setDocumentToDelete(document);
+    setIsDeleteDialogOpen(true);
+  };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">დოკუმენტები</h1>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="btn-primary"
+    <Box p={3}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+        <h1>დოკუმენტები</h1>
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<AddIcon />}
+          onClick={() => {
+            setSelectedDocument(null);
+            setIsFormOpen(true);
+          }}
         >
-          {showForm ? 'დახურვა' : 'ახალი დოკუმენტი'}
-        </button>
-      </div>
+          ახალი დოკუმენტი
+        </Button>
+      </Box>
 
-      {showForm && (
-        <div className="mb-8">
-          <DocumentForm onSuccess={() => setShowForm(false)} />
-        </div>
-      )}
+      <DocumentList
+        documents={documents}
+        onEdit={handleEdit}
+        onDelete={handleDeleteClick}
+      />
 
-      <DocumentList />
-    </div>
+      <Dialog
+        open={isFormOpen}
+        onClose={() => {
+          setIsFormOpen(false);
+          setSelectedDocument(null);
+        }}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          {selectedDocument ? 'დოკუმენტის რედაქტირება' : 'ახალი დოკუმენტი'}
+        </DialogTitle>
+        <DialogContent>
+          <DocumentForm
+            initialData={selectedDocument || undefined}
+            onSubmit={selectedDocument ? handleUpdate : handleCreate}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={isDeleteDialogOpen}
+        onClose={() => {
+          setIsDeleteDialogOpen(false);
+          setDocumentToDelete(null);
+        }}
+      >
+        <DialogTitle>დოკუმენტის წაშლა</DialogTitle>
+        <DialogContent>
+          <p>დარწმუნებული ხართ, რომ გსურთ ამ დოკუმენტის წაშლა?</p>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setIsDeleteDialogOpen(false);
+              setDocumentToDelete(null);
+            }}
+          >
+            გაუქმება
+          </Button>
+          <Button onClick={handleDelete} color="error">
+            წაშლა
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
 } 
