@@ -30,11 +30,10 @@ async function bootstrap() {
     .setTitle('SabApp API')
     .setDescription('The SabApp API description')
     .setVersion('1.0')
-    .addBearerAuth()
     .build();
   
-  const document = SwaggerModule.createDocument(app as any, config);
-  SwaggerModule.setup('api', app as any, document);
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, document);
 
   try {
     const portEnv = process.env.PORT;
