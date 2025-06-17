@@ -34,5 +34,9 @@ services:
         value: production
       - key: NEXT_PUBLIC_API_URL
         value: https://saba-api-njd9.onrender.com
+      - key: NEXT_TELEMETRY_DISABLED
+        value: "1"
+      - key: NODE_OPTIONS
+        value: "--max-old-space-size=4096"
     healthCheckPath: /
     autoDeploy: true 
