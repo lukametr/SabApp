@@ -8,16 +8,22 @@ async function bootstrap() {
 
   // CORS კონფიგურაცია
   app.enableCors({
-    origin: true, // ყველა დომეინისთვის
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    origin: ['https://saba-app.onrender.com', 'http://localhost:3000'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    exposedHeaders: ['Content-Range', 'X-Content-Range'],
     credentials: true,
+    maxAge: 3600,
     preflightContinue: false,
     optionsSuccessStatus: 204
   });
 
   // Enable validation
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(new ValidationPipe({
+    transform: true,
+    whitelist: true,
+    forbidNonWhitelisted: true,
+  }));
 
   // Setup Swagger
   const config = new DocumentBuilder()
