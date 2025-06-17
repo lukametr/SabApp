@@ -7,7 +7,8 @@
     "build": "NEXT_TELEMETRY_DISABLED=1 next build",
     "start": "next start -p ${PORT:-3002}",
     "lint": "next lint",
-    "postinstall": "next telemetry disable"
+    "postinstall": "next telemetry disable",
+    "clean": "rm -rf .next"
   },
   "dependencies": {
     "@emotion/react": "^11.11.3",
