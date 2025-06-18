@@ -6,7 +6,10 @@ import helmet from 'helmet';
 import * as compression from 'compression';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: ['error', 'warn', 'log', 'debug', 'verbose'],
+    abortOnError: false,
+  });
 
   // Global prefix
   app.setGlobalPrefix('api');
@@ -72,9 +75,19 @@ async function bootstrap() {
       process.exit(1);
     }
 
+    // Error handling
+    process.on('uncaughtException', (error) => {
+      console.error('Uncaught Exception:', error);
+    });
+
+    process.on('unhandledRejection', (reason, promise) => {
+      console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    });
+
     await app.listen(port, '0.0.0.0');
     console.log(`✅ Application is running on: http://0.0.0.0:${port}`);
     console.log(`📚 API Documentation available at: http://0.0.0.0:${port}/docs`);
+    console.log(`🏥 Health check available at: http://0.0.0.0:${port}/api/health`);
   } catch (error) {
     console.error('❌ Failed to start application:', error);
     process.exit(1);
