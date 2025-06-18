@@ -2,13 +2,15 @@
 const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ['@mui/material', '@mui/icons-material'],
-  webpack: (config) => {
-    config.resolve.fallback = {
-      ...config.resolve.fallback,
-      fs: false,
-      net: false,
-      tls: false,
-    };
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+      };
+    }
     return config;
   },
   env: {
@@ -32,7 +34,11 @@ const nextConfig = {
   },
   eslint: {
     ignoreDuringBuilds: true
-  }
+  },
+  images: {
+    domains: ['saba-app.onrender.com', 'saba-api.onrender.com'],
+    unoptimized: true,
+  },
 };
 
 module.exports = nextConfig; 
