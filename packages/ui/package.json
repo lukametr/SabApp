@@ -16,19 +16,19 @@
     "react-dom": "^18.2.0"
   },
   "dependencies": {
-    "@sabap/utils": "workspace:*",
-    "@mui/material": "^5.15.11",
-    "@mui/icons-material": "^5.15.11",
     "@emotion/react": "^11.11.3",
     "@emotion/styled": "^11.11.0",
+    "@mui/icons-material": "^5.15.11",
+    "@mui/material": "^5.15.11",
+    "@sabap/utils": "workspace:*",
     "clsx": "^2.1.0",
     "tailwind-merge": "^2.2.1"
   },
   "devDependencies": {
     "@types/react": "^18.2.55",
     "@types/react-dom": "^18.2.19",
-    "tsup": "^8.0.2",
     "rimraf": "^5.0.5",
+    "tsup": "^8.5.0",
     "typescript": "^5.3.3"
   }
-} 
+}
