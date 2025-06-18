@@ -4,7 +4,6 @@ import { Model } from 'mongoose';
 import { Document } from './schemas/document.schema';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
-import { UserDocument } from '../users/schemas/user.schema';
 import * as fs from 'fs';
 import * as path from 'path';
 import archiver from 'archiver';
@@ -15,10 +14,9 @@ export class DocumentsService {
     @InjectModel(Document.name) private documentModel: Model<Document>
   ) {}
 
-  async create(createDocumentDto: CreateDocumentDto, user: UserDocument): Promise<Document> {
+  async create(createDocumentDto: CreateDocumentDto): Promise<Document> {
     const createdDocument = new this.documentModel({
-      ...createDocumentDto,
-      authorId: user._id
+      ...createDocumentDto
     });
     return createdDocument.save();
   }
@@ -141,9 +139,9 @@ export class DocumentsService {
 
     return new Promise((resolve, reject) => {
       const chunks: Buffer[] = [];
-      archive.on('data', chunk => chunks.push(chunk));
+      archive.on('data', (chunk: Buffer) => chunks.push(chunk));
       archive.on('end', () => resolve(Buffer.concat(chunks)));
-      archive.on('error', err => reject(err));
+      archive.on('error', (err: Error) => reject(err));
     });
   }
 
