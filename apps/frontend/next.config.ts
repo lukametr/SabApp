@@ -5,5 +5,13 @@ const config: NextConfig = {
   images: {
     domains: ['saba-api.onrender.com', 'localhost'],
   },
-  // ... existing code ...
-}; 
+  experimental: {
+    optimizeCss: true,
+  },
+  distDir: '.next',
+  generateBuildId: async () => {
+    return 'build-' + Date.now();
+  },
+};
+
+export default config; 
