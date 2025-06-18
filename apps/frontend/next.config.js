@@ -11,13 +11,14 @@ const nextConfig = {
     };
     return config;
   },
+  env: {
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://saba-api.onrender.com',
+  },
   async rewrites() {
     return [
       {
         source: '/api/:path*',
-        destination: process.env.NODE_ENV === 'production'
-          ? 'https://saba-api-njd9.onrender.com/api/:path*'
-          : 'http://localhost:3003/api/:path*',
+        destination: `${process.env.NEXT_PUBLIC_API_URL}/api/:path*`,
       },
     ];
   },

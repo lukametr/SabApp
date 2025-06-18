@@ -12,16 +12,24 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
 
   // Security headers
-  app.use(helmet());
+  app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    crossOriginEmbedderPolicy: false
+  }));
   
   // Compression
   app.use(compression());
 
   // CORS კონფიგურაცია
   app.enableCors({
-    origin: 'https://saba-app.onrender.com',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    credentials: true
+    origin: ['https://saba-app.onrender.com', 'http://localhost:3000'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
+    exposedHeaders: ['Content-Range', 'X-Content-Range'],
+    credentials: true,
+    maxAge: 3600,
+    preflightContinue: false,
+    optionsSuccessStatus: 204
   });
 
   // Enable validation
