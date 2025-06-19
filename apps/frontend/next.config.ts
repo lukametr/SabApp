@@ -1,14 +1,15 @@
 import { NextConfig } from 'next';
 
 const config: NextConfig = {
-  output: 'standalone',
+  output: 'export',
   images: {
     domains: ['saba-api.onrender.com', 'localhost'],
+    unoptimized: true,
   },
   experimental: {
     optimizeCss: true,
   },
-  distDir: '.next',
+  distDir: 'out',
   generateBuildId: async () => {
     return 'build-' + Date.now();
   },
