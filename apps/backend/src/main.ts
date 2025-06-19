@@ -34,21 +34,11 @@ async function bootstrap() {
 
   // CORS კონფიგურაცია
   app.enableCors({
-    origin: ['https://saba-app.onrender.com', 'http://localhost:3000'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    origin: true, // Allow all origins
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
-    allowedHeaders: [
-      'Content-Type',
-      'Authorization',
-      'Accept',
-      'Origin',
-      'X-Requested-With',
-      'Access-Control-Allow-Origin',
-      'Access-Control-Allow-Headers',
-      'Access-Control-Allow-Methods',
-      'Access-Control-Allow-Credentials'
-    ],
-    exposedHeaders: ['Content-Range', 'X-Content-Range'],
+    allowedHeaders: '*',
+    exposedHeaders: '*',
     maxAge: 3600,
     preflightContinue: false,
     optionsSuccessStatus: 204

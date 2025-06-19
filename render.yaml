@@ -17,6 +17,12 @@ services:
         value: 10000
       - key: NEXT_PUBLIC_API_URL
         value: https://saba-api.onrender.com
+      - key: JWT_SECRET
+        sync: false
+      - key: FRONTEND_URL
+        value: https://saba-app.onrender.com
+      - key: CORS_ORIGIN
+        value: https://saba-app.onrender.com
     healthCheckPath: /api/health
     autoDeploy: true
 
@@ -42,4 +48,18 @@ services:
       - key: NODE_OPTIONS
         value: "--max-old-space-size=4096"
     healthCheckPath: /
-    autoDeploy: true 
+    autoDeploy: true
+
+  # ფრონტენდის სერვისი
+  - type: web
+    name: saba-app
+    env: node
+    buildCommand: cd apps/frontend && pnpm install --no-frozen-lockfile && pnpm run clean && pnpm run build
+    startCommand: cd apps/frontend && pnpm run start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: NEXT_PUBLIC_API_URL
+        value: https://saba-api.onrender.com/api 
