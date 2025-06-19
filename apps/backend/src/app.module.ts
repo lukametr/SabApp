@@ -16,6 +16,11 @@ import { DocumentsModule } from './documents/documents.module';
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', '..', '..', 'apps', 'frontend', 'out'),
       exclude: ['/api*'],
+      serveRoot: '/',
+      serveStaticOptions: {
+        index: false,
+        redirect: false,
+      },
     }),
     DocumentsModule,
   ],
