@@ -3,19 +3,15 @@ services:
   - type: web
     name: saba-api
     env: node
-    region: oregon
-    plan: free
-    buildCommand: cd apps/backend && pnpm install && pnpm build
-    startCommand: cd apps/backend && pnpm start
+    buildCommand: cd apps/backend && pnpm install && pnpm run build
+    startCommand: cd apps/backend && pnpm run start:prod
     envVars:
-      - key: PORT
-        value: 3003
+      - key: MONGODB_URI
+        sync: false
       - key: NODE_ENV
         value: production
-      - key: MONGO_URI
-        sync: false
-      - key: JWT_SECRET
-        sync: false
+      - key: PORT
+        value: 10000
     healthCheckPath: /api/health
     autoDeploy: true
 
