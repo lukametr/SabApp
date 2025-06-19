@@ -12,6 +12,10 @@ const config: NextConfig = {
   generateBuildId: async () => {
     return 'build-' + Date.now();
   },
+  trailingSlash: true,
+  generateStaticParams: async () => {
+    return [];
+  },
 };
 
 export default config; 
