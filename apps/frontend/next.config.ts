@@ -11,6 +11,22 @@ const config: NextConfig = {
   generateStaticParams: async () => {
     return [];
   },
+  // Disable server-side features since we're using static export
+  experimental: {
+    appDir: false,
+  },
+  // Ensure all pages are static
+  staticPageGenerationTimeout: 120,
+  // Disable server-side features
+  webpack: (config) => {
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+      net: false,
+      tls: false,
+    };
+    return config;
+  },
 };
 
 export default config; 
