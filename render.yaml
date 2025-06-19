@@ -3,7 +3,10 @@ services:
   - type: web
     name: saba-api
     env: node
-    buildCommand: cd apps/backend && pnpm install && pnpm run build
+    rootDir: .
+    buildCommand: |
+      cd apps/frontend && pnpm install && pnpm run build
+      cd ../backend && pnpm install && pnpm run build
     startCommand: cd apps/backend && pnpm run start:prod
     envVars:
       - key: MONGODB_URI
