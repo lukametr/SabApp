@@ -16,7 +16,8 @@ export class DocumentsService {
 
   async create(createDocumentDto: CreateDocumentDto): Promise<Document> {
     const createdDocument = new this.documentModel({
-      ...createDocumentDto
+      ...createDocumentDto,
+      authorId: 'default-user', // TODO: Get from authentication
     });
     return createdDocument.save();
   }

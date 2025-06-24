@@ -10,6 +10,27 @@ export enum PersonCategory {
   LEGAL = 'legal',
 }
 
+export interface Risk {
+  probability: number;
+  severity: number;
+  total: number;
+}
+
+export interface Hazard {
+  id: string;
+  hazardIdentification: string;
+  affectedPersons: string[];
+  injuryDescription: string;
+  existingControlMeasures: string;
+  initialRisk: Risk;
+  additionalControlMeasures: string;
+  residualRisk: Risk;
+  requiredMeasures: string;
+  responsiblePerson: string;
+  reviewDate: Date;
+  photos: string[];
+}
+
 export interface Document {
   id: string;
   authorId: string;
@@ -18,30 +39,14 @@ export interface Document {
   objectName: string;
   workDescription: string;
   date: Date;
-  time: string;
-  hazardIdentification: string;
+  time: Date;
+  hazards: Hazard[];
   filePath?: string;
-  affectedPersons: string[];
-  injuryDescription: string;
-  existingControlMeasures: string;
-  initialRisk: {
-    probability: number;
-    severity: number;
-    total: number;
-  };
-  additionalControlMeasures: string;
-  residualRisk: {
-    probability: number;
-    severity: number;
-    total: number;
-  };
-  requiredMeasures: string;
-  responsiblePerson: string;
-  reviewDate: Date;
   isFavorite: boolean;
   assessmentA: number;
   assessmentSh: number;
   assessmentR: number;
+  photos: string[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -52,27 +57,9 @@ export interface CreateDocumentDto {
   objectName: string;
   workDescription: string;
   date: Date;
-  time: string;
-  hazardIdentification: string;
-  filePath?: string;
-  affectedPersons: string[];
-  injuryDescription: string;
-  existingControlMeasures: string;
-  initialRisk: {
-    probability: number;
-    severity: number;
-    total: number;
-  };
-  additionalControlMeasures: string;
-  residualRisk: {
-    probability: number;
-    severity: number;
-    total: number;
-  };
-  requiredMeasures: string;
-  responsiblePerson: string;
-  reviewDate: Date;
-  photos?: File[];
+  time: Date;
+  hazards: Hazard[];
+  photos?: string[];
 }
 
 export interface UpdateDocumentDto {
@@ -82,24 +69,7 @@ export interface UpdateDocumentDto {
   objectName?: string;
   workDescription?: string;
   date?: Date;
-  time?: string;
-  hazardIdentification?: string;
-  filePath?: string;
-  affectedPersons?: string[];
-  injuryDescription?: string;
-  existingControlMeasures?: string;
-  initialRisk?: {
-    probability: number;
-    severity: number;
-    total: number;
-  };
-  additionalControlMeasures?: string;
-  residualRisk?: {
-    probability: number;
-    severity: number;
-    total: number;
-  };
-  requiredMeasures?: string;
-  responsiblePerson?: string;
-  reviewDate?: Date;
+  time?: Date;
+  hazards?: Hazard[];
+  photos?: string[];
 } 

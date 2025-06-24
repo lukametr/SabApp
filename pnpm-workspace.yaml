@@ -2,5 +2,14 @@ packages:
   - apps/*
   - packages/*
 
+ignoredBuiltDependencies:
+  - '@mui/x-telemetry'
+  - '@prisma/client'
+  - '@prisma/engines'
+  - bcrypt
+  - esbuild
+  - prisma
+  - unrs-resolver
+
 onlyBuiltDependencies:
   - '@nestjs/core'
