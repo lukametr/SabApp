@@ -14,7 +14,7 @@ import {
   Tooltip,
 } from '@mui/material';
 import { Edit, Delete, Visibility } from '@mui/icons-material';
-import { Document } from '../types/document.types';
+import { Document } from '../types/document';
 
 interface DocumentListProps {
   documents: Document[];
@@ -49,8 +49,13 @@ const DocumentList: React.FC<DocumentListProps> = React.memo(({
     return 'error';
   }, []);
 
-  const formatDate = useCallback((date: string): string => {
+  const formatDate = useCallback((date: Date | string): string => {
     return new Date(date).toLocaleDateString('ka-GE');
+  }, []);
+
+  const getMaxRisk = useCallback((hazards: any[]): number => {
+    if (!hazards || hazards.length === 0) return 0;
+    return Math.max(...hazards.map(h => h.residualRisk?.total || 0));
   }, []);
 
   return (
@@ -61,7 +66,8 @@ const DocumentList: React.FC<DocumentListProps> = React.memo(({
             <TableCell>ობიექტის სახელი</TableCell>
             <TableCell>შემფასებელი</TableCell>
             <TableCell>თარიღი</TableCell>
-            <TableCell>რისკი</TableCell>
+            <TableCell>საფრთხეების რაოდენობა</TableCell>
+            <TableCell>მაქსიმალური რისკი</TableCell>
             <TableCell>მოქმედებები</TableCell>
           </TableRow>
         </TableHead>
@@ -79,7 +85,7 @@ const DocumentList: React.FC<DocumentListProps> = React.memo(({
                 <Box>
                   <Typography variant="body1">{doc.objectName}</Typography>
                   <Typography variant="caption" color="textSecondary">
-                    {doc.objectAddress}
+                    {doc.workDescription}
                   </Typography>
                 </Box>
               </TableCell>
@@ -88,16 +94,20 @@ const DocumentList: React.FC<DocumentListProps> = React.memo(({
                   <Typography variant="body2">
                     {doc.evaluatorName} {doc.evaluatorLastName}
                   </Typography>
-                  <Typography variant="caption" color="textSecondary">
-                    {doc.evaluatorPosition}
-                  </Typography>
                 </Box>
               </TableCell>
               <TableCell>{formatDate(doc.date)}</TableCell>
               <TableCell>
                 <Chip 
-                  label={doc.residualRisk.total}
-                  color={getRiskColor(doc.residualRisk.total) as 'success' | 'warning' | 'error'}
+                  label={doc.hazards?.length || 0}
+                  color="primary"
+                  size="small"
+                />
+              </TableCell>
+              <TableCell>
+                <Chip 
+                  label={getMaxRisk(doc.hazards)}
+                  color={getRiskColor(getMaxRisk(doc.hazards)) as 'success' | 'warning' | 'error'}
                   size="small"
                 />
               </TableCell>

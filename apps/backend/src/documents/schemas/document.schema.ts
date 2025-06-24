@@ -16,6 +16,54 @@ export enum PersonCategory {
   LEGAL = 'legal',
 }
 
+@Schema({ _id: false })
+class Risk {
+  @Prop({ required: true })
+  probability: number;
+
+  @Prop({ required: true })
+  severity: number;
+
+  @Prop({ required: true })
+  total: number;
+}
+
+@Schema({ _id: false })
+class Hazard {
+  @Prop({ required: true })
+  hazardIdentification: string;
+
+  @Prop({ type: [String], required: true })
+  affectedPersons: string[];
+
+  @Prop({ required: true })
+  injuryDescription: string;
+
+  @Prop({ required: true })
+  existingControlMeasures: string;
+
+  @Prop({ type: Risk, required: true })
+  initialRisk: Risk;
+
+  @Prop({ required: true })
+  additionalControlMeasures: string;
+
+  @Prop({ type: Risk, required: true })
+  residualRisk: Risk;
+
+  @Prop({ required: true })
+  requiredMeasures: string;
+
+  @Prop({ required: true })
+  responsiblePerson: string;
+
+  @Prop({ required: true })
+  reviewDate: Date;
+
+  @Prop({ type: [String], default: [] })
+  photos: string[];
+}
+
 @Schema({ timestamps: true })
 export class Document extends MongoDocument {
   @Prop({ required: true })
@@ -37,62 +85,13 @@ export class Document extends MongoDocument {
   date: Date;
 
   @Prop({ required: true })
-  time: string;
+  time: Date;
 
-  @Prop({ required: true })
-  hazardIdentification: string;
+  @Prop({ type: [Hazard], required: true })
+  hazards: Hazard[];
 
   @Prop()
   filePath: string;
-
-  @Prop({ type: [String], required: true })
-  affectedPersons: string[];
-
-  @Prop({ required: true })
-  injuryDescription: string;
-
-  @Prop({ required: true })
-  existingControlMeasures: string;
-
-  @Prop({
-    type: {
-      probability: { type: Number, required: true },
-      severity: { type: Number, required: true },
-      total: { type: Number, required: true }
-    },
-    required: true
-  })
-  initialRisk: {
-    probability: number;
-    severity: number;
-    total: number;
-  };
-
-  @Prop({ required: true })
-  additionalControlMeasures: string;
-
-  @Prop({
-    type: {
-      probability: { type: Number, required: true },
-      severity: { type: Number, required: true },
-      total: { type: Number, required: true }
-    },
-    required: true
-  })
-  residualRisk: {
-    probability: number;
-    severity: number;
-    total: number;
-  };
-
-  @Prop({ required: true })
-  requiredMeasures: string;
-
-  @Prop({ required: true })
-  responsiblePerson: string;
-
-  @Prop({ required: true })
-  reviewDate: Date;
 
   @Prop({ default: false })
   isFavorite: boolean;

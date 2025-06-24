@@ -3,8 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Button, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
-import { DocumentList } from '../../components/DocumentList';
-import { DocumentForm } from '../../components/DocumentForm';
+import { DocumentList, DocumentForm } from '../../components';
 import { useDocumentStore } from '../../store/documentStore';
 import { Document } from '../../types/document';
 
@@ -73,25 +72,15 @@ export default function DocumentsPage() {
         onDelete={handleDeleteClick}
       />
 
-      <Dialog
+      <DocumentForm
         open={isFormOpen}
         onClose={() => {
           setIsFormOpen(false);
           setSelectedDocument(null);
         }}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>
-          {selectedDocument ? 'დოკუმენტის რედაქტირება' : 'ახალი დოკუმენტი'}
-        </DialogTitle>
-        <DialogContent>
-          <DocumentForm
-            initialData={selectedDocument || undefined}
-            onSubmit={selectedDocument ? handleUpdate : handleCreate}
-          />
-        </DialogContent>
-      </Dialog>
+        defaultValues={selectedDocument || undefined}
+        onSubmit={selectedDocument ? handleUpdate : handleCreate}
+      />
 
       <Dialog
         open={isDeleteDialogOpen}
