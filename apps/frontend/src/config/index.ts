@@ -1,5 +1,5 @@
 export const config = {
-  apiUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
+  apiUrl: process.env.NEXT_PUBLIC_API_URL || 'https://saba-api-njd9.onrender.com',
   appName: 'SabaP',
   appDescription: 'დოკუმენტების მართვის პლატფორმა',
   contactEmail: 'info@sabap.ge',
