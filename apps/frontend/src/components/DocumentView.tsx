@@ -23,13 +23,13 @@ export const DocumentView: React.FC<DocumentViewProps> = ({ document, onEdit, on
     try {
       const blob = await downloadDocument(document.id);
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = window.document.createElement('a');
       a.href = url;
       a.download = document.filePath || 'document';
-      document.body.appendChild(a);
+      window.document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      window.document.body.removeChild(a);
     } catch (error) {
       console.error('Error downloading document:', error);
     }

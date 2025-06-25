@@ -3,16 +3,29 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { DocumentList } from '@/components/DocumentList';
+import { Document } from '@/types/document';
+import { documentApi } from '@/services/api';
 
 export const dynamic = 'force-dynamic'
 
 export default function ProfilePage() {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
+  const [userDocuments, setUserDocuments] = useState<Document[]>([]);
 
   useEffect(() => {
     if (user) {
       setIsLoading(false);
+      // Load user documents
+      const loadUserDocuments = async () => {
+        try {
+          const docs = await documentApi.getMyDocuments();
+          setUserDocuments(docs);
+        } catch (error) {
+          console.error('Error loading user documents:', error);
+        }
+      };
+      loadUserDocuments();
     }
   }, [user]);
 
@@ -51,7 +64,7 @@ export default function ProfilePage() {
 
         <div>
           <h2 className="text-2xl font-bold text-gray-900 mb-4">ჩემი დოკუმენტები</h2>
-          <DocumentList showMyDocuments={true} />
+          <DocumentList documents={userDocuments} showMyDocuments={true} />
         </div>
       </div>
     </div>

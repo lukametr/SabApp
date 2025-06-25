@@ -21,6 +21,7 @@ interface DocumentListProps {
   onEdit?: (document: Document) => void;
   onDelete?: (document: Document) => void;
   onSelect?: (document: Document) => void;
+  showMyDocuments?: boolean;
 }
 
 const DocumentList: React.FC<DocumentListProps> = React.memo(({ 
@@ -74,7 +75,7 @@ const DocumentList: React.FC<DocumentListProps> = React.memo(({
         <TableBody>
           {documents.map((doc) => (
             <TableRow 
-              key={doc._id || doc.id}
+              key={doc.id}
               onClick={() => handleSelect(doc)}
               sx={{ 
                 cursor: 'pointer',
