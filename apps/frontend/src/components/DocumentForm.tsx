@@ -101,7 +101,7 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
       }
     } else {
       if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach((track: MediaStreamTrack) => track.stop());
       }
       setCameraActive(null);
     }
@@ -127,7 +127,7 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
       }, 'image/jpeg');
     }
     if (stream) {
-      stream.getTracks().forEach(track => track.stop());
+      stream.getTracks().forEach((track: MediaStreamTrack) => track.stop());
     }
     setCameraActive(null);
   };
@@ -543,16 +543,15 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
 export function DocumentForm({ onSubmit: handleFormSubmit, onCancel, defaultValues, open, onClose }: Props) {
   const [file, setFile] = useState<File | null>(null);
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
-  const [riskWarning, setRiskWarning] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
   const [cameraActive, setCameraActive] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
-  const [photos, setPhotos] = useState<File[]>([]);
-  const [previewUrls, setPreviewUrls] = useState<string[]>(defaultValues?.photos || []);
-  const [hazards, setHazards] = useState<HazardData[]>([]);
+  const [photos, setPhotos] = useState<File[]>(defaultValues?.photos ?? []);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const [hazards, setHazards] = useState<HazardData[]>(defaultValues?.hazards as HazardData[] ?? []);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
-  const { control, handleSubmit: submitForm, setValue, watch, formState: { errors } } = useForm<CreateDocumentDto>({
+  const { control, handleSubmit: submitForm, formState: { errors } } = useForm<CreateDocumentDto>({
     defaultValues: defaultValues || {
       evaluatorName: '',
       evaluatorLastName: '',
@@ -560,32 +559,10 @@ export function DocumentForm({ onSubmit: handleFormSubmit, onCancel, defaultValu
       workDescription: '',
       date: new Date(),
       time: new Date(),
-      hazardIdentification: '',
-      affectedPersons: [],
-      injuryDescription: '',
-      existingControlMeasures: '',
-      initialRisk: { probability: 0, severity: 0, total: 0 },
-      additionalControlMeasures: '',
-      residualRisk: { probability: 0, severity: 0, total: 0 },
-      requiredMeasures: '',
-      responsiblePerson: '',
-      reviewDate: new Date(),
+      hazards: [],
+      photos: []
     },
   });
-
-  // Calculate initial risk total
-  React.useEffect(() => {
-    const initialProb = Number(watch('initialRisk.probability')) || 0;
-    const initialSev = Number(watch('initialRisk.severity')) || 0;
-    setValue('initialRisk.total', initialProb + initialSev);
-  }, [watch, setValue]);
-
-  React.useEffect(() => {
-    const residualProb = Number(watch('residualRisk.probability')) || 0;
-    const residualSev = Number(watch('residualRisk.severity')) || 0;
-    setValue('residualRisk.total', residualProb + residualSev);
-    setRiskWarning(residualProb + residualSev >= 9);
-  }, [watch, setValue]);
 
   // Camera logic
   const handleCamera = async () => {
@@ -602,18 +579,19 @@ export function DocumentForm({ onSubmit: handleFormSubmit, onCancel, defaultValu
       }
     } else {
       if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach((track: MediaStreamTrack) => track.stop());
       }
       setCameraActive(false);
     }
   };
+
   const handleCapture = () => {
     if (videoRef.current) {
       const canvas = document.createElement('canvas');
       canvas.width = videoRef.current.videoWidth;
       canvas.height = videoRef.current.videoHeight;
       canvas.getContext('2d')?.drawImage(videoRef.current, 0, 0);
-      canvas.toBlob(blob => {
+      canvas.toBlob((blob: Blob | null) => {
         if (blob) {
           const capturedFile = new File([blob], 'capture.jpg', { type: 'image/jpeg' });
           setFile(capturedFile);
@@ -622,7 +600,7 @@ export function DocumentForm({ onSubmit: handleFormSubmit, onCancel, defaultValu
       }, 'image/jpeg');
     }
     if (stream) {
-      stream.getTracks().forEach(track => track.stop());
+      stream.getTracks().forEach((track: MediaStreamTrack) => track.stop());
     }
     setCameraActive(false);
   };
@@ -636,26 +614,10 @@ export function DocumentForm({ onSubmit: handleFormSubmit, onCancel, defaultValu
     }
   };
 
-  // Persons logic
-  const affectedPersons = watch('affectedPersons');
-  const handlePersonChange = (person: string) => {
-    let updated: string[] = [];
-    if (person === 'ყველა') {
-      updated = ['ყველა'];
-    } else {
-      updated = affectedPersons.includes(person)
-        ? affectedPersons.filter(p => p !== person)
-        : [...affectedPersons.filter(p => p !== 'ყველა'), person];
-    }
-    setValue('affectedPersons', updated);
-  };
-
   const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
-      const newPhotos = Array.from(event.target.files);
+      const newPhotos: File[] = Array.from(event.target.files);
       setPhotos([...photos, ...newPhotos]);
-
-      // შევქმნათ preview URLs
       const newPreviewUrls = newPhotos.map(file => URL.createObjectURL(file));
       setPreviewUrls([...previewUrls, ...newPreviewUrls]);
     }
@@ -670,24 +632,12 @@ export function DocumentForm({ onSubmit: handleFormSubmit, onCancel, defaultValu
     setPreviewUrls(newPreviewUrls);
   };
 
-  const handleSubmit = async (data: CreateDocumentDto) => {
-    console.log('ფორმის მონაცემები:', data);
-    console.log('საფრთხეები:', hazards);
-    console.log('ფოტოები:', photos);
-    console.log('მთავარი ფოტო:', file);
-
-    // Combine form data with hazards
-    const formattedData = {
+  const handleFormSubmitInternal = async (data: CreateDocumentDto) => {
+    const formattedData: CreateDocumentDto = {
       ...data,
-      date: data.date.toISOString(),
-      time: data.time.toISOString(),
-      reviewDate: data.reviewDate.toISOString(),
-      photos: photos.filter(photo => photo instanceof File),
-      hazards: hazards // Add hazards to the form data
+      hazards: hazards as unknown as CreateDocumentDto['hazards'],
+      photos: photos.length > 0 ? photos : undefined,
     };
-
-    console.log('ფორმატირებული მონაცემები:', formattedData);
-
     try {
       if (file) {
         await handleFormSubmit(formattedData, file);
@@ -714,7 +664,7 @@ export function DocumentForm({ onSubmit: handleFormSubmit, onCancel, defaultValu
       <DialogContent>
         <Box 
           component="form" 
-          onSubmit={submitForm(handleSubmit)} 
+          onSubmit={submitForm(handleFormSubmitInternal)} 
           noValidate 
           sx={{ mt: 2 }}
           role="form"
@@ -723,28 +673,28 @@ export function DocumentForm({ onSubmit: handleFormSubmit, onCancel, defaultValu
           <Typography variant="h5" mb={2} fontWeight={600}>ახალი დოკუმენტი</Typography>
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
-              <Controller name="evaluatorName" control={control} rules={{ required: true }} render={({ field }) => (
+              <Controller name="evaluatorName" control={control} rules={{ required: true }} render={({ field }: { field: any }) => (
                 <TextField {...field} label="შემფასებლის სახელი" fullWidth required error={!!errors.evaluatorName} />
               )} />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <Controller name="evaluatorLastName" control={control} rules={{ required: true }} render={({ field }) => (
+              <Controller name="evaluatorLastName" control={control} rules={{ required: true }} render={({ field }: { field: any }) => (
                 <TextField {...field} label="შემფასებლის გვარი" fullWidth required error={!!errors.evaluatorLastName} />
               )} />
             </Grid>
             <Grid item xs={12}>
-              <Controller name="objectName" control={control} rules={{ required: true }} render={({ field }) => (
+              <Controller name="objectName" control={control} rules={{ required: true }} render={({ field }: { field: any }) => (
                 <TextField {...field} label="ობიექტის დასახელება" fullWidth required error={!!errors.objectName} />
               )} />
             </Grid>
             <Grid item xs={12}>
-              <Controller name="workDescription" control={control} rules={{ required: true }} render={({ field }) => (
+              <Controller name="workDescription" control={control} rules={{ required: true }} render={({ field }: { field: any }) => (
                 <TextField {...field} label="სამუშაოს მოკლე აღწერა" fullWidth required multiline rows={2} error={!!errors.workDescription} />
               )} />
             </Grid>
             <Grid item xs={6}>
               <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ka}>
-                <Controller name="date" control={control} rules={{ required: true }} render={({ field }) => (
+                <Controller name="date" control={control} rules={{ required: true }} render={({ field }: { field: any }) => (
                   <DatePicker 
                     label="თარიღი" 
                     {...field} 
@@ -761,7 +711,7 @@ export function DocumentForm({ onSubmit: handleFormSubmit, onCancel, defaultValu
             </Grid>
             <Grid item xs={6}>
               <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ka}>
-                <Controller name="time" control={control} rules={{ required: true }} render={({ field }) => (
+                <Controller name="time" control={control} rules={{ required: true }} render={({ field }: { field: any }) => (
                   <TimePicker 
                     label="დრო" 
                     {...field} 
@@ -805,93 +755,6 @@ export function DocumentForm({ onSubmit: handleFormSubmit, onCancel, defaultValu
                   />
                 </Box>
               )}
-            </Grid>
-            <Grid item xs={12}>
-              <Typography fontWeight={500} mb={1}>პირთა წრე</Typography>
-              <Box display="flex" flexWrap="wrap" gap={1}>
-                {PERSONS.map(person => (
-                  <FormControlLabel
-                    key={person}
-                    control={<Checkbox checked={affectedPersons.includes(person)} onChange={() => handlePersonChange(person)} />}
-                    label={person}
-                  />
-                ))}
-              </Box>
-            </Grid>
-            <Grid item xs={12}>
-              <Controller name="injuryDescription" control={control} rules={{ required: true }} render={({ field }) => (
-                <TextField {...field} label="დაშავებულის დაზიანება" fullWidth required multiline rows={2} error={!!errors.injuryDescription} />
-              )} />
-            </Grid>
-            <Grid item xs={12}>
-              <Controller name="existingControlMeasures" control={control} rules={{ required: true }} render={({ field }) => (
-                <TextField {...field} label="არსებული კონტროლის ზომები" fullWidth required multiline rows={2} error={!!errors.existingControlMeasures} />
-              )} />
-            </Grid>
-            <Grid item xs={12}>
-              <Typography fontWeight={500} mb={1}>საწყისი რისკი</Typography>
-              <Box display="flex" gap={2}>
-                <Controller name="initialRisk.probability" control={control} render={({ field }) => (
-                  <TextField {...field} select label="ალბათობა" SelectProps={{ native: true }} sx={{ minWidth: 100 }}>
-                    {riskOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                  </TextField>
-                )} />
-                <Controller name="initialRisk.severity" control={control} render={({ field }) => (
-                  <TextField {...field} select label="სიმძიმე" SelectProps={{ native: true }} sx={{ minWidth: 100 }}>
-                    {riskOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                  </TextField>
-                )} />
-                <TextField label="ჯამი" value={watch('initialRisk.total')} InputProps={{ readOnly: true }} sx={{ minWidth: 100 }} />
-              </Box>
-            </Grid>
-            <Grid item xs={12}>
-              <Controller name="additionalControlMeasures" control={control} rules={{ required: true }} render={({ field }) => (
-                <TextField {...field} label="დამატებითი კონტროლის ზომები" fullWidth required multiline rows={2} error={!!errors.additionalControlMeasures} />
-              )} />
-            </Grid>
-            <Grid item xs={12}>
-              <Typography fontWeight={500} mb={1}>ნარჩენი რისკი</Typography>
-              <Box display="flex" gap={2}>
-                <Controller name="residualRisk.probability" control={control} render={({ field }) => (
-                  <TextField {...field} select label="ალბათობა" SelectProps={{ native: true }} sx={{ minWidth: 100 }}>
-                    {riskOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                  </TextField>
-                )} />
-                <Controller name="residualRisk.severity" control={control} render={({ field }) => (
-                  <TextField {...field} select label="სიმძიმე" SelectProps={{ native: true }} sx={{ minWidth: 100 }}>
-                    {riskOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                  </TextField>
-                )} />
-                <TextField label="ჯამი" value={watch('residualRisk.total')} InputProps={{ readOnly: true }} sx={{ minWidth: 100 }} />
-              </Box>
-              {riskWarning && <Alert severity="warning" sx={{ mt: 1 }}>საჭიროა დამატებითი კონტროლის ზომები</Alert>}
-            </Grid>
-            <Grid item xs={12}>
-              <Controller name="requiredMeasures" control={control} rules={{ required: true }} render={({ field }) => (
-                <TextField {...field} label="გასატარებელი ზომები/რეაგირება" fullWidth required multiline rows={2} error={!!errors.requiredMeasures} />
-              )} />
-            </Grid>
-            <Grid item xs={12}>
-              <Controller name="responsiblePerson" control={control} rules={{ required: true }} render={({ field }) => (
-                <TextField {...field} label="შესრულებაზე პასუხისმგებელი" fullWidth required error={!!errors.responsiblePerson} />
-              )} />
-            </Grid>
-            <Grid item xs={12}>
-              <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ka}>
-                <Controller name="reviewDate" control={control} rules={{ required: true }} render={({ field }) => (
-                  <DatePicker 
-                    label="გადახედვის სავარაუდო დრო" 
-                    {...field} 
-                    slotProps={{
-                      textField: {
-                        fullWidth: true,
-                        required: true,
-                        error: !!errors.reviewDate
-                      }
-                    }}
-                  />
-                )} />
-              </LocalizationProvider>
             </Grid>
             <Grid item xs={12}>
               <Typography variant="h6" gutterBottom>
@@ -950,10 +813,7 @@ export function DocumentForm({ onSubmit: handleFormSubmit, onCancel, defaultValu
               </Button>
             </Grid>
             <Grid item xs={12}>
-              <HazardSection 
-                hazards={hazards}
-                onHazardsChange={setHazards}
-              />
+              <HazardSection hazards={hazards} onHazardsChange={setHazards} />
             </Grid>
             <Grid item xs={12}>
               <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2 }}>
