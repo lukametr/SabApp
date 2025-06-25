@@ -22,4 +22,39 @@ services:
       - key: CORS_ORIGIN
         value: https://saba-app.onrender.com
     healthCheckPath: /api/health
+    autoDeploy: true
+
+  # ბექენდი - მხოლოდ API
+  - type: web
+    name: saba-backend
+    env: node
+    rootDir: apps/backend
+    buildCommand: pnpm install && pnpm run build
+    startCommand: pnpm run start:prod
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: JWT_SECRET
+        sync: false
+      - key: CORS_ORIGIN
+        value: https://saba-frontend.onrender.com
+    healthCheckPath: /api/health
+    autoDeploy: true
+
+  # ფრონტენდი - Next.js static export
+  - type: web
+    name: saba-frontend
+    env: node
+    rootDir: apps/frontend
+    buildCommand: pnpm install && pnpm run build && pnpm run export
+    startCommand: npx serve out -p $PORT
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        value: https://saba-backend.onrender.com/api
+      - key: PORT
+        value: 3000
     autoDeploy: true 
