@@ -12,9 +12,7 @@ async function bootstrap() {
   });
 
   // Global prefix
-  app.setGlobalPrefix('api', {
-    exclude: ['/'],
-  });
+  app.setGlobalPrefix('api');
 
   // Security headers
   app.use(helmet({
