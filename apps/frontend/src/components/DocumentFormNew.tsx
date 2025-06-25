@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import Image from 'next/image';
 import { Box, Button, TextField, Typography, Grid, Checkbox, FormControlLabel, Alert, Chip, Dialog, DialogTitle, DialogContent, IconButton, Paper, Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -276,7 +277,13 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
                 )}
                 {hazard.mediaPreview && cameraActive !== hazard.id && (
                   <Box mt={2}>
-                    <img src={hazard.mediaPreview} alt="preview" style={{ maxWidth: 200, borderRadius: 8 }} />
+                    <Image 
+                      src={hazard.mediaPreview} 
+                      alt="preview" 
+                      width={200}
+                      height={150}
+                      style={{ maxWidth: 200, borderRadius: 8, objectFit: 'cover' }}
+                    />
                   </Box>
                 )}
               </Grid>
@@ -476,9 +483,11 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
                         overflow: 'hidden',
                       }}
                     >
-                      <img
+                      <Image
                         src={url}
                         alt={`Preview ${index + 1}`}
+                        width={150}
+                        height={150}
                         style={{
                           width: '100%',
                           height: '100%',
