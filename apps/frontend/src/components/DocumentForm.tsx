@@ -43,8 +43,6 @@ interface HazardData {
   requiredMeasures: string;
   responsiblePerson: string;
   reviewDate: Date;
-  photos: File[];
-  previewUrls: string[];
 }
 
 interface HazardSectionProps {
@@ -72,8 +70,6 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
       requiredMeasures: '',
       responsiblePerson: '',
       reviewDate: new Date(),
-      photos: [],
-      previewUrls: []
     };
     onHazardsChange([...hazards, newHazard]);
     setExpandedHazard(newHazard.id);
@@ -157,36 +153,6 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
           : [...hazard.affectedPersons.filter(p => p !== 'ყველა'), person];
       }
       updateHazard(hazardId, { affectedPersons: updated });
-    }
-  };
-
-  const handlePhotoChange = (hazardId: string, event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      const newPhotos = Array.from(event.target.files);
-      const hazard = hazards.find(h => h.id === hazardId);
-      if (hazard) {
-        const updatedPhotos = [...hazard.photos, ...newPhotos];
-        const newPreviewUrls = newPhotos.map(file => URL.createObjectURL(file));
-        const updatedPreviewUrls = [...hazard.previewUrls, ...newPreviewUrls];
-        updateHazard(hazardId, {
-          photos: updatedPhotos,
-          previewUrls: updatedPreviewUrls
-        });
-      }
-    }
-  };
-
-  const handleRemovePhoto = (hazardId: string, index: number) => {
-    const hazard = hazards.find(h => h.id === hazardId);
-    if (hazard) {
-      const newPhotos = [...hazard.photos];
-      const newPreviewUrls = [...hazard.previewUrls];
-      newPhotos.splice(index, 1);
-      newPreviewUrls.splice(index, 1);
-      updateHazard(hazardId, {
-        photos: newPhotos,
-        previewUrls: newPreviewUrls
-      });
     }
   };
 
@@ -474,63 +440,6 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
                     }}
                   />
                 </LocalizationProvider>
-              </Grid>
-
-              <Grid item xs={12}>
-                <Typography variant="h6" gutterBottom>
-                  ფოტოები
-                </Typography>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
-                  {hazard.previewUrls.map((url, index) => (
-                    <Paper
-                      key={index}
-                      sx={{
-                        position: 'relative',
-                        width: 150,
-                        height: 150,
-                        overflow: 'hidden',
-                      }}
-                    >
-                      <Image
-                        src={url}
-                        alt={`Preview ${index + 1}`}
-                        width={150}
-                        height={150}
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover',
-                        }}
-                      />
-                      <IconButton
-                        sx={{
-                          position: 'absolute',
-                          top: 5,
-                          right: 5,
-                          bgcolor: 'rgba(255, 255, 255, 0.8)',
-                          '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.9)' },
-                        }}
-                        onClick={() => handleRemovePhoto(hazard.id, index)}
-                      >
-                        <Delete />
-                      </IconButton>
-                    </Paper>
-                  ))}
-                </Box>
-                <Button
-                  variant="outlined"
-                  component="label"
-                  startIcon={<PhotoCamera />}
-                >
-                  ფოტოების ატვირთვა
-                  <input
-                    type="file"
-                    hidden
-                    multiple
-                    accept="image/*"
-                    onChange={(e) => handlePhotoChange(hazard.id, e)}
-                  />
-                </Button>
               </Grid>
             </Grid>
           </AccordionDetails>
