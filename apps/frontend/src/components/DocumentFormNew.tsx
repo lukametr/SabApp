@@ -571,7 +571,7 @@ export function DocumentForm({ onSubmit: handleFormSubmit, onCancel, defaultValu
       requiredMeasures: hazard.requiredMeasures,
       responsiblePerson: hazard.responsiblePerson,
       reviewDate: hazard.reviewDate,
-      photos: [] // TODO: Handle photo uploads
+      photos: hazard.photos
     }));
 
     // Combine form data with hazards
