@@ -37,4 +37,8 @@ next-env.d.ts
 
 # IDE
 .idea
-.vscode 
+.vscode
+
+# uploads
+apps/backend/uploads/*
+!apps/backend/uploads/.gitkeep 

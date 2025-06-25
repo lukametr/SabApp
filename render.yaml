@@ -1,13 +1,14 @@
 services:
-  # ბექენდის სერვისი
+  # მთავარი სერვისი - ფრონტენდი და ბექენდი ერთად
   - type: web
-    name: saba-api
+    name: saba-app
     env: node
     rootDir: .
     buildCommand: |
-      cd apps/frontend && pnpm install --no-frozen-lockfile && pnpm run clean && pnpm run build
-      cd ../backend && pnpm install && pnpm run build
-    startCommand: cd apps/backend && pnpm run start:prod
+      pnpm install --frozen-lockfile
+      cd apps/frontend && pnpm build
+      cd ../backend && pnpm build
+    startCommand: cd apps/backend && pnpm start:prod
     envVars:
       - key: MONGODB_URI
         sync: false
@@ -16,7 +17,7 @@ services:
       - key: PORT
         value: 10000
       - key: NEXT_PUBLIC_API_URL
-        value: https://saba-api.onrender.com
+        value: https://saba-app.onrender.com
       - key: JWT_SECRET
         sync: false
       - key: FRONTEND_URL
@@ -24,42 +25,4 @@ services:
       - key: CORS_ORIGIN
         value: https://saba-app.onrender.com
     healthCheckPath: /api/health
-    autoDeploy: true
-
-  # ფრონტენდის სერვისი
-  - type: web
-    name: saba-frontend
-    env: node
-    buildCommand: |
-      npm install -g pnpm@8
-      pnpm install --frozen-lockfile
-      cd apps/frontend
-      rm -rf .next node_modules
-      pnpm install
-      pnpm build
-    startCommand: cd apps/frontend && pnpm start
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: NEXT_PUBLIC_API_URL
-        value: https://saba-api-njd9.onrender.com
-      - key: NEXT_TELEMETRY_DISABLED
-        value: "1"
-      - key: NODE_OPTIONS
-        value: "--max-old-space-size=4096"
-    healthCheckPath: /
-    autoDeploy: true
-
-  # ფრონტენდის სერვისი
-  - type: web
-    name: saba-app
-    env: node
-    buildCommand: cd apps/frontend && pnpm install --no-frozen-lockfile && pnpm run clean && pnpm run build
-    startCommand: cd apps/frontend && pnpm run start
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: PORT
-        value: 3000
-      - key: NEXT_PUBLIC_API_URL
-        value: https://saba-api.onrender.com/api 
+    autoDeploy: true 

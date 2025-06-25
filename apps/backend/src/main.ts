@@ -34,7 +34,7 @@ async function bootstrap() {
 
   // CORS კონფიგურაცია
   app.enableCors({
-    origin: ['https://saba-app.onrender.com', 'http://localhost:3000', 'http://localhost:3001'],
+    origin: ['https://saba-app.onrender.com', 'http://localhost:3000', 'http://localhost:3001', 'http://localhost:10000'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     credentials: true,
     allowedHeaders: [
