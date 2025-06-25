@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import Image from 'next/image';
 import { Box, Button, TextField, Typography, Grid, Checkbox, FormControlLabel, Alert, Chip, Dialog, DialogTitle, DialogContent, IconButton, Paper, Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -284,7 +285,13 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
                 )}
                 {hazard.mediaPreview && cameraActive !== hazard.id && (
                   <Box mt={2}>
-                    <img src={hazard.mediaPreview} alt="preview" style={{ maxWidth: 200, borderRadius: 8 }} />
+                    <Image 
+                      src={hazard.mediaPreview} 
+                      alt="preview" 
+                      width={200}
+                      height={150}
+                      style={{ maxWidth: 200, borderRadius: 8, objectFit: 'cover' }}
+                    />
                   </Box>
                 )}
               </Grid>
@@ -484,9 +491,11 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
                         overflow: 'hidden',
                       }}
                     >
-                      <img
+                      <Image
                         src={url}
                         alt={`Preview ${index + 1}`}
+                        width={150}
+                        height={150}
                         style={{
                           width: '100%',
                           height: '100%',
@@ -564,19 +573,19 @@ export function DocumentForm({ onSubmit: handleFormSubmit, onCancel, defaultValu
     },
   });
 
-  // Risk calculation
+  // Calculate initial risk total
   React.useEffect(() => {
     const initialProb = Number(watch('initialRisk.probability')) || 0;
     const initialSev = Number(watch('initialRisk.severity')) || 0;
     setValue('initialRisk.total', initialProb + initialSev);
-  }, [watch('initialRisk.probability'), watch('initialRisk.severity'), setValue]);
+  }, [watch, setValue]);
 
   React.useEffect(() => {
     const residualProb = Number(watch('residualRisk.probability')) || 0;
     const residualSev = Number(watch('residualRisk.severity')) || 0;
     setValue('residualRisk.total', residualProb + residualSev);
     setRiskWarning(residualProb + residualSev >= 9);
-  }, [watch('residualRisk.probability'), watch('residualRisk.severity'), setValue]);
+  }, [watch, setValue]);
 
   // Camera logic
   const handleCamera = async () => {
@@ -786,7 +795,15 @@ export function DocumentForm({ onSubmit: handleFormSubmit, onCancel, defaultValu
                 </Box>
               )}
               {mediaPreview && !cameraActive && (
-                <Box mt={2}><img src={mediaPreview} alt="preview" style={{ maxWidth: 200, borderRadius: 8 }} /></Box>
+                <Box mt={2}>
+                  <Image 
+                    src={mediaPreview} 
+                    alt="preview" 
+                    width={200}
+                    height={150}
+                    style={{ maxWidth: 200, borderRadius: 8, objectFit: 'cover' }}
+                  />
+                </Box>
               )}
             </Grid>
             <Grid item xs={12}>
@@ -891,9 +908,11 @@ export function DocumentForm({ onSubmit: handleFormSubmit, onCancel, defaultValu
                       overflow: 'hidden',
                     }}
                   >
-                    <img
+                    <Image
                       src={url}
                       alt={`Preview ${index + 1}`}
+                      width={150}
+                      height={150}
                       style={{
                         width: '100%',
                         height: '100%',

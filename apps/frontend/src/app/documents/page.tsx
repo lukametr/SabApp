@@ -69,8 +69,19 @@ export default function DocumentsPage() {
   // უნივერსალური onSubmit ფუნქცია
   const handleFormSubmit = async (data: CreateDocumentDto) => {
     if (selectedDocument) {
-      // რედაქტირების რეჟიმი
-      await handleUpdate({ ...data, id: selectedDocument.id });
+      // რედაქტირების რეჟიმი - გადავაკეთოთ UpdateDocumentDto-ში
+      const updateData: UpdateDocumentDto = {
+        id: selectedDocument.id,
+        evaluatorName: data.evaluatorName,
+        evaluatorLastName: data.evaluatorLastName,
+        objectName: data.objectName,
+        workDescription: data.workDescription,
+        date: data.date,
+        time: data.time,
+        hazards: data.hazards,
+        photos: [] // UpdateDocumentDto-ში photos არის string[]
+      };
+      await handleUpdate(updateData);
     } else {
       // შექმნის რეჟიმი
       await handleCreate(data);
