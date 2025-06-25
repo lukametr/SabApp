@@ -4,7 +4,6 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { DocumentsModule } from './documents/documents.module';
 
 @Module({
@@ -25,6 +24,6 @@ import { DocumentsModule } from './documents/documents.module';
     DocumentsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [],
 })
 export class AppModule {}

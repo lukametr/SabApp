@@ -4,11 +4,8 @@ services:
     name: saba-app
     env: node
     rootDir: .
-    buildCommand: |
-      pnpm install --frozen-lockfile
-      cd apps/frontend && pnpm build
-      cd ../backend && pnpm build
-    startCommand: cd apps/backend && pnpm start:prod
+    buildCommand: pnpm run build:render
+    startCommand: pnpm run start:prod
     envVars:
       - key: MONGODB_URI
         sync: false
