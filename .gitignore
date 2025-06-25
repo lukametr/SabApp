@@ -41,4 +41,8 @@ next-env.d.ts
 
 # uploads
 apps/backend/uploads/*
-!apps/backend/uploads/.gitkeep 
+!apps/backend/uploads/.gitkeep
+
+# build artifacts
+apps/backend/dist/
+apps/frontend/out/ 

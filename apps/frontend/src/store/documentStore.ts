@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { Document, CreateDocumentDto, UpdateDocumentDto } from '../types/document';
-import { documentApi } from '../services/api';
+import { documentApi } from '../services/api/documentApi';
 
 interface DocumentStore {
   documents: Document[];

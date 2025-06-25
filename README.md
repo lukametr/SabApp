@@ -1,20 +1,6 @@
-# SabApp - უსაფრთხოების შეფასების სისტემა
+# SabApp
 
-## აღწერა
-SabApp არის ვებ-აპლიკაცია, რომელიც საშუალებას გაძლევთ შეაფასოთ სამუშაო ადგილის უსაფრთხოება და შექმნათ შესაბამისი დოკუმენტაცია.
-
-## ფუნქციონალი
-- დოკუმენტების შექმნა და მართვა
-- რისკების შეფასება
-- ფოტოების ატვირთვა
-- დოკუმენტების ექსპორტი
-- მონაცემთა ბაზის ინტეგრაცია
-
-## ტექნოლოგიები
-- Frontend: Next.js, TypeScript, Material-UI
-- Backend: Node.js, Express, TypeScript
-- Database: MongoDB Atlas
-- Deployment: Render
+A full-stack application for document management with hazard assessment features.
 
 ## 🚀 Deployment on Render
 
@@ -39,16 +25,17 @@ Set these environment variables in your Render service:
 1. Connect your GitHub repository to Render
 2. Create a new Web Service
 3. Use the following settings:
-   - **Build Command**: `pnpm install --frozen-lockfile && cd apps/frontend && pnpm build && cd ../backend && pnpm build`
-   - **Start Command**: `cd apps/backend && pnpm start:prod`
+   - **Build Command**: `pnpm run build:render`
+   - **Start Command**: `pnpm run start:prod`
    - **Health Check Path**: `/api/health`
 
 ### Architecture
 
-- **Frontend**: Next.js with static export
+- **Frontend**: Next.js with static export (`apps/frontend/out`)
 - **Backend**: NestJS with MongoDB
 - **Static Files**: Served by NestJS ServeStaticModule
 - **API**: Available at `/api/*` endpoints
+- **Root**: Serves frontend index.html
 
 ### Local Development
 
@@ -61,6 +48,9 @@ pnpm dev
 
 # Build for production
 pnpm build
+
+# Start production server
+pnpm start:prod
 ```
 
 ### API Endpoints
@@ -71,6 +61,49 @@ pnpm build
 - `POST /api/documents` - Create new document
 - `PUT /api/documents/:id` - Update document
 - `DELETE /api/documents/:id` - Delete document
+
+### Troubleshooting
+
+#### Build Issues
+- Ensure all dependencies are installed: `pnpm install --frozen-lockfile`
+- Check TypeScript errors: `pnpm run lint`
+- Verify import paths are correct
+
+#### Runtime Issues
+- Check MongoDB connection
+- Verify environment variables are set
+- Check logs for specific error messages
+
+#### Frontend Not Loading
+- Ensure static export is working: `cd apps/frontend && pnpm build`
+- Check if `apps/frontend/out` directory exists
+- Verify ServeStaticModule path in `apps/backend/src/app.module.ts`
+
+## Features
+
+- Document creation and management
+- Hazard assessment with risk calculation
+- File upload support
+- Camera integration
+- Responsive Material-UI interface
+- JWT authentication
+- MongoDB data persistence
+
+## აღწერა
+SabApp არის ვებ-აპლიკაცია, რომელიც საშუალებას გაძლევთ შეაფასოთ სამუშაო ადგილის უსაფრთხოება და შექმნათ შესაბამისი დოკუმენტაცია.
+
+## ფუნქციონალი
+- დოკუმენტების შექმნა და მართვა
+- რისკების შეფასება
+- ფოტოების ატვირთვა
+- დოკუმენტების ექსპორტი
+- მონაცემთა ბაზის ინტეგრაცია
+
+## ტექნოლოგიები
+- Frontend: Next.js, TypeScript, Material-UI
+- Backend: Node.js, Express, TypeScript
+- Database: MongoDB Atlas
+- Deployment: Render
 
 ## ინსტალაცია
 

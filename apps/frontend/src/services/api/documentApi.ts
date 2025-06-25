@@ -1,4 +1,4 @@
-import { api } from './api';
+import api from '../../lib/api';
 import { Document, CreateDocumentDto, UpdateDocumentDto } from '../../types/document';
 
 export const documentApi = {
