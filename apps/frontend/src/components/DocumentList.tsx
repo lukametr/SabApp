@@ -14,7 +14,7 @@ import {
   Tooltip,
 } from '@mui/material';
 import { Edit, Delete, Visibility } from '@mui/icons-material';
-import { Document } from '../types/document';
+import { Document, Hazard } from '../types/document';
 
 interface DocumentListProps {
   documents: Document[];
@@ -53,7 +53,7 @@ const DocumentList: React.FC<DocumentListProps> = React.memo(({
     return new Date(date).toLocaleDateString('ka-GE');
   }, []);
 
-  const getMaxRisk = useCallback((hazards: any[]): number => {
+  const getMaxRisk = useCallback((hazards: Hazard[]): number => {
     if (!hazards || hazards.length === 0) return 0;
     return Math.max(...hazards.map(h => h.residualRisk?.total || 0));
   }, []);
