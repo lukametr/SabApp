@@ -26,7 +26,7 @@ async function bootstrap() {
         scriptSrc: ["'self'", "'unsafe-inline'"],
         styleSrc: ["'self'", "'unsafe-inline'"],
         imgSrc: ["'self'", "data:", "https:"],
-        connectSrc: ["'self'", "https://saba-app.onrender.com"],
+        connectSrc: ["'self'", "https://saba-frontend.onrender.com"],
       },
     },
   }));
@@ -36,7 +36,7 @@ async function bootstrap() {
 
   // CORS კონფიგურაცია
   app.enableCors({
-    origin: ['https://saba-app.onrender.com', 'http://localhost:3000', 'http://localhost:3001', 'http://localhost:10000'],
+    origin: ['https://saba-frontend.onrender.com', 'http://localhost:3000', 'http://localhost:3001', 'http://localhost:10000'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     credentials: true,
     allowedHeaders: [
