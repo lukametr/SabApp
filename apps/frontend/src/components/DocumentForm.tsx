@@ -571,6 +571,16 @@ export function DocumentForm({ onSubmit: handleFormSubmit, onCancel, defaultValu
             <Grid item xs={12}>
               <HazardSection hazards={hazards} onHazardsChange={setHazards} />
             </Grid>
+            <Grid item xs={12}>
+              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2 }}>
+                <Button variant="outlined" onClick={onCancel}>
+                  გაუქმება
+                </Button>
+                <Button type="submit" variant="contained">
+                  {defaultValues ? 'განახლება' : 'შენახვა'}
+                </Button>
+              </Box>
+            </Grid>
           </Grid>
         </Box>
       </DialogContent>
