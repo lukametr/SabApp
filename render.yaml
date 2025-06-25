@@ -1,29 +1,4 @@
 services:
-  # მთავარი სერვისი - ფრონტენდი და ბექენდი ერთად
-  - type: web
-    name: saba-app
-    env: node
-    rootDir: .
-    buildCommand: pnpm install --frozen-lockfile && cd apps/frontend && pnpm build && cd ../backend && pnpm build
-    startCommand: cd apps/backend && pnpm start:prod
-    envVars:
-      - key: MONGODB_URI
-        sync: false
-      - key: NODE_ENV
-        value: production
-      - key: PORT
-        value: 10000
-      - key: NEXT_PUBLIC_API_URL
-        value: https://saba-app.onrender.com/api
-      - key: JWT_SECRET
-        sync: false
-      - key: FRONTEND_URL
-        value: https://saba-app.onrender.com
-      - key: CORS_ORIGIN
-        value: https://saba-app.onrender.com
-    healthCheckPath: /api/health
-    autoDeploy: true
-
   # ბექენდი - მხოლოდ API
   - type: web
     name: saba-backend
@@ -50,7 +25,7 @@ services:
     name: saba-frontend
     env: node
     rootDir: apps/frontend
-    buildCommand: pnpm install && pnpm run build && pnpm run export
+    buildCommand: pnpm install && pnpm run build
     startCommand: npx serve out -p $PORT
     envVars:
       - key: NEXT_PUBLIC_API_URL
