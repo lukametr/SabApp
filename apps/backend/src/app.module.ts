@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AppController } from './app.controller';
-import { RootController } from './app.controller';
 import { DocumentsModule } from './documents/documents.module';
 
 @Module({
@@ -13,7 +12,7 @@ import { DocumentsModule } from './documents/documents.module';
     MongooseModule.forRoot(process.env.MONGODB_URI || 'mongodb://localhost:27017/sabap'),
     DocumentsModule,
   ],
-  controllers: [AppController, RootController],
+  controllers: [AppController],
   providers: [],
 })
 export class AppModule {}
