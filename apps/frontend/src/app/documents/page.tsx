@@ -49,6 +49,23 @@ export default function DocumentsPage() {
     setIsDeleteDialogOpen(true);
   };
 
+  // ფუნქცია Document-ის CreateDocumentDto-ში გადასაყვანად
+  const convertDocumentToCreateDto = (doc: Document): Partial<CreateDocumentDto> => {
+    return {
+      evaluatorName: doc.evaluatorName,
+      evaluatorLastName: doc.evaluatorLastName,
+      objectName: doc.objectName,
+      workDescription: doc.workDescription,
+      date: doc.date,
+      time: doc.time,
+      hazards: doc.hazards.map(hazard => ({
+        ...hazard,
+        photos: [] // ფოტოები ცარიელია რედაქტირებისას
+      })),
+      photos: [] // ფოტოები ცარიელია რედაქტირებისას
+    };
+  };
+
   return (
     <Box p={3}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
@@ -78,7 +95,7 @@ export default function DocumentsPage() {
           setIsFormOpen(false);
           setSelectedDocument(null);
         }}
-        defaultValues={selectedDocument || undefined}
+        defaultValues={selectedDocument ? convertDocumentToCreateDto(selectedDocument) : undefined}
         onSubmit={selectedDocument ? handleUpdate : handleCreate}
       />
 
