@@ -1,11 +1,11 @@
 services:
-  # ბექენდი
+  # მთავარი სერვისი - ფრონტენდი და ბექენდი ერთად
   - type: web
-    name: saba-backend
+    name: saba-app
     env: node
-    rootDir: apps/backend
-    buildCommand: npm install && npm run build
-    startCommand: npm run start:prod
+    rootDir: .
+    buildCommand: pnpm install --frozen-lockfile && cd apps/frontend && pnpm build && cd ../backend && pnpm build
+    startCommand: cd apps/backend && pnpm start:prod
     envVars:
       - key: MONGODB_URI
         sync: false
@@ -13,23 +13,13 @@ services:
         value: production
       - key: PORT
         value: 10000
+      - key: NEXT_PUBLIC_API_URL
+        value: https://saba-app.onrender.com/api
       - key: JWT_SECRET
         sync: false
+      - key: FRONTEND_URL
+        value: https://saba-app.onrender.com
       - key: CORS_ORIGIN
-        value: https://saba-frontend.onrender.com
+        value: https://saba-app.onrender.com
     healthCheckPath: /api/health
-    autoDeploy: true
-
-  # ფრონტენდი
-  - type: web
-    name: saba-frontend
-    env: node
-    rootDir: apps/frontend
-    buildCommand: npm install && npm run build
-    startCommand: npm start
-    envVars:
-      - key: NEXT_PUBLIC_API_URL
-        value: https://saba-backend.onrender.com/api
-      - key: PORT
-        value: 3000
     autoDeploy: true 
