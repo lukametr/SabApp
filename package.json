@@ -8,11 +8,14 @@
   ],
   "scripts": {
     "dev": "pnpm run --parallel dev",
-    "build": "pnpm run --parallel build",
+    "build": "pnpm run --filter=frontend build && pnpm run --filter=backend build",
     "start": "pnpm run --parallel start",
+    "start:prod": "cd apps/backend && pnpm start:prod",
     "lint": "pnpm run --parallel lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
-    "clean": "pnpm run --parallel clean"
+    "clean": "pnpm run --parallel clean",
+    "build:prod": "bash scripts/build.sh",
+    "start:prod:script": "bash scripts/start.sh"
   },
   "devDependencies": {
     "@types/node": "^20.19.0",
