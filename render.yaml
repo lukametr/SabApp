@@ -14,7 +14,7 @@ services:
       - key: PORT
         value: 10000
       - key: NEXT_PUBLIC_API_URL
-        value: https://saba-app.onrender.com
+        value: https://saba-app.onrender.com/api
       - key: JWT_SECRET
         sync: false
       - key: FRONTEND_URL
