@@ -151,7 +151,7 @@ importers:
         specifier: ^8.0.3
         version: 8.16.0
       multer:
-        specifier: ^1.4.5-lts.1
+        specifier: ^1.4.5-lts.2
         version: 1.4.5-lts.2
       passport:
         specifier: ^0.7.0

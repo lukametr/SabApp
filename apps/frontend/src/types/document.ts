@@ -28,7 +28,7 @@ export interface Hazard {
   requiredMeasures: string;
   responsiblePerson: string;
   reviewDate: Date;
-  photos: string[];
+  photos: File[];
 }
 
 export interface Document {
@@ -59,7 +59,7 @@ export interface CreateDocumentDto {
   date: Date;
   time: Date;
   hazards: Hazard[];
-  photos?: string[];
+  photos?: File[];
 }
 
 export interface UpdateDocumentDto {

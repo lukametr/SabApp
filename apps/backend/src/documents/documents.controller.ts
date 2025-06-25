@@ -4,6 +4,8 @@ import { Response } from 'express';
 import { DocumentsService } from './documents.service';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Controller('documents')
 export class DocumentsController {
@@ -14,12 +16,36 @@ export class DocumentsController {
     { name: 'photos', maxCount: 10 },
     { name: 'hazardPhotos', maxCount: 50 }
   ]))
-  create(@Body() createDocumentDto: CreateDocumentDto, @UploadedFiles() files: any) {
-    // Handle file uploads here if needed
+  async create(@Body() createDocumentDto: CreateDocumentDto, @UploadedFiles() files: any) {
     console.log('Received document data:', createDocumentDto);
     console.log('Received files:', files);
     
-    return this.documentsService.create(createDocumentDto);
+    // შევინახოთ ფაილები
+    const savedPhotos: string[] = [];
+    
+    if (files && files.hazardPhotos) {
+      const uploadsDir = path.join(process.cwd(), 'uploads');
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
+      
+      for (const file of files.hazardPhotos) {
+        const fileName = `${Date.now()}-${file.originalname}`;
+        const filePath = path.join(uploadsDir, fileName);
+        
+        // გადავიტანოთ ფაილი uploads დირექტორიაში
+        fs.writeFileSync(filePath, file.buffer);
+        savedPhotos.push(fileName);
+      }
+    }
+    
+    // დავამატოთ შენახული ფოტოების სახელები დოკუმენტში
+    const documentWithPhotos = {
+      ...createDocumentDto,
+      photos: savedPhotos
+    };
+    
+    return this.documentsService.create(documentWithPhotos);
   }
 
   @Get()

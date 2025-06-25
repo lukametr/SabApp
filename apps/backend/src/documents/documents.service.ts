@@ -18,6 +18,7 @@ export class DocumentsService {
     const createdDocument = new this.documentModel({
       ...createDocumentDto,
       authorId: 'default-user', // TODO: Get from authentication
+      photos: createDocumentDto.photos || [], // დავამატოთ ფოტოების სახელები
     });
     return createdDocument.save();
   }
