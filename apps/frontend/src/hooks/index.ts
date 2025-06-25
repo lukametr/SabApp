@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts';
-import { ROUTES } from '@/constants';
+import { ROUTES, FILE_TYPES, MAX_FILE_SIZE, ERROR_MESSAGES } from '@/constants';
 
 export const useRequireAuth = () => {
   const { user, loading } = useAuth();
@@ -16,7 +16,7 @@ export const useRequireAuth = () => {
   return { user, loading };
 };
 
-export const useForm = <T extends Record<string, any>>(initialState: T) => {
+export const useForm = <T extends Record<string, unknown>>(initialState: T) => {
   const [values, setValues] = useState<T>(initialState);
   const [errors, setErrors] = useState<Partial<Record<keyof T, string>>>({});
 
@@ -43,7 +43,6 @@ export const useForm = <T extends Record<string, any>>(initialState: T) => {
 export const useFileUpload = () => {
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { FILE_TYPES, MAX_FILE_SIZE, ERROR_MESSAGES } = require('@/constants');
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];

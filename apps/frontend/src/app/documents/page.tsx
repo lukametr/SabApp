@@ -5,7 +5,7 @@ import { Box, Button, Dialog, DialogTitle, DialogContent, DialogActions } from '
 import { Add as AddIcon } from '@mui/icons-material';
 import { DocumentList, DocumentForm } from '../../components';
 import { useDocumentStore } from '../../store/documentStore';
-import { Document } from '../../types/document';
+import { Document, CreateDocumentDto, UpdateDocumentDto } from '../../types/document';
 
 export default function DocumentsPage() {
   const { documents, fetchDocuments, createDocument, updateDocument, deleteDocument } = useDocumentStore();
@@ -18,12 +18,12 @@ export default function DocumentsPage() {
     fetchDocuments();
   }, [fetchDocuments]);
 
-  const handleCreate = async (data: any) => {
+  const handleCreate = async (data: CreateDocumentDto) => {
     await createDocument(data);
     setIsFormOpen(false);
   };
 
-  const handleUpdate = async (data: any) => {
+  const handleUpdate = async (data: UpdateDocumentDto) => {
     if (selectedDocument) {
       await updateDocument({ ...data, id: selectedDocument.id });
       setSelectedDocument(null);

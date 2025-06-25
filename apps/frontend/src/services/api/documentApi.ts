@@ -54,7 +54,7 @@ export const documentApi = {
       
       // დავამატოთ ფოტოები
       if (hazard.photos && Array.isArray(hazard.photos)) {
-        hazard.photos.forEach((photo, photoIndex) => {
+        hazard.photos.forEach((photo, _photoIndex) => {
           if (photo instanceof File) {
             formData.append(`hazardPhotos`, photo);
           }
