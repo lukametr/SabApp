@@ -6,14 +6,7 @@ import { join } from 'path';
 @ApiTags('app')
 @Controller()
 export class AppController {
-  @Get()
-  @ApiOperation({ summary: 'აპლიკაციის მთავარი გვერდი' })
-  @ApiResponse({ status: 200, description: 'ფრონტენდის მთავარი გვერდი' })
-  serveFrontend(@Res() res: Response) {
-    res.sendFile(join(__dirname, '..', '..', '..', 'apps', 'frontend', 'out', 'index.html'));
-  }
-
-  @Get('api/health')
+  @Get('health')
   @ApiOperation({ summary: 'აპლიკაციის ჯანმრთელობის შემოწმება' })
   @ApiResponse({ status: 200, description: 'აპლიკაცია მუშაობს' })
   getHealth() {
@@ -24,5 +17,16 @@ export class AppController {
       memory: process.memoryUsage(),
       version: process.env.npm_package_version || '1.0.0',
     };
+  }
+}
+
+@ApiTags('root')
+@Controller()
+export class RootController {
+  @Get()
+  @ApiOperation({ summary: 'აპლიკაციის მთავარი გვერდი' })
+  @ApiResponse({ status: 200, description: 'ფრონტენდის მთავარი გვერდი' })
+  serveFrontend(@Res() res: Response) {
+    res.sendFile(join(__dirname, '..', '..', '..', 'apps', 'frontend', 'out', 'index.html'));
   }
 }
