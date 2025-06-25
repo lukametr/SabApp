@@ -487,7 +487,22 @@ export function DocumentForm({ onSubmit: handleFormSubmit, onCancel, defaultValu
       aria-labelledby="document-form-dialog"
     >
       <DialogTitle id="document-form-dialog">
-        {defaultValues ? 'დოკუმენტის რედაქტირება' : 'ახალი დოკუმენტი'}
+        <Box display="flex" justifyContent="space-between" alignItems="center">
+          <Typography variant="h5" fontWeight={600}>
+            {defaultValues ? 'დოკუმენტის რედაქტირება' : 'ახალი დოკუმენტი'}
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Button variant="outlined" onClick={onCancel}>
+              გაუქმება
+            </Button>
+            <Button 
+              variant="contained" 
+              onClick={submitForm(handleFormSubmitInternal)}
+            >
+              {defaultValues ? 'განახლება' : 'შენახვა'}
+            </Button>
+          </Box>
+        </Box>
       </DialogTitle>
       <DialogContent>
         <Box 
@@ -498,7 +513,6 @@ export function DocumentForm({ onSubmit: handleFormSubmit, onCancel, defaultValu
           role="form"
           tabIndex={-1}
         >
-          <Typography variant="h5" mb={2} fontWeight={600}>ახალი დოკუმენტი</Typography>
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
               <Controller name="evaluatorName" control={control} rules={{ required: true }} render={({ field }: { field: any }) => (
@@ -556,16 +570,6 @@ export function DocumentForm({ onSubmit: handleFormSubmit, onCancel, defaultValu
             </Grid>
             <Grid item xs={12}>
               <HazardSection hazards={hazards} onHazardsChange={setHazards} />
-            </Grid>
-            <Grid item xs={12}>
-              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2 }}>
-                <Button variant="outlined" onClick={onCancel}>
-                  გაუქმება
-                </Button>
-                <Button type="submit" variant="contained">
-                  {defaultValues ? 'განახლება' : 'შენახვა'}
-                </Button>
-              </Box>
             </Grid>
           </Grid>
         </Box>
