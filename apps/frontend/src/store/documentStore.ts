@@ -60,7 +60,7 @@ export const useDocumentStore = create<DocumentStore>((set) => ({
     try {
       set({ isLoading: true, error: null });
       console.log('დოკუმენტის შექმნა:', data, file);
-      const response = await documentApi.create(data, file);
+      const response = await documentApi.create(data);
       console.log('პასუხი:', response);
       set((state) => ({
         documents: [...state.documents, response],

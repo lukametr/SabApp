@@ -52,9 +52,38 @@ export default function Home() {
     setSelectedDocument(null);
   }, []);
 
+  // Convert Document to CreateDocumentDto format for form default values
+  const convertDocumentToCreateDto = useCallback((doc: Document): Partial<CreateDocumentDto> => {
+    return {
+      evaluatorName: doc.evaluatorName,
+      evaluatorLastName: doc.evaluatorLastName,
+      objectName: doc.objectName,
+      workDescription: doc.workDescription,
+      date: doc.date,
+      time: doc.time,
+      hazards: doc.hazards.map(hazard => ({
+        ...hazard,
+        photos: [] // Convert string[] to File[] for form
+      })),
+      photos: [] // Convert string[] to File[] for form
+    };
+  }, []);
+
   const handleSubmit = useCallback(async (data: CreateDocumentDto) => {
     if (editDoc) {
-      await updateDocument({ id: editDoc.id, ...data });
+      // Convert CreateDocumentDto to UpdateDocumentDto format
+      const updateData = {
+        id: editDoc.id,
+        evaluatorName: data.evaluatorName,
+        evaluatorLastName: data.evaluatorLastName,
+        objectName: data.objectName,
+        workDescription: data.workDescription,
+        date: data.date,
+        time: data.time,
+        hazards: data.hazards,
+        photos: [] // UpdateDocumentDto expects string[], not File[]
+      };
+      await updateDocument(updateData);
     } else {
       await handleCreateDocument(data);
     }
@@ -84,7 +113,7 @@ export default function Home() {
       
       {/* DocumentForm with built-in Dialog */}
       <DocumentForm
-        defaultValues={editDoc || undefined}
+        defaultValues={editDoc ? convertDocumentToCreateDto(editDoc) : undefined}
         onSubmit={handleSubmit}
         onCancel={handleCloseDialog}
         open={open}

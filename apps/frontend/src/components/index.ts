@@ -1,3 +1,3 @@
 export { DocumentList } from './DocumentList';
-export { DocumentForm } from './DocumentFormNew';
+export { DocumentForm } from './DocumentForm';
 export { DocumentView } from './DocumentView'; 
