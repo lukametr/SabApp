@@ -66,6 +66,17 @@ export default function DocumentsPage() {
     };
   };
 
+  // უნივერსალური onSubmit ფუნქცია
+  const handleFormSubmit = async (data: CreateDocumentDto) => {
+    if (selectedDocument) {
+      // რედაქტირების რეჟიმი
+      await handleUpdate({ ...data, id: selectedDocument.id });
+    } else {
+      // შექმნის რეჟიმი
+      await handleCreate(data);
+    }
+  };
+
   return (
     <Box p={3}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
@@ -96,7 +107,7 @@ export default function DocumentsPage() {
           setSelectedDocument(null);
         }}
         defaultValues={selectedDocument ? convertDocumentToCreateDto(selectedDocument) : undefined}
-        onSubmit={selectedDocument ? handleUpdate : handleCreate}
+        onSubmit={handleFormSubmit}
       />
 
       <Dialog
