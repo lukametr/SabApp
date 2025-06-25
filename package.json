@@ -19,6 +19,7 @@
     "start:prod:script": "bash scripts/start.sh"
   },
   "devDependencies": {
+    "@types/axios": "^0.14.4",
     "@types/node": "^20.19.0",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^7.0.0",
@@ -47,6 +48,7 @@
     "@types/compression": "^1.8.1",
     "@types/helmet": "^4.0.0",
     "archiver": "^6.0.1",
+    "axios": "^1.10.0",
     "backend": "^0.0.0",
     "bcryptjs": "^3.0.2",
     "class-transformer": "^0.5.1",
