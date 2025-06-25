@@ -6,6 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "export": "next build",
+    "serve": "npx serve out -p $PORT",
     "lint": "next lint",
     "clean": "rm -rf .next out node_modules",
     "postbuild": "echo 'Frontend built successfully'"
