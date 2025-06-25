@@ -541,15 +541,7 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
 }
 
 export function DocumentForm({ onSubmit: handleFormSubmit, onCancel, defaultValues, open, onClose }: Props) {
-  const [file, setFile] = useState<File | null>(null);
-  const [mediaPreview, setMediaPreview] = useState<string | null>(null);
-  const [cameraActive, setCameraActive] = useState(false);
-  const [stream, setStream] = useState<MediaStream | null>(null);
-  const [photos, setPhotos] = useState<File[]>(defaultValues?.photos ?? []);
-  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [hazards, setHazards] = useState<HazardData[]>(defaultValues?.hazards as HazardData[] ?? []);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
 
   const { control, handleSubmit: submitForm, formState: { errors } } = useForm<CreateDocumentDto>({
     defaultValues: defaultValues || {
@@ -564,86 +556,13 @@ export function DocumentForm({ onSubmit: handleFormSubmit, onCancel, defaultValu
     },
   });
 
-  // Camera logic
-  const handleCamera = async () => {
-    if (!cameraActive) {
-      try {
-        const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
-        setStream(mediaStream);
-        setCameraActive(true);
-        if (videoRef.current) {
-          videoRef.current.srcObject = mediaStream;
-        }
-      } catch {
-        alert('კამერასთან წვდომა ვერ მოხერხდა');
-      }
-    } else {
-      if (stream) {
-        stream.getTracks().forEach((track: MediaStreamTrack) => track.stop());
-      }
-      setCameraActive(false);
-    }
-  };
-
-  const handleCapture = () => {
-    if (videoRef.current) {
-      const canvas = document.createElement('canvas');
-      canvas.width = videoRef.current.videoWidth;
-      canvas.height = videoRef.current.videoHeight;
-      canvas.getContext('2d')?.drawImage(videoRef.current, 0, 0);
-      canvas.toBlob((blob: Blob | null) => {
-        if (blob) {
-          const capturedFile = new File([blob], 'capture.jpg', { type: 'image/jpeg' });
-          setFile(capturedFile);
-          setMediaPreview(URL.createObjectURL(blob));
-        }
-      }, 'image/jpeg');
-    }
-    if (stream) {
-      stream.getTracks().forEach((track: MediaStreamTrack) => track.stop());
-    }
-    setCameraActive(false);
-  };
-
-  // File upload
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    if (f) {
-      setFile(f);
-      setMediaPreview(URL.createObjectURL(f));
-    }
-  };
-
-  const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      const newPhotos: File[] = Array.from(event.target.files);
-      setPhotos([...photos, ...newPhotos]);
-      const newPreviewUrls = newPhotos.map(file => URL.createObjectURL(file));
-      setPreviewUrls([...previewUrls, ...newPreviewUrls]);
-    }
-  };
-
-  const handleRemovePhoto = (index: number) => {
-    const newPhotos = [...photos];
-    const newPreviewUrls = [...previewUrls];
-    newPhotos.splice(index, 1);
-    newPreviewUrls.splice(index, 1);
-    setPhotos(newPhotos);
-    setPreviewUrls(newPreviewUrls);
-  };
-
   const handleFormSubmitInternal = async (data: CreateDocumentDto) => {
     const formattedData: CreateDocumentDto = {
       ...data,
       hazards: hazards as unknown as CreateDocumentDto['hazards'],
-      photos: photos.length > 0 ? photos : undefined,
     };
     try {
-      if (file) {
-        await handleFormSubmit(formattedData, file);
-      } else {
-        await handleFormSubmit(formattedData);
-      }
+      await handleFormSubmit(formattedData);
       onClose();
     } catch (error) {
       console.error('ფორმის გაგზავნის შეცდომა:', error);
@@ -725,92 +644,6 @@ export function DocumentForm({ onSubmit: handleFormSubmit, onCancel, defaultValu
                   />
                 )} />
               </LocalizationProvider>
-            </Grid>
-            <Grid item xs={12}>
-              <Typography fontWeight={500} mb={1}>ამსახველი ფოტო/ვიდეო მასალა</Typography>
-              <Box display="flex" gap={2} alignItems="center">
-                <Button variant="outlined" onClick={handleCamera} startIcon={<PhotoCamera />} sx={{ minWidth: 0 }}>
-                  კამერა
-                </Button>
-                <Button variant="outlined" onClick={() => fileInputRef.current?.click()} sx={{ minWidth: 0 }}>
-                  ატვირთვა
-                </Button>
-                <input type="file" ref={fileInputRef} accept="image/*,video/*" style={{ display: 'none' }} onChange={handleFileChange} />
-                {mediaPreview && <Chip label="ფაილი დამატებულია" color="success" onDelete={() => { setFile(null); setMediaPreview(null); }} />}
-              </Box>
-              {cameraActive && (
-                <Box mt={2}>
-                  <video ref={videoRef} autoPlay width={300} height={200} style={{ borderRadius: 8 }} />
-                  <Button onClick={handleCapture} variant="contained" sx={{ mt: 1 }}>გადაღება</Button>
-                </Box>
-              )}
-              {mediaPreview && !cameraActive && (
-                <Box mt={2}>
-                  <Image 
-                    src={mediaPreview} 
-                    alt="preview" 
-                    width={200}
-                    height={150}
-                    style={{ maxWidth: 200, borderRadius: 8, objectFit: 'cover' }}
-                  />
-                </Box>
-              )}
-            </Grid>
-            <Grid item xs={12}>
-              <Typography variant="h6" gutterBottom>
-                ფოტოები
-              </Typography>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
-                {previewUrls.map((url, index) => (
-                  <Paper
-                    key={index}
-                    sx={{
-                      position: 'relative',
-                      width: 150,
-                      height: 150,
-                      overflow: 'hidden',
-                    }}
-                  >
-                    <Image
-                      src={url}
-                      alt={`Preview ${index + 1}`}
-                      width={150}
-                      height={150}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                      }}
-                    />
-                    <IconButton
-                      sx={{
-                        position: 'absolute',
-                        top: 5,
-                        right: 5,
-                        bgcolor: 'rgba(255, 255, 255, 0.8)',
-                        '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.9)' },
-                      }}
-                      onClick={() => handleRemovePhoto(index)}
-                    >
-                      <Delete />
-                    </IconButton>
-                  </Paper>
-                ))}
-              </Box>
-              <Button
-                variant="outlined"
-                component="label"
-                startIcon={<PhotoCamera />}
-              >
-                ფოტოების ატვირთვა
-                <input
-                  type="file"
-                  hidden
-                  multiple
-                  accept="image/*"
-                  onChange={handlePhotoChange}
-                />
-              </Button>
             </Grid>
             <Grid item xs={12}>
               <HazardSection hazards={hazards} onHazardsChange={setHazards} />
