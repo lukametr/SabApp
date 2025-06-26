@@ -18,6 +18,7 @@ services:
       - key: CORS_ORIGIN
         value: https://saba-frontend.onrender.com
     healthCheckPath: /api/health
+    healthCheckTimeout: 180
     autoDeploy: true
 
   # ფრონტენდი - Next.js static export
