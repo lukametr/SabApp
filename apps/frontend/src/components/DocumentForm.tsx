@@ -144,10 +144,10 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
   const handlePersonChange = (hazardId: string, person: string) => {
     const hazard = hazards.find(h => h.id === hazardId);
     if (hazard) {
-      let updated: string[] = [];
-      if (person === 'ყველა') {
-        updated = ['ყველა'];
-      } else {
+    let updated: string[] = [];
+    if (person === 'ყველა') {
+      updated = ['ყველა'];
+    } else {
         updated = hazard.affectedPersons.includes(person)
           ? hazard.affectedPersons.filter(p => p !== person)
           : [...hazard.affectedPersons.filter(p => p !== 'ყველა'), person];
@@ -471,7 +471,7 @@ export function DocumentForm({ onSubmit: handleFormSubmit, onCancel, defaultValu
       hazards: hazards as unknown as CreateDocumentDto['hazards'],
     };
     try {
-      await handleFormSubmit(formattedData);
+        await handleFormSubmit(formattedData);
       onClose();
     } catch (error) {
       console.error('ფორმის გაგზავნის შეცდომა:', error);
@@ -489,7 +489,7 @@ export function DocumentForm({ onSubmit: handleFormSubmit, onCancel, defaultValu
       <DialogTitle id="document-form-dialog">
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Typography variant="h5" fontWeight={600}>
-            {defaultValues ? 'დოკუმენტის რედაქტირება' : 'ახალი დოკუმენტი'}
+        {defaultValues ? 'დოკუმენტის რედაქტირება' : 'ახალი დოკუმენტი'}
           </Typography>
           <Box sx={{ display: 'flex', gap: 2 }}>
             <Button variant="outlined" onClick={onCancel}>

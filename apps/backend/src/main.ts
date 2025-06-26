@@ -88,16 +88,44 @@ async function bootstrap() {
     // Error handling
     process.on('uncaughtException', (error) => {
       console.error('Uncaught Exception:', error);
+      // Don't exit on uncaught exceptions in production
+      if (process.env.NODE_ENV !== 'production') {
+        process.exit(1);
+      }
     });
 
     process.on('unhandledRejection', (reason, promise) => {
       console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+      // Don't exit on unhandled rejections in production
+      if (process.env.NODE_ENV !== 'production') {
+        process.exit(1);
+      }
+    });
+
+    // Keep-alive mechanism
+    process.on('SIGTERM', () => {
+      console.log('SIGTERM received, shutting down gracefully');
+      app.close().then(() => {
+        console.log('Application closed');
+        process.exit(0);
+      });
+    });
+
+    process.on('SIGINT', () => {
+      console.log('SIGINT received, shutting down gracefully');
+      app.close().then(() => {
+        console.log('Application closed');
+        process.exit(0);
+      });
     });
 
     await app.listen(port, '0.0.0.0');
     console.log(`✅ Application is running on: http://0.0.0.0:${port}`);
     console.log(`📚 API Documentation available at: http://0.0.0.0:${port}/docs`);
     console.log(`🏥 Health check available at: http://0.0.0.0:${port}/api/health`);
+    
+    // Keep the process alive
+    process.stdin.resume();
   } catch (error) {
     console.error('❌ Failed to start application:', error);
     process.exit(1);
