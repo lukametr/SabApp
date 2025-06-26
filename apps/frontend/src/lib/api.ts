@@ -1,6 +1,6 @@
 import axios, { AxiosResponse, AxiosError, InternalAxiosRequestConfig } from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://saba-backend.onrender.com/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://saba-api.onrender.com/api';
 
 const api = axios.create({
   baseURL: API_URL,
