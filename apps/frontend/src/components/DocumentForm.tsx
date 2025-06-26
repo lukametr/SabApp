@@ -1,9 +1,9 @@
 import React, { useRef, useState } from 'react';
 import Image from 'next/image';
-import { Box, Button, TextField, Typography, Grid, Checkbox, FormControlLabel, Alert, Chip, Dialog, DialogTitle, DialogContent, IconButton, Paper, Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
+import { Box, Button, TextField, Typography, Grid, Checkbox, FormControlLabel, Alert, Chip, Dialog, DialogTitle, DialogContent, IconButton, Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, Controller, ControllerRenderProps } from 'react-hook-form';
 import { DatePicker, TimePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { ka } from 'date-fns/locale';
@@ -515,28 +515,28 @@ export function DocumentForm({ onSubmit: handleFormSubmit, onCancel, defaultValu
         >
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
-              <Controller name="evaluatorName" control={control} rules={{ required: true }} render={({ field }: { field: any }) => (
+              <Controller name="evaluatorName" control={control} rules={{ required: true }} render={({ field }: { field: ControllerRenderProps<CreateDocumentDto, 'evaluatorName'> }) => (
                 <TextField {...field} label="შემფასებლის სახელი" fullWidth required error={!!errors.evaluatorName} />
               )} />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <Controller name="evaluatorLastName" control={control} rules={{ required: true }} render={({ field }: { field: any }) => (
+              <Controller name="evaluatorLastName" control={control} rules={{ required: true }} render={({ field }: { field: ControllerRenderProps<CreateDocumentDto, 'evaluatorLastName'> }) => (
                 <TextField {...field} label="შემფასებლის გვარი" fullWidth required error={!!errors.evaluatorLastName} />
               )} />
             </Grid>
             <Grid item xs={12}>
-              <Controller name="objectName" control={control} rules={{ required: true }} render={({ field }: { field: any }) => (
+              <Controller name="objectName" control={control} rules={{ required: true }} render={({ field }: { field: ControllerRenderProps<CreateDocumentDto, 'objectName'> }) => (
                 <TextField {...field} label="ობიექტის დასახელება" fullWidth required error={!!errors.objectName} />
               )} />
             </Grid>
             <Grid item xs={12}>
-              <Controller name="workDescription" control={control} rules={{ required: true }} render={({ field }: { field: any }) => (
+              <Controller name="workDescription" control={control} rules={{ required: true }} render={({ field }: { field: ControllerRenderProps<CreateDocumentDto, 'workDescription'> }) => (
                 <TextField {...field} label="სამუშაოს მოკლე აღწერა" fullWidth required multiline rows={2} error={!!errors.workDescription} />
               )} />
             </Grid>
             <Grid item xs={6}>
               <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ka}>
-                <Controller name="date" control={control} rules={{ required: true }} render={({ field }: { field: any }) => (
+                <Controller name="date" control={control} rules={{ required: true }} render={({ field }: { field: ControllerRenderProps<CreateDocumentDto, 'date'> }) => (
                   <DatePicker 
                     label="თარიღი" 
                     {...field} 
@@ -553,7 +553,7 @@ export function DocumentForm({ onSubmit: handleFormSubmit, onCancel, defaultValu
             </Grid>
             <Grid item xs={6}>
               <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ka}>
-                <Controller name="time" control={control} rules={{ required: true }} render={({ field }: { field: any }) => (
+                <Controller name="time" control={control} rules={{ required: true }} render={({ field }: { field: ControllerRenderProps<CreateDocumentDto, 'time'> }) => (
                   <TimePicker 
                     label="დრო" 
                     {...field} 
