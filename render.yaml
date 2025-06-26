@@ -1,7 +1,7 @@
 services:
   # ბექენდი - მხოლოდ API
   - type: web
-    name: saba-backend
+    name: saba-api
     env: node
     rootDir: apps/backend
     buildCommand: pnpm install && pnpm run build
@@ -30,7 +30,7 @@ services:
     startCommand: npx serve out -p $PORT
     envVars:
       - key: NEXT_PUBLIC_API_URL
-        value: https://saba-backend.onrender.com/api
+        value: https://saba-api.onrender.com/api
       - key: PORT
         value: 3000
     autoDeploy: true 
