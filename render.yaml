@@ -25,8 +25,8 @@ services:
     name: saba-frontend
     env: node
     rootDir: apps/frontend
-    buildCommand: pnpm install && next build
-    startCommand: pnpm run serve
+    buildCommand: pnpm install && pnpm run build
+    startCommand: npx serve out -p $PORT
     envVars:
       - key: NEXT_PUBLIC_API_URL
         value: https://saba-backend.onrender.com/api
