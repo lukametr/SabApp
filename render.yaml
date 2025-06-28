@@ -17,7 +17,7 @@ services:
         sync: false
       - key: CORS_ORIGIN
         value: https://saba-frontend.onrender.com
-    healthCheckPath: /api/health
+    healthCheckPath: /health
     healthCheckTimeout: 180
     autoDeploy: true
 
@@ -30,7 +30,9 @@ services:
     startCommand: npx serve out -p $PORT
     envVars:
       - key: NEXT_PUBLIC_API_URL
-        value: https://saba-api.onrender.com/api
+        value: https://saba-api.onrender.com
       - key: PORT
         value: 3000
+      - key: NODE_ENV
+        value: production
     autoDeploy: true 
