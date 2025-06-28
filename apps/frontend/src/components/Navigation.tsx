@@ -1,11 +1,9 @@
 'use client'
 
-import { useAuth } from '@/contexts/AuthContext'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 export default function Navigation() {
-  const { user, logout } = useAuth()
   const pathname = usePathname()
 
   const isActive = (path: string) => pathname === path
@@ -52,51 +50,6 @@ export default function Navigation() {
                 ჩვენს შესახებ
               </Link>
             </div>
-          </div>
-          <div className="hidden sm:ml-6 sm:flex sm:items-center">
-            {user ? (
-              <div className="flex items-center space-x-4">
-                <Link
-                  href="/profile"
-                  className={`text-sm font-medium ${
-                    isActive('/profile')
-                      ? 'text-primary-600'
-                      : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  პროფილი
-                </Link>
-                <button
-                  onClick={logout}
-                  className="text-sm font-medium text-gray-500 hover:text-gray-700"
-                >
-                  გასვლა
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-4">
-                <Link
-                  href="/auth/login"
-                  className={`text-sm font-medium ${
-                    isActive('/auth/login')
-                      ? 'text-primary-600'
-                      : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  შესვლა
-                </Link>
-                <Link
-                  href="/auth/register"
-                  className={`text-sm font-medium ${
-                    isActive('/auth/register')
-                      ? 'text-primary-600'
-                      : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  რეგისტრაცია
-                </Link>
-              </div>
-            )}
           </div>
         </div>
       </div>
