@@ -27,7 +27,7 @@ services:
     env: node
     rootDir: apps/frontend
     buildCommand: pnpm install && pnpm run build
-    startCommand: PORT=$PORT pnpm run start
+    startCommand: pnpm run start
     envVars:
       - key: NEXT_PUBLIC_API_URL
         value: https://saba-api-njd9.onrender.com
