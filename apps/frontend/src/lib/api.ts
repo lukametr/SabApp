@@ -11,6 +11,21 @@ const api = axios.create({
   timeout: 10000,
 });
 
+// Add request interceptor for JWT
+api.interceptors.request.use(
+  (config) => {
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('token');
+      if (token) {
+        config.headers = config.headers || {};
+        config.headers['Authorization'] = `Bearer ${token}`;
+      }
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 // Add response interceptor for error handling
 api.interceptors.response.use(
   (response: AxiosResponse) => response,
