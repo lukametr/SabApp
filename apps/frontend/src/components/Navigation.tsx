@@ -9,6 +9,16 @@ import { GoogleLogin, CredentialResponse } from '@react-oauth/google'
 import api from '../lib/api'
 import RegistrationForm from './RegistrationForm'
 
+interface ApiError {
+  response?: {
+    status: number;
+    data: {
+      message: string;
+    };
+  };
+  message: string;
+}
+
 export default function Navigation() {
   const pathname = usePathname()
   const router = useRouter()
@@ -40,17 +50,19 @@ export default function Navigation() {
         })
         login(res.data)
         router.refresh()
-      } catch (err: any) {
-        if (err?.response?.status === 409 && err?.response?.data?.message?.includes('Personal number')) {
+      } catch (err: unknown) {
+        const error = err as ApiError
+        if (error?.response?.status === 409 && error?.response?.data?.message?.includes('Personal number')) {
           // User doesn't exist, show registration form
           setPendingIdToken(idToken)
           setShowRegistration(true)
         } else {
-          alert('ავტორიზაციის შეცდომა: ' + (err?.response?.data?.message || err.message))
+          alert('ავტორიზაციის შეცდომა: ' + (error?.response?.data?.message || error?.message || 'უცნობი შეცდომა'))
         }
       }
-    } catch (err: any) {
-      alert('ავტორიზაციის შეცდომა: ' + (err?.response?.data?.message || err.message))
+    } catch (err: unknown) {
+      const error = err as ApiError
+      alert('ავტორიზაციის შეცდომა: ' + (error?.response?.data?.message || error?.message || 'უცნობი შეცდომა'))
     }
   }
 
@@ -68,8 +80,9 @@ export default function Navigation() {
       setShowRegistration(false)
       setPendingIdToken(null)
       router.refresh()
-    } catch (err: any) {
-      alert('რეგისტრაციის შეცდომა: ' + (err?.response?.data?.message || err.message))
+    } catch (err: unknown) {
+      const error = err as ApiError
+      alert('რეგისტრაციის შეცდომა: ' + (error?.response?.data?.message || error?.message || 'უცნობი შეცდომა'))
     } finally {
       setLoading(false)
     }
@@ -112,16 +125,6 @@ export default function Navigation() {
                   }`}
                 >
                   დოკუმენტები
-                </Link>
-                <Link
-                  href="/about"
-                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                    isActive('/about')
-                      ? 'border-primary-500 text-gray-900'
-                      : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                  }`}
-                >
-                  ჩვენს შესახებ
                 </Link>
               </div>
             </div>
