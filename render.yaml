@@ -21,16 +21,16 @@ services:
     healthCheckTimeout: 180
     autoDeploy: true
 
-  # ფრონტენდი - Next.js static export
+  # ფრონტენდი - Next.js standard deployment
   - type: web
     name: saba-frontend
     env: node
     rootDir: apps/frontend
     buildCommand: pnpm install && pnpm run build
-    startCommand: npx serve out -p $PORT
+    startCommand: pnpm run start
     envVars:
       - key: NEXT_PUBLIC_API_URL
-        value: https://saba-api.onrender.com
+        value: https://saba-api-njd9.onrender.com
       - key: PORT
         value: 3000
       - key: NODE_ENV
