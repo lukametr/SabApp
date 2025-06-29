@@ -9,6 +9,6 @@ COPY . .
 
 WORKDIR /app/apps/backend
 RUN pnpm install --frozen-lockfile
-RUN pnpm build
+RUN pnpm run build
 
 CMD ["pnpm", "start:prod"]
