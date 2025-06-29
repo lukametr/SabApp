@@ -12,7 +12,7 @@ async function bootstrap() {
   });
 
   // Global prefix
-  app.setGlobalPrefix('api');
+  app.setGlobalPrefix('api', { exclude: ['/health'] });
 
   // Security headers
   app.use(helmet({
@@ -33,9 +33,9 @@ async function bootstrap() {
   app.use(compression());
 
   // CORS კონფიგურაცია
-  const corsOrigin = process.env.CORS_ORIGIN || 'https://saba-api-njd9.onrender.com';
+  const corsOrigin = process.env.CORS_ORIGIN || '*';
   app.enableCors({
-    origin: [corsOrigin, 'http://localhost:3000', 'http://localhost:3001', 'http://localhost:10000'],
+    origin: corsOrigin === '*' ? true : [corsOrigin, 'http://localhost:3000', 'http://localhost:3001', 'http://localhost:10000'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     credentials: false,
     allowedHeaders: [
