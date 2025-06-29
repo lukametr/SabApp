@@ -1,10 +1,10 @@
 services:
-  # ბექენდი - მხოლოდ API
+  # მთავარი სერვისი - ბექენდი + ფრონტენდი ერთად
   - type: web
-    name: saba-api
+    name: saba-app
     env: node
-    rootDir: apps/backend
-    buildCommand: pnpm install && pnpm run build
+    rootDir: .
+    buildCommand: pnpm install && pnpm run build:render
     startCommand: pnpm run start:prod
     envVars:
       - key: MONGODB_URI
@@ -16,23 +16,9 @@ services:
       - key: JWT_SECRET
         sync: false
       - key: CORS_ORIGIN
-        value: https://saba-frontend.onrender.com
+        value: https://saba-app.onrender.com
+      - key: NEXT_PUBLIC_API_URL
+        value: https://saba-app.onrender.com
     healthCheckPath: /health
     healthCheckTimeout: 180
-    autoDeploy: true
-
-  # ფრონტენდი - Next.js standard deployment
-  - type: web
-    name: saba-frontend
-    env: node
-    rootDir: apps/frontend
-    buildCommand: pnpm install && pnpm run build
-    startCommand: pnpm run start
-    envVars:
-      - key: NEXT_PUBLIC_API_URL
-        value: https://saba-api-njd9.onrender.com
-      - key: NODE_ENV
-        value: production
-      - key: PORT
-        value: 3000
     autoDeploy: true 
