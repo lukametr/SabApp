@@ -11,6 +11,8 @@ COPY . .
 WORKDIR /app/apps/backend
 RUN pnpm install --frozen-lockfile
 
+RUN pnpm install -g @nestjs/cli
+
 RUN pnpm build
 
 CMD ["pnpm", "start:prod"]
