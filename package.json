@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "pnpm run --parallel dev",
     "build": "pnpm run --filter=frontend build && pnpm run --filter=backend build",
-    "build:render": "pnpm install --frozen-lockfile && cd apps/frontend && pnpm build && cd ../backend && pnpm build",
+    "build:render": "echo 'This script is deprecated. Use Railway build process instead.' && exit 0",
     "start": "pnpm run --parallel start",
     "start:prod": "cd apps/backend && pnpm start:prod",
     "lint": "pnpm run --parallel lint",
