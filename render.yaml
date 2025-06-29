@@ -1,3 +1,6 @@
+# This file is for Render.com deployment. If you are deploying to Railway, you can safely delete or ignore this file.
+# To avoid confusion, you may want to remove this file from your repository if you are not using Render.
+
 services:
   # მთავარი სერვისი - ბექენდი + ფრონტენდი ერთად
   - type: web
@@ -21,4 +24,4 @@ services:
         value: https://saba-app.onrender.com
     healthCheckPath: /health
     healthCheckTimeout: 180
-    autoDeploy: true 
+    autoDeploy: true
