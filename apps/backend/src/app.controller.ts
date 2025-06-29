@@ -33,7 +33,7 @@ export class AppController {
 
   @Get('*')
   serveFrontend(@Res() res: Response) {
-    const indexPath = join(__dirname, '../../frontend/out/index.html');
+    const indexPath = join(process.cwd(), 'apps/frontend/out/index.html');
     console.log('Looking for frontend at:', indexPath);
     console.log('File exists:', existsSync(indexPath));
     
@@ -43,7 +43,7 @@ export class AppController {
       res.status(HttpStatus.NOT_FOUND).json({
         message: 'Frontend not found. Please ensure the frontend is built.',
         path: indexPath,
-        currentDir: __dirname,
+        currentDir: process.cwd(),
         exists: existsSync(indexPath),
       });
     }
