@@ -31,6 +31,18 @@ export class AppController {
     };
   }
 
+  @Get('/health')
+  getRootHealth(@Res() res: Response) {
+    // იგივე პასუხი, რაც /api/health-ზე
+    return res.status(HttpStatus.OK).json({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      memory: process.memoryUsage(),
+      version: process.env.npm_package_version || '1.0.0',
+    });
+  }
+
   @Get('debug')
   debugInfo() {
     const currentDir = process.cwd();
