@@ -103,12 +103,15 @@ async function bootstrap() {
       }
     });
 
-    // Keep-alive mechanism
+    // Keep-alive mechanism for Render
     process.on('SIGTERM', () => {
       console.log('SIGTERM received, shutting down gracefully');
       app.close().then(() => {
         console.log('Application closed');
         process.exit(0);
+      }).catch((error) => {
+        console.error('Error during shutdown:', error);
+        process.exit(1);
       });
     });
 
@@ -117,21 +120,36 @@ async function bootstrap() {
       app.close().then(() => {
         console.log('Application closed');
         process.exit(0);
+      }).catch((error) => {
+        console.error('Error during shutdown:', error);
+        process.exit(1);
       });
     });
 
+    // Start the application
     await app.listen(port, '0.0.0.0');
     console.log(`✅ Application is running on: http://0.0.0.0:${port}`);
     console.log(`📚 API Documentation available at: http://0.0.0.0:${port}/docs`);
     console.log(`🏥 Health check available at: http://0.0.0.0:${port}/api/health`);
     console.log(`🌐 CORS Origin: ${corsOrigin}`);
     
-    // Keep the process alive
-    process.stdin.resume();
+    // Keep the process alive - this is crucial for Render
+    console.log('🚀 Application started successfully and keeping alive...');
+    
+    // Don't call process.stdin.resume() as it can cause issues
+    // Instead, just keep the event loop running
+    setInterval(() => {
+      // Keep alive ping every 30 seconds
+      console.log('💓 Keep-alive ping:', new Date().toISOString());
+    }, 30000);
+    
   } catch (error) {
     console.error('❌ Failed to start application:', error);
     process.exit(1);
   }
 }
 
-bootstrap();
+bootstrap().catch((error) => {
+  console.error('❌ Bootstrap failed:', error);
+  process.exit(1);
+});
