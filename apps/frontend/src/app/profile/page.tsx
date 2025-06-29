@@ -3,6 +3,7 @@
 import { useAuthStore } from '../../store/authStore';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 export default function ProfilePage() {
   const { user, loadFromStorage } = useAuthStore();
@@ -21,7 +22,15 @@ export default function ProfilePage() {
     <div className="max-w-xl mx-auto mt-10 p-6 bg-white rounded shadow">
       <h1 className="text-2xl font-bold mb-4">პროფილი</h1>
       <div className="flex items-center space-x-4 mb-4">
-        {user.picture && <img src={user.picture} alt="profile" className="w-16 h-16 rounded-full" />}
+        {user.picture && (
+          <Image 
+            src={user.picture} 
+            alt="profile" 
+            width={64}
+            height={64}
+            className="rounded-full"
+          />
+        )}
         <div>
           <div className="font-semibold text-lg">{user.name}</div>
           <div className="text-gray-600">{user.email}</div>

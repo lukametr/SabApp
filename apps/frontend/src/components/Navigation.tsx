@@ -6,6 +6,7 @@ import { useAuthStore } from '../store/authStore'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { GoogleLogin, CredentialResponse } from '@react-oauth/google'
+import Image from 'next/image'
 import api from '../lib/api'
 import RegistrationForm from './RegistrationForm'
 
@@ -144,7 +145,13 @@ export default function Navigation() {
                 <>
                   <Link href="/profile" className="flex items-center space-x-2">
                     {user.picture && (
-                      <img src={user.picture} alt="profile" className="w-8 h-8 rounded-full" />
+                      <Image 
+                        src={user.picture} 
+                        alt="profile" 
+                        width={32}
+                        height={32}
+                        className="rounded-full"
+                      />
                     )}
                     <span className="font-medium text-gray-700">{user.name}</span>
                   </Link>
