@@ -1,6 +1,6 @@
 import axios, { AxiosResponse, AxiosError } from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://saba-api-njd9.onrender.com';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://saba-app.onrender.com';
 
 const api = axios.create({
   baseURL: API_URL,
