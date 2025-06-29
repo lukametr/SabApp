@@ -24,7 +24,7 @@ async function bootstrap() {
         scriptSrc: ["'self'", "'unsafe-inline'"],
         styleSrc: ["'self'", "'unsafe-inline'"],
         imgSrc: ["'self'", "data:", "https:"],
-        connectSrc: ["'self'", "https://saba-frontend.onrender.com"],
+        connectSrc: ["'self'"],
       },
     },
   }));
@@ -33,8 +33,9 @@ async function bootstrap() {
   app.use(compression());
 
   // CORS კონფიგურაცია
+  const corsOrigin = process.env.CORS_ORIGIN || 'https://saba-api-njd9.onrender.com';
   app.enableCors({
-    origin: ['https://saba-frontend.onrender.com', 'http://localhost:3000', 'http://localhost:3001', 'http://localhost:10000'],
+    origin: [corsOrigin, 'http://localhost:3000', 'http://localhost:3001', 'http://localhost:10000'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     credentials: false,
     allowedHeaders: [
@@ -123,6 +124,7 @@ async function bootstrap() {
     console.log(`✅ Application is running on: http://0.0.0.0:${port}`);
     console.log(`📚 API Documentation available at: http://0.0.0.0:${port}/docs`);
     console.log(`🏥 Health check available at: http://0.0.0.0:${port}/api/health`);
+    console.log(`🌐 CORS Origin: ${corsOrigin}`);
     
     // Keep the process alive
     process.stdin.resume();
