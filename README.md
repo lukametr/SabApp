@@ -145,8 +145,8 @@ pnpm dev
 
 ## დეპლოი
 აპლიკაცია დეპლოირებულია Render-ზე:
-- Frontend: https://saba-app.onrender.com
-- Backend: https://saba-api.onrender.com
+- Frontend: https://saba-app-production.up.railway.app
+- Backend: https://saba-app-production.up.railway.app
 
 ## ლიცენზია
 MIT 
