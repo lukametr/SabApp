@@ -15,7 +15,7 @@ import { UsersModule } from './users/users.module';
     }),
     MongooseModule.forRoot(process.env.MONGODB_URI || 'mongodb://localhost:27017/sabap'),
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '../../../frontend/out'),
+      rootPath: join(__dirname, '../../frontend/out'),
       exclude: ['/api*'],
       serveRoot: '/',
     }),
