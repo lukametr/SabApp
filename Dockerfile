@@ -8,7 +8,7 @@ RUN npm install -g pnpm && pnpm install --frozen-lockfile
 COPY . .
 
 WORKDIR /app/apps/backend
-RUN pnpm install --frozen-lockfile --workspace-root
+RUN pnpm install --frozen-lockfile
 RUN pnpm run build
 
 CMD ["pnpm", "start:prod"]
