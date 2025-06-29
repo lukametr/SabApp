@@ -7,8 +7,10 @@ RUN npm install -g pnpm && pnpm install --frozen-lockfile
 
 COPY . .
 
+# Install backend dependencies explicitly for backend build context
 WORKDIR /app/apps/backend
+RUN pnpm install --frozen-lockfile
 
 RUN pnpm build
 
-CMD ["pnpm", "start"]
+CMD ["pnpm", "start:prod"]
