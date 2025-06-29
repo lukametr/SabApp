@@ -1,6 +1,9 @@
 import axios, { AxiosResponse, AxiosError } from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://saba-app.onrender.com';
+// Use relative URL when served from backend, external URL for development
+const API_URL = process.env.NODE_ENV === 'production' 
+  ? '/api' 
+  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001');
 
 const api = axios.create({
   baseURL: API_URL,

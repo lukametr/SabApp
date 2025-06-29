@@ -1,4 +1,7 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Res, HttpStatus } from '@nestjs/common';
+import { Response } from 'express';
+import { join } from 'path';
+import { existsSync } from 'fs';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 @ApiTags('app')
@@ -26,5 +29,19 @@ export class AppController {
       memory: process.memoryUsage(),
       version: process.env.npm_package_version || '1.0.0',
     };
+  }
+
+  @Get('*')
+  serveFrontend(@Res() res: Response) {
+    const indexPath = join(__dirname, '../../../frontend/out/index.html');
+    
+    if (existsSync(indexPath)) {
+      res.sendFile(indexPath);
+    } else {
+      res.status(HttpStatus.NOT_FOUND).json({
+        message: 'Frontend not found. Please ensure the frontend is built.',
+        path: indexPath,
+      });
+    }
   }
 }
