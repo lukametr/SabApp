@@ -10,27 +10,9 @@ const nextConfig = {
   },
   output: 'export',
   distDir: 'out',
-  async headers() {
-    return [
-      {
-        source: '/(.*)',
-        headers: [
-          {
-            key: 'Content-Security-Policy',
-            value: `
-              default-src 'self';
-              script-src 'self' 'unsafe-inline' https://accounts.google.com https://www.gstatic.com;
-              style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com;
-              style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com;
-              frame-src https://accounts.google.com;
-              connect-src 'self' https://accounts.google.com https://www.googleapis.com;
-              img-src 'self' https://*.gstatic.com https://lh3.googleusercontent.com;
-              font-src 'self' https://fonts.gstatic.com;
-            `.replace(/\s{2,}/g, ' ').trim()
-          }
-        ]
-      }
-    ]
+  env: {
+    NEXT_PUBLIC_GOOGLE_CLIENT_ID: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
   },
   webpack: (config) => {
     config.resolve.fallback = {
