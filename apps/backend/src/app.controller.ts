@@ -89,14 +89,6 @@ export class AppController {
     const frontendPath = join(process.cwd(), '../frontend/out');
     const indexPath = join(frontendPath, 'index.html');
     
-    // Check if the requested path exists as a static file
-    const requestedPath = join(frontendPath, url);
-    
-    if (existsSync(requestedPath) && !url.startsWith('/api')) {
-      // Serve the static file if it exists
-      return res.sendFile(requestedPath);
-    }
-    
     // Serve index.html for SPA routing
     if (existsSync(indexPath)) {
       return res.sendFile(indexPath);

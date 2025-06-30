@@ -20,7 +20,7 @@ import { HealthModule } from './health.module';
       exclude: ['/api*'],
       serveRoot: '/',
       serveStaticOptions: {
-        index: false,
+        index: 'index.html',
       },
     }),
     DocumentsModule,
