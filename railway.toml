@@ -1,0 +1,14 @@
+[build]
+builder = "nixpacks"
+buildCommand = "cd ../.. && pnpm install --frozen-lockfile && pnpm --filter ./apps/frontend build && pnpm --filter ./apps/backend build"
+
+[deploy]
+startCommand = "cd apps/backend && pnpm start:prod"
+healthcheckPath = "/health"
+healthcheckTimeout = 100
+restartPolicyType = "on-failure"
+restartPolicyMaxRetries = 10
+
+[[services]]
+name = "sabapp-backend"
+sourceDir = "apps/backend" 
