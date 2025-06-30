@@ -20,6 +20,19 @@ interface ApiError {
   message: string;
 }
 
+declare global {
+  interface Window {
+    google: {
+      accounts: {
+        id: {
+          initialize: (config: any) => void;
+          renderButton: (element: HTMLElement, options: any) => void;
+        };
+      };
+    };
+  }
+}
+
 export default function Navigation() {
   const pathname = usePathname()
   const router = useRouter()
@@ -31,6 +44,18 @@ export default function Navigation() {
   useEffect(() => {
     loadFromStorage()
   }, [loadFromStorage])
+
+  useEffect(() => {
+    // Initialize Google Sign-In
+    if (window.google && window.google.accounts) {
+      window.google.accounts.id.initialize({
+        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID',
+        callback: handleGoogleSuccess,
+        auto_select: false,
+        cancel_on_tap_outside: true,
+      });
+    }
+  }, []);
 
   const isActive = (path: string) => pathname === path
 
