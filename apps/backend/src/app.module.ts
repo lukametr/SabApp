@@ -19,6 +19,9 @@ import { HealthModule } from './health.module';
       rootPath: join(process.cwd(), 'apps/frontend/out'),
       exclude: ['/api*'],
       serveRoot: '/',
+      serveStaticOptions: {
+        index: false,
+      },
     }),
     DocumentsModule,
     AuthModule,
