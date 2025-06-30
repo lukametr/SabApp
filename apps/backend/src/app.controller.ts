@@ -83,9 +83,7 @@ export class AppController {
     // Skip API routes and other backend routes
     if (url.startsWith('/api/') || 
         url.startsWith('/health') || 
-        url.startsWith('/docs') ||
-        url.startsWith('/auth/') ||
-        url.startsWith('/users/')) {
+        url.startsWith('/docs')) {
       return res.status(404).json({ error: 'API endpoint not found' });
     }
     
