@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuthStore } from '../store/authStore'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { GoogleLogin, CredentialResponse } from '@react-oauth/google'
 import Image from 'next/image'
@@ -25,8 +25,19 @@ declare global {
     google: {
       accounts: {
         id: {
-          initialize: (config: any) => void;
-          renderButton: (element: HTMLElement, options: any) => void;
+          initialize: (config: {
+            client_id: string;
+            callback: (response: CredentialResponse) => void;
+            auto_select?: boolean;
+            cancel_on_tap_outside?: boolean;
+            prompt_parent_id?: string;
+            ux_mode?: string;
+            scope?: string;
+          }) => void;
+          renderButton: (element: HTMLElement, options: {
+            theme?: string;
+            size?: string;
+          }) => void;
         };
       };
     };
@@ -45,37 +56,7 @@ export default function Navigation() {
     loadFromStorage()
   }, [loadFromStorage])
 
-  useEffect(() => {
-    // Initialize Google Sign-In
-    console.log('Initializing Google Sign-In...');
-    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-    console.log('Client ID:', clientId);
-    
-    if (!clientId || clientId === 'YOUR_GOOGLE_CLIENT_ID_HERE') {
-      console.error('Google Client ID not configured');
-      return;
-    }
-    
-    if (window.google && window.google.accounts) {
-      console.log('Google API loaded, initializing...');
-      window.google.accounts.id.initialize({
-        client_id: clientId,
-        callback: handleGoogleSuccess,
-        auto_select: false,
-        cancel_on_tap_outside: true,
-        prompt_parent_id: 'google-signin-container',
-        ux_mode: 'popup',
-        scope: 'openid email profile',
-      });
-      console.log('Google Sign-In initialized successfully');
-    } else {
-      console.error('Google API not loaded');
-    }
-  }, []);
-
-  const isActive = (path: string) => pathname === path
-
-  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
+  const handleGoogleSuccess = useCallback(async (credentialResponse: CredentialResponse) => {
     try {
       console.log('Google Sign-In response:', credentialResponse);
       const idToken = credentialResponse.credential
@@ -113,7 +94,37 @@ export default function Navigation() {
       console.error('Google Sign-In error:', error);
       alert('ავტორიზაციის შეცდომა: ' + (error?.response?.data?.message || error?.message || 'უცნობი შეცდომა'))
     }
-  }
+  }, [login, router])
+
+  useEffect(() => {
+    // Initialize Google Sign-In
+    console.log('Initializing Google Sign-In...');
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    console.log('Client ID:', clientId);
+    
+    if (!clientId || clientId === 'YOUR_GOOGLE_CLIENT_ID_HERE') {
+      console.error('Google Client ID not configured');
+      return;
+    }
+    
+    if (window.google && window.google.accounts) {
+      console.log('Google API loaded, initializing...');
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: handleGoogleSuccess,
+        auto_select: false,
+        cancel_on_tap_outside: true,
+        prompt_parent_id: 'google-signin-container',
+        ux_mode: 'popup',
+        scope: 'openid email profile',
+      });
+      console.log('Google Sign-In initialized successfully');
+    } else {
+      console.error('Google API not loaded');
+    }
+  }, [handleGoogleSuccess]);
+
+  const isActive = (path: string) => pathname === path
 
   const handleRegistrationSubmit = async (personalNumber: string, phoneNumber: string) => {
     if (!pendingIdToken) return
@@ -141,6 +152,11 @@ export default function Navigation() {
     logout()
     router.push('/')
     router.refresh()
+  }
+
+  const handleGoogleError = () => {
+    console.error('Google Sign-In error occurred');
+    alert('Google ავტორიზაციის შეცდომა: უცნობი შეცდომა')
   }
 
   return (
@@ -182,10 +198,7 @@ export default function Navigation() {
                 <div id="google-signin-container">
                   <GoogleLogin
                     onSuccess={handleGoogleSuccess}
-                    onError={(error) => {
-                      console.error('Google Sign-In error:', error);
-                      alert('Google ავტორიზაციის შეცდომა: ' + (error.error || 'უცნობი შეცდომა'))
-                    }}
+                    onError={handleGoogleError}
                     useOneTap
                     text="signin_with"
                     shape="pill"
