@@ -12,7 +12,9 @@ async function bootstrap() {
   });
 
   // Set global prefix for all API routes
-  app.setGlobalPrefix('api');
+  app.setGlobalPrefix('api', {
+    exclude: ['/health', '/docs'],
+  });
 
   // Security headers
   app.use(helmet({
@@ -133,7 +135,7 @@ async function bootstrap() {
     await app.listen(port, '0.0.0.0');
     console.log(`✅ Application is running on: http://0.0.0.0:${port}`);
     console.log(`📚 API Documentation available at: http://0.0.0.0:${port}/docs`);
-    console.log(`🏥 Health check available at: http://0.0.0.0:${port}/api/health`);
+    console.log(`🏥 Health check available at: http://0.0.0.0:${port}/health`);
     console.log(`🌐 CORS Origin: ${corsOrigin}`);
     
     // Keep the process alive - this is crucial for Render
