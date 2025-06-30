@@ -1,24 +1,28 @@
 import axios, { AxiosResponse, AxiosError } from 'axios';
 
 // Use relative URL when served from backend, external URL for development
-const API_URL = process.env.NODE_ENV === 'production' 
-  ? (process.env.NEXT_PUBLIC_API_URL || 'https://saba-app-production.up.railway.app/api')
-  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api');
+const getApiUrl = () => {
+  if (typeof window !== 'undefined') {
+    // Client-side: use relative URL for production, external for development
+    if (process.env.NODE_ENV === 'production') {
+      return '/api'; // Relative URL when served from same domain
+    } else {
+      return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+    }
+  } else {
+    // Server-side: use environment variable
+    return process.env.NEXT_PUBLIC_API_URL || 'https://saba-app-production.up.railway.app/api';
+  }
+};
+
+const API_URL = getApiUrl();
 
 console.log('🔧 API Configuration:', {
   NODE_ENV: process.env.NODE_ENV,
   API_URL,
   NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+  isClient: typeof window !== 'undefined',
 });
-
-// Helper function to get correct API path
-export const getApiPath = (path: string): string => {
-  if (process.env.NODE_ENV === 'production') {
-    // In production, use full URL since frontend and backend are separate
-    return `${API_URL}${path}`;
-  }
-  return path;
-};
 
 const api = axios.create({
   baseURL: API_URL,
@@ -32,6 +36,11 @@ const api = axios.create({
 // Add request interceptor for JWT
 api.interceptors.request.use(
   (config) => {
+    // Ensure proper URL construction
+    if (config.url && !config.url.startsWith('http')) {
+      config.url = config.url.replace(/^\/+/, ''); // Remove leading slashes
+    }
+    
     console.log('🚀 API Request:', {
       method: config.method?.toUpperCase(),
       url: config.url,

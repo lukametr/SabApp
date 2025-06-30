@@ -3,10 +3,13 @@ import { Response, Request } from 'express';
 import { join } from 'path';
 import { existsSync, readdirSync } from 'fs';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { AppService } from './app.service';
 
 @ApiTags('app')
 @Controller()
 export class AppController {
+  constructor(private readonly appService: AppService) {}
+
   // @Get()
   // @ApiOperation({ summary: 'Root endpoint' })
   // @ApiResponse({ status: 200, description: 'SabApp API is running' })
@@ -73,6 +76,21 @@ export class AppController {
         indexPath,
       };
     }
+  }
+
+  @Get('api/debug')
+  getApiDebug() {
+    return {
+      message: 'API is working!',
+      timestamp: new Date().toISOString(),
+      routes: {
+        documents: '/api/documents',
+        auth: '/api/auth',
+        users: '/api/users',
+        health: '/health',
+        docs: '/docs'
+      }
+    };
   }
 
   // Catch-all route for SPA routing
