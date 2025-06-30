@@ -8,18 +8,18 @@ Add these variables in Railway dashboard under **Shared Variables**:
 
 ```bash
 # Google OAuth Configuration
-NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id_here
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=675742559993-5quocp5mgvmog0fd2g8ue03vpleb23t5.apps.googleusercontent.com
 
 # API Configuration  
-NEXT_PUBLIC_API_URL=https://your-app-name.up.railway.app/api
+NEXT_PUBLIC_API_URL=https://saba-app-production.up.railway.app/api
 
 # Backend Configuration
 PORT=3001
-CORS_ORIGIN=https://your-app-name.up.railway.app
-DATABASE_URL=your_database_url_here
+CORS_ORIGIN=https://saba-app-production.up.railway.app
+DATABASE_URL=mongodb+srv://lukametr:akukelaAIO12@cluster0.l56lnkq.mongodb.net/saba?retryWrites=true&w=majority&appName=Cluster0
 
 # Google OAuth Backend
-GOOGLE_CLIENT_ID=your_google_client_id_here
+GOOGLE_CLIENT_ID=675742559993-5quocp5mgvmog0fd2g8ue03vpleb23t5.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=your_google_client_secret_here
 ```
 
@@ -37,13 +37,13 @@ GOOGLE_CLIENT_SECRET=your_google_client_secret_here
    - Create or edit OAuth 2.0 Client ID
    - Add these **Authorized JavaScript origins:**
      ```
-     https://your-app-name.up.railway.app
+     https://saba-app-production.up.railway.app
      http://localhost:3000
      ```
    - Add these **Authorized redirect URIs:**
      ```
-     https://your-app-name.up.railway.app
-     https://your-app-name.up.railway.app/api/auth/google/callback
+     https://saba-app-production.up.railway.app
+     https://saba-app-production.up.railway.app/api/auth/google/callback
      http://localhost:3000
      ```
 
@@ -57,6 +57,7 @@ GOOGLE_CLIENT_SECRET=your_google_client_secret_here
 #### API Issues:
 - **404 on /api/documents**: Verify backend is running and routes are configured
 - **CORS errors**: Check `CORS_ORIGIN` variable matches your domain
+- **Domain mismatch**: Ensure all URLs use `saba-app-production.up.railway.app`
 
 #### Font Issues:
 - Font warnings are now fixed with proper preloading configuration
@@ -67,8 +68,8 @@ GOOGLE_CLIENT_SECRET=your_google_client_secret_here
 1. **Check Environment Variables:**
    ```bash
    # In Railway logs, you should see:
-   🔧 API Configuration: { NODE_ENV: 'production', API_URL: '', ... }
-   🔑 Google Client ID: { clientId: 'your-id', isConfigured: true, ... }
+   🔧 API Configuration: { NODE_ENV: 'production', API_URL: 'https://saba-app-production.up.railway.app/api', ... }
+   🔑 Google Client ID: { clientId: '675742559993-5quocp5mgvmog0fd2g8ue03vpleb23t5.apps.googleusercontent.com', isConfigured: true, ... }
    ```
 
 2. **Test Google Sign-In:**
@@ -86,7 +87,7 @@ GOOGLE_CLIENT_SECRET=your_google_client_secret_here
 1. **Push Changes:**
    ```bash
    git add .
-   git commit -m "Fix Google Sign-In and API issues"
+   git commit -m "Fix API configuration and domain issues"
    git push
    ```
 
