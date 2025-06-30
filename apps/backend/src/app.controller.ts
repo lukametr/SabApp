@@ -10,12 +10,9 @@ export class AppController {
   @Get()
   @ApiOperation({ summary: 'Root endpoint' })
   @ApiResponse({ status: 200, description: 'SabApp API is running' })
-  getRoot() {
-    return {
-      message: 'SabApp API is running',
-      version: process.env.npm_package_version || '1.0.0',
-      timestamp: new Date().toISOString(),
-    };
+  getRoot(@Res() res: Response) {
+    // გადამისამართება ფრონტენდის Next.js აპზე
+    return res.redirect('/_next/static');
   }
 
   @Get('health')
