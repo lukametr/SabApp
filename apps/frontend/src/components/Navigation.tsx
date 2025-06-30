@@ -109,17 +109,25 @@ export default function Navigation() {
 
   useEffect(() => {
     // Initialize Google Sign-In
-    console.log('Initializing Google Sign-In...');
+    console.log('🔧 Initializing Google Sign-In...');
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-    console.log('Client ID:', clientId);
+    console.log('🔑 Google Client ID:', {
+      clientId,
+      isConfigured: clientId && clientId !== 'YOUR_GOOGLE_CLIENT_ID_HERE',
+      envVars: {
+        NODE_ENV: process.env.NODE_ENV,
+        NEXT_PUBLIC_GOOGLE_CLIENT_ID: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+      }
+    });
     
     if (!clientId || clientId === 'YOUR_GOOGLE_CLIENT_ID_HERE') {
-      console.error('Google Client ID not configured');
+      console.error('❌ Google Client ID not configured properly');
+      console.error('💡 Please set NEXT_PUBLIC_GOOGLE_CLIENT_ID in your environment variables');
       return;
     }
     
     if (window.google && window.google.accounts) {
-      console.log('Google API loaded, initializing...');
+      console.log('✅ Google API loaded, initializing...');
       window.google.accounts.id.initialize({
         client_id: clientId,
         callback: handleGoogleSuccess,
@@ -133,11 +141,12 @@ export default function Navigation() {
       
       // Show Google One Tap automatically only if user is not logged in
       if (!user) {
+        console.log('🎯 Showing Google One Tap for unauthenticated user');
         window.google.accounts.id.prompt();
       }
-      console.log('Google Sign-In initialized successfully');
+      console.log('✅ Google Sign-In initialized successfully');
     } else {
-      console.error('Google API not loaded');
+      console.error('❌ Google API not loaded - script may not have loaded yet');
     }
   }, [handleGoogleSuccess, user]);
 

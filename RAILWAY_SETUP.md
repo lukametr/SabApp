@@ -1,124 +1,110 @@
-# Railway Setup Guide
+# Railway Deployment Setup Guide
 
-## 🚨 Current Issues to Fix
+## 🚀 Environment Variables Configuration
 
-### 1. Environment Variables Missing
-The application is failing because these environment variables are not set in Railway:
+### Required Environment Variables
 
-#### Frontend Environment Variables (Railway Dashboard)
-Go to your Railway project → Frontend service → Variables tab and add:
+Add these variables in Railway dashboard under **Shared Variables**:
 
 ```bash
-NEXT_PUBLIC_GOOGLE_CLIENT_ID=YOUR_ACTUAL_GOOGLE_CLIENT_ID_HERE
-NEXT_PUBLIC_API_URL=https://saba-app-production.up.railway.app/api
-```
+# Google OAuth Configuration
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id_here
 
-#### Backend Environment Variables (Railway Dashboard)
-Go to your Railway project → Backend service → Variables tab and add:
+# API Configuration  
+NEXT_PUBLIC_API_URL=https://your-app-name.up.railway.app/api
 
-```bash
-MONGODB_URI=your_mongodb_connection_string
-CORS_ORIGIN=https://saba-app-production.up.railway.app
-FRONTEND_URL=https://saba-app-production.up.railway.app
-```
-
-### 2. Google OAuth Configuration
-
-#### Step 1: Create Google OAuth Credentials
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project or select existing one
-3. Enable Google+ API and Google Identity API
-4. Go to "Credentials" → "Create Credentials" → "OAuth 2.0 Client IDs"
-
-#### Step 2: Configure OAuth Consent Screen
-1. Go to "OAuth consent screen"
-2. Fill in required information:
-   - App name: "SabApp"
-   - User support email: your email
-   - Developer contact information: your email
-3. Add test users if in testing mode
-
-#### Step 3: Configure OAuth Client ID
-1. Application type: "Web application"
-2. Authorized JavaScript origins:
-   ```
-   https://saba-app-production.up.railway.app
-   http://localhost:3000
-   ```
-3. Authorized redirect URIs:
-   ```
-   https://saba-app-production.up.railway.app
-   http://localhost:3000
-   ```
-
-#### Step 4: Copy Client ID
-Copy the generated Client ID and add it to Railway environment variables.
-
-### 3. Fix Google Cloud Console Issues
-
-If you encounter the "new branding experience" bug mentioned in the [Google Cloud Community](https://www.googlecloudcommunity.com/gc/Developer-Tools/new-branding-experience-not-letting-me-create-clientId/td-p/860498), try these solutions:
-
-1. **Refresh the page** after configuring consent screen
-2. **Use incognito mode** to access Google Cloud Console
-3. **Clear browser cache and cookies**
-4. **Switch to old experience** by clicking on any GCP service first
-
-### 4. Deployment Verification
-
-After setting up environment variables:
-
-1. **Redeploy the application** in Railway
-2. **Check Railway logs** for any build errors
-3. **Test the application** at your Railway URL
-4. **Verify Google Sign-In** works correctly
-
-## 🔧 Troubleshooting
-
-### Google Sign-In Issues
-- **"Client ID undefined"**: Environment variable not set correctly
-- **"Origin not allowed"**: Add your Railway URL to authorized origins
-- **"Missing required parameter"**: Check Google Client ID configuration
-
-### API 404 Errors
-- **"/api/documents 404"**: Backend not running or routes not configured
-- **Check Railway logs** for backend startup errors
-- **Verify MongoDB connection** string is correct
-
-### CSP Errors
-- **Google stylesheets blocked**: CSP headers removed for static export compatibility
-- **This is expected** in static export mode
-
-## 📋 Environment Variables Summary
-
-### Frontend (.env.local for local development)
-```bash
-NEXT_PUBLIC_API_URL=http://localhost:3001/api
-NEXT_PUBLIC_GOOGLE_CLIENT_ID=YOUR_GOOGLE_CLIENT_ID_HERE
-```
-
-### Backend (.env for local development)
-```bash
-MONGODB_URI=mongodb://localhost:27017/sabap
-CORS_ORIGIN=http://localhost:3000
-FRONTEND_URL=http://localhost:3000
+# Backend Configuration
 PORT=3001
+CORS_ORIGIN=https://your-app-name.up.railway.app
+DATABASE_URL=your_database_url_here
+
+# Google OAuth Backend
+GOOGLE_CLIENT_ID=your_google_client_id_here
+GOOGLE_CLIENT_SECRET=your_google_client_secret_here
 ```
 
-### Railway Production
-Set these in Railway dashboard for each service (frontend/backend) as shown above.
+### 🔧 Google Cloud Console Setup
 
-## 🎯 Next Steps
+1. **OAuth Consent Screen:**
+   - Go to [Google Cloud Console](https://console.cloud.google.com/)
+   - Select your project
+   - Navigate to "APIs & Services" > "OAuth consent screen"
+   - Add your Railway domain to "Authorized domains"
+   - Add test users if in testing mode
 
-1. **Set up environment variables** in Railway
-2. **Configure Google OAuth** credentials
-3. **Redeploy the application**
-4. **Test all functionality**
-5. **Monitor logs** for any remaining issues
+2. **OAuth 2.0 Credentials:**
+   - Go to "APIs & Services" > "Credentials"
+   - Create or edit OAuth 2.0 Client ID
+   - Add these **Authorized JavaScript origins:**
+     ```
+     https://your-app-name.up.railway.app
+     http://localhost:3000
+     ```
+   - Add these **Authorized redirect URIs:**
+     ```
+     https://your-app-name.up.railway.app
+     https://your-app-name.up.railway.app/api/auth/google/callback
+     http://localhost:3000
+     ```
 
-## 📞 Support
+### 🐛 Troubleshooting
 
-If you continue to have issues:
-1. Check Railway deployment logs
-2. Verify all environment variables are set
-3. Test Google OAuth configuration
-4. Review this guide for any missed steps 
+#### Google Sign-In Issues:
+- **"Client ID undefined"**: Check `NEXT_PUBLIC_GOOGLE_CLIENT_ID` in Railway variables
+- **"redirect_uri_mismatch"**: Verify redirect URIs in Google Cloud Console
+- **"invalid_request"**: Check OAuth consent screen configuration
+
+#### API Issues:
+- **404 on /api/documents**: Verify backend is running and routes are configured
+- **CORS errors**: Check `CORS_ORIGIN` variable matches your domain
+
+#### Font Issues:
+- Font warnings are now fixed with proper preloading configuration
+- Check browser console for any remaining font-related errors
+
+### 📝 Verification Steps
+
+1. **Check Environment Variables:**
+   ```bash
+   # In Railway logs, you should see:
+   🔧 API Configuration: { NODE_ENV: 'production', API_URL: '', ... }
+   🔑 Google Client ID: { clientId: 'your-id', isConfigured: true, ... }
+   ```
+
+2. **Test Google Sign-In:**
+   - Should show Georgian button: "შესვლა Google ანგარიშით"
+   - Google One Tap should appear automatically
+   - No Russian text should be visible
+
+3. **Test API Endpoints:**
+   - `/health` should return 200 OK
+   - `/api/documents` should return documents list
+   - Check browser network tab for successful requests
+
+### 🔄 Deployment Process
+
+1. **Push Changes:**
+   ```bash
+   git add .
+   git commit -m "Fix Google Sign-In and API issues"
+   git push
+   ```
+
+2. **Monitor Railway Logs:**
+   - Check for build success
+   - Verify environment variables are loaded
+   - Monitor API requests and responses
+
+3. **Test Application:**
+   - Frontend loads without errors
+   - Google Sign-In works in Georgian
+   - Documents API returns data
+   - No console errors
+
+### 📞 Support
+
+If issues persist:
+1. Check Railway logs for detailed error messages
+2. Verify all environment variables are set correctly
+3. Test Google OAuth configuration in Google Cloud Console
+4. Check browser console for client-side errors 
