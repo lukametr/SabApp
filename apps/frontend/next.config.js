@@ -10,10 +10,19 @@ const nextConfig = {
   },
   output: 'export',
   distDir: 'out',
+  
+  // Environment variables configuration
   env: {
-    NEXT_PUBLIC_GOOGLE_CLIENT_ID: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+    NEXT_PUBLIC_GOOGLE_CLIENT_ID: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '',
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://sabap-production.up.railway.app/api',
   },
+  
+  // Public runtime config for client-side access
+  publicRuntimeConfig: {
+    googleClientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '',
+    apiUrl: process.env.NEXT_PUBLIC_API_URL || 'https://sabap-production.up.railway.app/api',
+  },
+  
   webpack: (config) => {
     config.resolve.fallback = {
       ...config.resolve.fallback,

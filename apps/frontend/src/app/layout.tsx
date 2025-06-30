@@ -5,7 +5,14 @@ import { Providers } from './providers';
 import Navigation from '../components/Navigation';
 import Script from 'next/script';
 
-const inter = Inter({ subsets: ['latin'] });
+// Font optimization with proper configuration
+const inter = Inter({ 
+  subsets: ['latin', 'latin-ext'],
+  display: 'swap',
+  variable: '--font-inter',
+  preload: true,
+  fallback: ['system-ui', 'arial'],
+});
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -26,8 +33,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ka">
+    <html lang="ka" className={inter.variable}>
       <head>
+        {/* Font preloading */}
+        <link
+          rel="preconnect"
+          href="https://fonts.googleapis.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        
+        {/* Google Sign-In Script */}
         <Script 
           src="https://accounts.google.com/gsi/client?hl=ka" 
           async 
@@ -35,7 +55,7 @@ export default function RootLayout({
           strategy="beforeInteractive"
         />
       </head>
-      <body className={inter.className}>
+      <body className={`${inter.className} font-sans`}>
         <Providers>
           <Navigation />
           {children}

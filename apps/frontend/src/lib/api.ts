@@ -5,6 +5,12 @@ const API_URL = process.env.NODE_ENV === 'production'
   ? '' // Use relative URL since backend serves static files and has /api prefix
   : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api');
 
+console.log('🔧 API Configuration:', {
+  NODE_ENV: process.env.NODE_ENV,
+  API_URL,
+  NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+});
+
 // Helper function to get correct API path
 export const getApiPath = (path: string): string => {
   if (process.env.NODE_ENV === 'production') {
@@ -25,6 +31,13 @@ const api = axios.create({
 // Add request interceptor for JWT
 api.interceptors.request.use(
   (config) => {
+    console.log('🚀 API Request:', {
+      method: config.method?.toUpperCase(),
+      url: config.url,
+      baseURL: config.baseURL,
+      fullURL: `${config.baseURL}${config.url}`,
+    });
+    
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('token');
       if (token) {
@@ -35,20 +48,30 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
-    console.error('Request Error:', error);
+    console.error('❌ Request Error:', error);
     return Promise.reject(error);
   }
 );
 
 // Add response interceptor for error handling
 api.interceptors.response.use(
-  (response: AxiosResponse) => response,
+  (response: AxiosResponse) => {
+    console.log('✅ API Response:', {
+      status: response.status,
+      url: response.config.url,
+      data: response.data,
+    });
+    return response;
+  },
   (error: AxiosError) => {
-    console.error('API Error:', {
+    console.error('❌ API Error:', {
       message: error.message,
       status: error.response?.status,
+      statusText: error.response?.statusText,
       data: error.response?.data,
       url: error.config?.url,
+      baseURL: error.config?.baseURL,
+      fullURL: `${error.config?.baseURL}${error.config?.url}`,
     });
     
     // Handle specific error cases
