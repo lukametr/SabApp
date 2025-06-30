@@ -230,4 +230,6 @@ export const DocumentView: React.FC<DocumentViewProps> = ({ document, onEdit, on
       </CardContent>
     </Card>
   );
-}; 
+};
+
+export default DocumentView;

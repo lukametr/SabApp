@@ -1,3 +1,3 @@
-export { DocumentList } from './DocumentList';
-export { DocumentForm } from './DocumentForm';
-export { DocumentView } from './DocumentView'; 
+export { default as DocumentList } from './DocumentList';
+export { default as DocumentForm } from './DocumentForm';
+export { default as DocumentView } from './DocumentView';

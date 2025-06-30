@@ -2,8 +2,9 @@
 
 import React, { useState, useCallback } from 'react';
 import { Box, Button, Dialog, DialogTitle, DialogContent, Typography } from '@mui/material';
-import { DocumentList } from '../components/DocumentList';
-import { DocumentForm, DocumentView } from '../components';
+import DocumentList from '../components/DocumentList';
+import DocumentForm from '../components/DocumentForm';
+import DocumentView from '../components/DocumentView';
 import { useDocumentStore } from '../store/documentStore';
 import { CreateDocumentDto, Document } from '../types/document';
 
@@ -141,4 +142,4 @@ export default function Home() {
       </Dialog>
     </Box>
   );
-} 
+}
