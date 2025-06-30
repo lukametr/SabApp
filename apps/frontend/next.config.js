@@ -8,6 +8,8 @@ const nextConfig = {
   experimental: {
     esmExternals: false,
   },
+  output: 'export',
+  distDir: 'out',
   webpack: (config) => {
     config.resolve.fallback = {
       ...config.resolve.fallback,

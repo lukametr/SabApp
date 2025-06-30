@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Button, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
-import { DocumentList, DocumentForm } from '../../components';
+import DocumentList from '../../components/DocumentList';
+import DocumentForm from '../../components/DocumentForm';
 import { useDocumentStore } from '../../store/documentStore';
 import { Document, CreateDocumentDto, UpdateDocumentDto } from '../../types/document';
 
@@ -148,4 +149,4 @@ export default function DocumentsPage() {
       </Dialog>
     </Box>
   );
-} 
+}

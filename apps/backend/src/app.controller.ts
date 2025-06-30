@@ -73,24 +73,4 @@ export class AppController {
       };
     }
   }
-
-  @Get('*')
-  serveFrontend(@Res() res: Response) {
-    const indexPath = join(process.cwd(), 'apps/frontend/out/index.html');
-    console.log('Looking for frontend at:', indexPath);
-    console.log('File exists:', existsSync(indexPath));
-    console.log('Current working directory:', process.cwd());
-    
-    if (existsSync(indexPath)) {
-      res.sendFile(indexPath);
-    } else {
-      res.status(HttpStatus.NOT_FOUND).json({
-        message: 'Frontend not found. Please ensure the frontend is built.',
-        path: indexPath,
-        currentDir: process.cwd(),
-        exists: existsSync(indexPath),
-        debug: 'Try visiting /debug endpoint for more information',
-      });
-    }
-  }
 }

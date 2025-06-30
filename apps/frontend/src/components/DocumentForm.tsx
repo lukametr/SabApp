@@ -449,7 +449,7 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
   );
 }
 
-export function DocumentForm({ onSubmit: handleFormSubmit, onCancel, defaultValues, open, onClose }: Props) {
+export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, defaultValues, open, onClose }: Props) {
   const [hazards, setHazards] = useState<HazardData[]>(defaultValues?.hazards as HazardData[] ?? []);
 
   const { control, handleSubmit: submitForm, formState: { errors } } = useForm<CreateDocumentDto>({
@@ -586,4 +586,4 @@ export function DocumentForm({ onSubmit: handleFormSubmit, onCancel, defaultValu
       </DialogContent>
     </Dialog>
   );
-} 
+}
