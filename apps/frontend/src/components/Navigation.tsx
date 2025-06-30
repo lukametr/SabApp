@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useAuthStore } from '../store/authStore'
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { GoogleLogin, CredentialResponse } from '@react-oauth/google'
+import { CredentialResponse } from '@react-oauth/google'
 import Image from 'next/image'
 import api, { getApiPath } from '../lib/api'
 import RegistrationForm from './RegistrationForm'
@@ -98,6 +98,15 @@ export default function Navigation() {
     }
   }, [login, router])
 
+  const handleCustomGoogleSignIn = () => {
+    if (window.google && window.google.accounts) {
+      // Show Google One Tap and sign-in popup
+      window.google.accounts.id.prompt();
+    } else {
+      alert('Google Sign-In არ არის ხელმისაწვდომი');
+    }
+  }
+
   useEffect(() => {
     // Initialize Google Sign-In
     console.log('Initializing Google Sign-In...');
@@ -119,13 +128,18 @@ export default function Navigation() {
         prompt_parent_id: 'google-signin-container',
         ux_mode: 'popup',
         scope: 'openid email profile',
-        locale: 'ka',
+        locale: 'ka', // Georgian locale
       });
+      
+      // Show Google One Tap automatically only if user is not logged in
+      if (!user) {
+        window.google.accounts.id.prompt();
+      }
       console.log('Google Sign-In initialized successfully');
     } else {
       console.error('Google API not loaded');
     }
-  }, [handleGoogleSuccess]);
+  }, [handleGoogleSuccess, user]);
 
   const isActive = (path: string) => pathname === path
 
@@ -155,19 +169,6 @@ export default function Navigation() {
     logout()
     router.push('/')
     router.refresh()
-  }
-
-  const handleGoogleError = () => {
-    console.error('Google Sign-In error occurred');
-    alert('Google ავტორიზაციის შეცდომა: უცნობი შეცდომა')
-  }
-
-  const handleCustomGoogleSignIn = () => {
-    if (window.google && window.google.accounts) {
-      window.google.accounts.id.prompt();
-    } else {
-      alert('Google Sign-In არ არის ხელმისაწვდომი');
-    }
   }
 
   return (
@@ -207,21 +208,10 @@ export default function Navigation() {
             <div className="flex items-center space-x-4">
               {!user && (
                 <div id="google-signin-container">
-                  <GoogleLogin
-                    onSuccess={handleGoogleSuccess}
-                    onError={handleGoogleError}
-                    useOneTap
-                    text="signin_with"
-                    shape="rectangular"
-                    size="large"
-                    theme="outline"
-                    width="200"
-                    locale="ka"
-                  />
-                  {/* Custom Georgian button as fallback */}
+                  {/* Custom Georgian button */}
                   <button
                     onClick={handleCustomGoogleSignIn}
-                    className="ml-2 px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 flex items-center"
+                    className="px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 flex items-center"
                   >
                     <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
                       <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
