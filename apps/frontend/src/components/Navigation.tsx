@@ -7,7 +7,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { CredentialResponse } from '@react-oauth/google'
 import Image from 'next/image'
-import api, { getApiPath } from '../lib/api'
+import api from '../lib/api'
 import RegistrationForm from './RegistrationForm'
 
 interface ApiError {
@@ -72,7 +72,7 @@ export default function Navigation() {
       
       // Check if user already exists
       try {
-        const res = await api.post(getApiPath('/auth/google'), {
+        const res = await api.post('/auth/google', {
           idToken,
           personalNumber: '',
           phoneNumber: '',
@@ -157,7 +157,7 @@ export default function Navigation() {
 
     setLoading(true)
     try {
-      const res = await api.post(getApiPath('/auth/google'), {
+      const res = await api.post('/auth/google', {
         idToken: pendingIdToken,
         personalNumber,
         phoneNumber,

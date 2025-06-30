@@ -16,6 +16,20 @@ async function bootstrap() {
     exclude: ['/health', '/docs'],
   });
 
+  // Debug middleware for API routes
+  app.use((req, res, next) => {
+    console.log(`🔍 [${req.method}] ${req.url} - API Route Check`);
+    
+    // Check if this is an API route
+    if (req.url.startsWith('/api')) {
+      console.log(`✅ API Route detected: ${req.url}`);
+    } else if (!req.url.startsWith('/health') && !req.url.startsWith('/docs')) {
+      console.log(`📄 SPA Fallback for: ${req.url}`);
+    }
+    
+    next();
+  });
+
   // Security headers
   app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" },
@@ -55,7 +69,7 @@ async function bootstrap() {
       'Access-Control-Allow-Methods',
       'Access-Control-Allow-Credentials'
     ],
-    exposedHeaders: ['Content-Range', 'X-Content-Range'],
+    exposedHeaders: ['R-Range', 'X-Content-Range'],
     maxAge: 3600,
     preflightContinue: false,
     optionsSuccessStatus: 204
@@ -138,6 +152,7 @@ async function bootstrap() {
     console.log(`📚 API Documentation available at: http://0.0.0.0:${port}/docs`);
     console.log(`🏥 Health check available at: http://0.0.0.0:${port}/health`);
     console.log(`🌐 CORS Origin: ${corsOrigin}`);
+    console.log(`🔧 API Routes available at: http://0.0.0.0:${port}/api`);
     
     // Keep the process alive - this is crucial for Render
     console.log('🚀 Application started successfully and keeping alive...');
