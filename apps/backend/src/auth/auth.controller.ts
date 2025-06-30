@@ -9,7 +9,7 @@ import { Roles } from './decorators/roles.decorator';
 import { UserRole } from '../users/schemas/user.schema';
 
 @ApiTags('auth')
-@Controller('api/auth')
+@Controller('auth')
 export class AuthController {
   constructor(
     private authService: AuthService,
