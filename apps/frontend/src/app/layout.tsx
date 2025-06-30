@@ -26,10 +26,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="ka">
       <head>
         <Script 
-          src="https://accounts.google.com/gsi/client" 
+          src="https://accounts.google.com/gsi/client?hl=ka" 
           async 
           defer
           strategy="beforeInteractive"
