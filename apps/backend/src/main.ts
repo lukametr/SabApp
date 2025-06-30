@@ -11,8 +11,8 @@ async function bootstrap() {
     abortOnError: false,
   });
 
-  // Set global prefix for all API routes except health
-  // app.setGlobalPrefix('api', { exclude: ['health'] });
+  // Set global prefix for all API routes
+  app.setGlobalPrefix('api');
 
   // Security headers
   app.use(helmet({
