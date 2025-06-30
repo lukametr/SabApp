@@ -47,13 +47,23 @@ export default function Navigation() {
 
   useEffect(() => {
     // Initialize Google Sign-In
+    console.log('Initializing Google Sign-In...');
+    console.log('Client ID:', process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID);
+    
     if (window.google && window.google.accounts) {
+      console.log('Google API loaded, initializing...');
       window.google.accounts.id.initialize({
         client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID',
         callback: handleGoogleSuccess,
         auto_select: false,
         cancel_on_tap_outside: true,
+        prompt_parent_id: 'google-signin-container',
+        ux_mode: 'popup',
+        scope: 'openid email profile',
       });
+      console.log('Google Sign-In initialized successfully');
+    } else {
+      console.error('Google API not loaded');
     }
   }, []);
 
@@ -61,11 +71,15 @@ export default function Navigation() {
 
   const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
     try {
+      console.log('Google Sign-In response:', credentialResponse);
       const idToken = credentialResponse.credential
       if (!idToken) {
+        console.error('No ID token received from Google');
         alert('Google ავტორიზაციის შეცდომა: ტოკენი ვერ მოიძებნა')
         return
       }
+      
+      console.log('ID token received, length:', idToken.length);
       
       // Check if user already exists
       try {
@@ -74,10 +88,12 @@ export default function Navigation() {
           personalNumber: '',
           phoneNumber: '',
         })
+        console.log('Auth response:', res.data);
         login(res.data)
         router.refresh()
       } catch (err: unknown) {
         const error = err as ApiError
+        console.error('Auth API error:', error);
         if (error?.response?.status === 409 && error?.response?.data?.message?.includes('Personal number')) {
           // User doesn't exist, show registration form
           setPendingIdToken(idToken)
@@ -88,6 +104,7 @@ export default function Navigation() {
       }
     } catch (err: unknown) {
       const error = err as ApiError
+      console.error('Google Sign-In error:', error);
       alert('ავტორიზაციის შეცდომა: ' + (error?.response?.data?.message || error?.message || 'უცნობი შეცდომა'))
     }
   }
@@ -156,15 +173,20 @@ export default function Navigation() {
             </div>
             <div className="flex items-center space-x-4">
               {!user && (
-                <GoogleLogin
-                  onSuccess={handleGoogleSuccess}
-                  onError={() => alert('Google ავტორიზაციის შეცდომა')}
-                  useOneTap
-                  text="signin_with"
-                  shape="pill"
-                  width="180"
-                  locale="ka"
-                />
+                <div id="google-signin-container">
+                  <GoogleLogin
+                    onSuccess={handleGoogleSuccess}
+                    onError={(error) => {
+                      console.error('Google Sign-In error:', error);
+                      alert('Google ავტორიზაციის შეცდომა: ' + (error.error || 'უცნობი შეცდომა'))
+                    }}
+                    useOneTap
+                    text="signin_with"
+                    shape="pill"
+                    width="180"
+                    locale="ka"
+                  />
+                </div>
               )}
               {user && (
                 <>
