@@ -2,8 +2,16 @@ import axios, { AxiosResponse, AxiosError } from 'axios';
 
 // Use relative URL when served from backend, external URL for development
 const API_URL = process.env.NODE_ENV === 'production' 
-  ? '/api' 
-  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001');
+  ? '' // Use relative URL since backend serves static files and has /api prefix
+  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api');
+
+// Helper function to get correct API path
+export const getApiPath = (path: string): string => {
+  if (process.env.NODE_ENV === 'production') {
+    return `/api${path}`;
+  }
+  return path;
+};
 
 const api = axios.create({
   baseURL: API_URL,
