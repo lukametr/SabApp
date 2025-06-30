@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { GoogleLogin, CredentialResponse } from '@react-oauth/google'
 import Image from 'next/image'
-import api from '../lib/api'
+import api, { getApiPath } from '../lib/api'
 import RegistrationForm from './RegistrationForm'
 
 interface ApiError {
@@ -48,12 +48,18 @@ export default function Navigation() {
   useEffect(() => {
     // Initialize Google Sign-In
     console.log('Initializing Google Sign-In...');
-    console.log('Client ID:', process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID);
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    console.log('Client ID:', clientId);
+    
+    if (!clientId || clientId === 'YOUR_GOOGLE_CLIENT_ID_HERE') {
+      console.error('Google Client ID not configured');
+      return;
+    }
     
     if (window.google && window.google.accounts) {
       console.log('Google API loaded, initializing...');
       window.google.accounts.id.initialize({
-        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID',
+        client_id: clientId,
         callback: handleGoogleSuccess,
         auto_select: false,
         cancel_on_tap_outside: true,
@@ -83,7 +89,7 @@ export default function Navigation() {
       
       // Check if user already exists
       try {
-        const res = await api.post('/auth/google', {
+        const res = await api.post(getApiPath('/auth/google'), {
           idToken,
           personalNumber: '',
           phoneNumber: '',
@@ -114,7 +120,7 @@ export default function Navigation() {
 
     setLoading(true)
     try {
-      const res = await api.post('/auth/google', {
+      const res = await api.post(getApiPath('/auth/google'), {
         idToken: pendingIdToken,
         personalNumber,
         phoneNumber,

@@ -1,19 +1,19 @@
-import api from '../../lib/api';
+import api, { getApiPath } from '../../lib/api';
 import { Document, CreateDocumentDto, UpdateDocumentDto } from '../../types/document';
 
 export const documentApi = {
   getAll: async (): Promise<Document[]> => {
-    const response = await api.get('/documents');
+    const response = await api.get(getApiPath('/documents'));
     return response.data;
   },
 
   getMyDocuments: async (): Promise<Document[]> => {
-    const response = await api.get('/documents/my');
+    const response = await api.get(getApiPath('/documents/my'));
     return response.data;
   },
 
   getById: async (id: string): Promise<Document> => {
-    const response = await api.get(`/documents/${id}`);
+    const response = await api.get(getApiPath(`/documents/${id}`));
     return response.data;
   },
 
@@ -62,7 +62,7 @@ export const documentApi = {
       }
     });
 
-    const response = await api.post('/documents', formData, {
+    const response = await api.post(getApiPath('/documents'), formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -88,7 +88,7 @@ export const documentApi = {
       }
     });
 
-    const response = await api.patch(`/documents/${data.id}`, formData, {
+    const response = await api.patch(getApiPath(`/documents/${data.id}`), formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -97,11 +97,11 @@ export const documentApi = {
   },
 
   delete: async (id: string): Promise<void> => {
-    await api.delete(`/documents/${id}`);
+    await api.delete(getApiPath(`/documents/${id}`));
   },
 
   toggleFavorite: async (id: string): Promise<Document> => {
-    const response = await api.post(`/documents/${id}/favorite`);
+    const response = await api.post(getApiPath(`/documents/${id}/favorite`));
     return response.data;
   },
 
@@ -111,7 +111,7 @@ export const documentApi = {
     assessmentSh: number,
     assessmentR: number,
   ): Promise<Document> => {
-    const response = await api.patch(`/documents/${id}/assessment`, {
+    const response = await api.patch(getApiPath(`/documents/${id}/assessment`), {
       assessmentA,
       assessmentSh,
       assessmentR,
@@ -120,14 +120,14 @@ export const documentApi = {
   },
 
   downloadDocument: async (id: string): Promise<Blob> => {
-    const response = await api.get(`/documents/${id}/download`, {
+    const response = await api.get(getApiPath(`/documents/${id}/download`), {
       responseType: 'blob',
     });
     return response.data;
   },
 
   downloadMultipleDocuments: async (ids: string[]): Promise<Blob> => {
-    const response = await api.post('/documents/download-multiple', { ids }, {
+    const response = await api.post(getApiPath('/documents/download-multiple'), { ids }, {
       responseType: 'blob',
     });
     return response.data;
