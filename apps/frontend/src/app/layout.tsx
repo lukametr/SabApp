@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
 import Navigation from '../components/Navigation';
+import Script from 'next/script';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -26,6 +27,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <Script 
+          src="https://accounts.google.com/gsi/client" 
+          async 
+          defer
+          strategy="beforeInteractive"
+        />
+      </head>
       <body className={inter.className}>
         <Providers>
           <Navigation />

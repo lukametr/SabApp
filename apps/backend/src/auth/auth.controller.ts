@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Body, Get, UseGuards, Request, Res, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
@@ -7,6 +7,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { Roles } from './decorators/roles.decorator';
 import { UserRole } from '../users/schemas/user.schema';
+import { Response } from 'express';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -23,6 +24,30 @@ export class AuthController {
   @ApiResponse({ status: 409, description: 'User already exists or data conflict' })
   async googleAuth(@Body() authDto: GoogleAuthDto): Promise<AuthResponseDto> {
     return this.authService.googleAuth(authDto);
+  }
+
+  @Get('google/callback')
+  @ApiOperation({ summary: 'Google OAuth callback' })
+  @ApiResponse({ status: 200, description: 'Successfully authenticated' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async googleCallback(@Request() req: any, @Res() res: Response) {
+    try {
+      // Handle Google OAuth callback
+      // This endpoint can be used for server-side OAuth flow
+      const { code, state } = req.query;
+      
+      if (!code) {
+        return res.status(HttpStatus.BAD_REQUEST).json({
+          message: 'Authorization code is required'
+        });
+      }
+
+      // Redirect to frontend with success message
+      return res.redirect(`${process.env.FRONTEND_URL || 'https://sabap-production.up.railway.app'}?auth=success`);
+    } catch (error) {
+      console.error('Google callback error:', error);
+      return res.redirect(`${process.env.FRONTEND_URL || 'https://sabap-production.up.railway.app'}?auth=error`);
+    }
   }
 
   @Get('profile')
