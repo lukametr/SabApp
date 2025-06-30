@@ -34,7 +34,7 @@ export class AuthController {
     try {
       // Handle Google OAuth callback
       // This endpoint can be used for server-side OAuth flow
-      const { code, state } = req.query;
+      const { code } = req.query;
       
       if (!code) {
         return res.status(HttpStatus.BAD_REQUEST).json({
