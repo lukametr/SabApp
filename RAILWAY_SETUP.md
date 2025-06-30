@@ -1,111 +1,119 @@
 # Railway Deployment Setup Guide
 
-## 🚀 Environment Variables Configuration
+## Environment Variables Configuration
 
 ### Required Environment Variables
 
-Add these variables in Railway dashboard under **Shared Variables**:
+You need to add these environment variables in Railway's **Shared Variables** section:
 
-```bash
-# Google OAuth Configuration
-NEXT_PUBLIC_GOOGLE_CLIENT_ID=675742559993-5quocp5mgvmog0fd2g8ue03vpleb23t5.apps.googleusercontent.com
-
-# API Configuration  
+```
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id_here
 NEXT_PUBLIC_API_URL=https://saba-app-production.up.railway.app/api
-
-# Backend Configuration
-PORT=3001
-CORS_ORIGIN=https://saba-app-production.up.railway.app
-DATABASE_URL=mongodb+srv://lukametr:akukelaAIO12@cluster0.l56lnkq.mongodb.net/saba?retryWrites=true&w=majority&appName=Cluster0
-
-# Google OAuth Backend
-GOOGLE_CLIENT_ID=675742559993-5quocp5mgvmog0fd2g8ue03vpleb23t5.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=your_google_client_secret_here
 ```
 
-### 🔧 Google Cloud Console Setup
+### How to Add Environment Variables in Railway
 
-1. **OAuth Consent Screen:**
+1. Go to your Railway project dashboard
+2. Click on your service (SabApp)
+3. Go to the **Variables** tab
+4. Add the variables in the **Shared Variables** section:
+   - `NEXT_PUBLIC_GOOGLE_CLIENT_ID`: Your Google OAuth Client ID
+   - `NEXT_PUBLIC_API_URL`: `https://saba-app-production.up.railway.app/api`
+
+### Google OAuth Configuration
+
+1. **Google Cloud Console Setup**:
    - Go to [Google Cloud Console](https://console.cloud.google.com/)
    - Select your project
-   - Navigate to "APIs & Services" > "OAuth consent screen"
-   - Add your Railway domain to "Authorized domains"
-   - Add test users if in testing mode
-
-2. **OAuth 2.0 Credentials:**
    - Go to "APIs & Services" > "Credentials"
-   - Create or edit OAuth 2.0 Client ID
-   - Add these **Authorized JavaScript origins:**
-     ```
-     https://saba-app-production.up.railway.app
-     http://localhost:3000
-     ```
-   - Add these **Authorized redirect URIs:**
-     ```
-     https://saba-app-production.up.railway.app
-     https://saba-app-production.up.railway.app/api/auth/google/callback
-     http://localhost:3000
-     ```
+   - Find your OAuth 2.0 Client ID
 
-### 🐛 Troubleshooting
-
-#### Google Sign-In Issues:
-- **"Client ID undefined"**: Check `NEXT_PUBLIC_GOOGLE_CLIENT_ID` in Railway variables
-- **"redirect_uri_mismatch"**: Verify redirect URIs in Google Cloud Console
-- **"invalid_request"**: Check OAuth consent screen configuration
-
-#### API Issues:
-- **404 on /api/documents**: Verify backend is running and routes are configured
-- **CORS errors**: Check `CORS_ORIGIN` variable matches your domain
-- **Domain mismatch**: Ensure all URLs use `saba-app-production.up.railway.app`
-
-#### Font Issues:
-- Font warnings are now fixed with proper preloading configuration
-- Check browser console for any remaining font-related errors
-
-### 📝 Verification Steps
-
-1. **Check Environment Variables:**
-   ```bash
-   # In Railway logs, you should see:
-   🔧 API Configuration: { NODE_ENV: 'production', API_URL: 'https://saba-app-production.up.railway.app/api', ... }
-   🔑 Google Client ID: { clientId: '675742559993-5quocp5mgvmog0fd2g8ue03vpleb23t5.apps.googleusercontent.com', isConfigured: true, ... }
+2. **Authorized JavaScript Origins**:
+   ```
+   https://saba-app-production.up.railway.app
+   http://localhost:3000
    ```
 
-2. **Test Google Sign-In:**
-   - Should show Georgian button: "შესვლა Google ანგარიშით"
-   - Google One Tap should appear automatically
-   - No Russian text should be visible
-
-3. **Test API Endpoints:**
-   - `/health` should return 200 OK
-   - `/api/documents` should return documents list
-   - Check browser network tab for successful requests
-
-### 🔄 Deployment Process
-
-1. **Push Changes:**
-   ```bash
-   git add .
-   git commit -m "Fix API configuration and domain issues"
-   git push
+3. **Authorized Redirect URIs**:
+   ```
+   https://saba-app-production.up.railway.app
+   https://saba-app-production.up.railway.app/
+   http://localhost:3000
    ```
 
-2. **Monitor Railway Logs:**
-   - Check for build success
-   - Verify environment variables are loaded
-   - Monitor API requests and responses
+### Troubleshooting Current Issues
 
-3. **Test Application:**
-   - Frontend loads without errors
-   - Google Sign-In works in Georgian
-   - Documents API returns data
-   - No console errors
+#### Issue 1: Google Client ID is undefined
+**Solution**: Add `NEXT_PUBLIC_GOOGLE_CLIENT_ID` to Railway Shared Variables
 
-### 📞 Support
+#### Issue 2: API 404 errors
+**Solution**: Ensure `NEXT_PUBLIC_API_URL` is set to `https://saba-app-production.up.railway.app/api`
 
-If issues persist:
-1. Check Railway logs for detailed error messages
-2. Verify all environment variables are set correctly
-3. Test Google OAuth configuration in Google Cloud Console
-4. Check browser console for client-side errors 
+#### Issue 3: Malformed API URLs
+**Solution**: The API configuration has been fixed to prevent URL concatenation issues
+
+### Verification Steps
+
+After setting environment variables:
+
+1. **Redeploy your application** in Railway
+2. **Check Railway logs** for any build errors
+3. **Test the application**:
+   - Visit `https://saba-app-production.up.railway.app`
+   - Check browser console for environment variable logs
+   - Test Google Sign-In functionality
+   - Test API endpoints
+
+### Debug Endpoints
+
+- **Health Check**: `https://saba-app-production.up.railway.app/health`
+- **API Documentation**: `https://saba-app-production.up.railway.app/docs`
+- **Environment Debug**: Check browser console for API configuration logs
+
+### Common Issues and Solutions
+
+1. **Environment variables not loading**:
+   - Ensure variables are in Shared Variables, not service-specific
+   - Redeploy after adding variables
+   - Check Railway logs for build errors
+
+2. **Google OAuth errors**:
+   - Verify Client ID is correct
+   - Check authorized origins in Google Cloud Console
+   - Ensure redirect URIs are properly configured
+
+3. **API 404 errors**:
+   - Verify API URL is correct
+   - Check backend logs in Railway
+   - Ensure documents controller is properly imported
+
+### Railway Configuration Files
+
+The project uses these Railway configuration files:
+- `railway.toml` (root) - Main deployment configuration
+- `apps/backend/railway.toml` - Backend-specific configuration
+
+### Deployment Process
+
+1. **Build Process**:
+   - Frontend: Next.js static export
+   - Backend: NestJS application
+   - Static files served by NestJS
+
+2. **Start Command**:
+   - Backend starts on port specified by `PORT` environment variable
+   - Frontend static files served from `/` path
+   - API routes served from `/api` path
+
+### Monitoring and Logs
+
+- **Railway Dashboard**: Monitor deployment status and logs
+- **Application Logs**: Check for errors in Railway logs
+- **Browser Console**: Check for client-side errors and API configuration
+
+### Security Notes
+
+- Never commit sensitive environment variables to Git
+- Use Railway's environment variable system for secrets
+- Ensure Google OAuth credentials are properly configured
+- Check CORS settings for production domain 
