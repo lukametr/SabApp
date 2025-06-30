@@ -80,9 +80,15 @@ export class AppController {
   serveFrontend(@Res() res: Response) {
     const url = res.req.url || '/';
     
-    // Skip API routes
+    // Skip API routes - let them be handled by other controllers
     if (url.startsWith('/api/') || url.startsWith('/health') || url.startsWith('/docs')) {
       return res.status(404).json({ error: 'API endpoint not found' });
+    }
+    
+    // Skip static files that should be served by ServeStaticModule
+    if (url.includes('.') && !url.includes('?')) {
+      // This is likely a static file, let ServeStaticModule handle it
+      return res.status(404).json({ error: 'Static file not found' });
     }
     
     // Railway-ზე ფრონტენდის ფაილები არიან /app/apps/frontend/out-ზე
