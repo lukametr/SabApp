@@ -1,7 +1,7 @@
 import { Controller, Get, Res, HttpStatus, All } from '@nestjs/common';
 import { Response } from 'express';
 import { join } from 'path';
-import { existsSync, readdirSync, readFileSync } from 'fs';
+import { existsSync, readdirSync } from 'fs';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 @ApiTags('app')
@@ -43,7 +43,8 @@ export class AppController {
   @Get('debug')
   debugInfo() {
     const currentDir = process.cwd();
-    const frontendPath = join(currentDir, 'apps/frontend/out');
+    // Railway-ზე ფრონტენდის ფაილები იქნება root დირექტორიაში
+    const frontendPath = join(currentDir, '../../apps/frontend/out');
     const indexPath = join(frontendPath, 'index.html');
     
     try {
@@ -77,7 +78,8 @@ export class AppController {
   // Catch-all route for SPA routing
   @All('*')
   serveFrontend(@Res() res: Response) {
-    const frontendPath = join(process.cwd(), 'apps/frontend/out');
+    // Railway-ზე ფრონტენდის ფაილები იქნება root დირექტორიაში
+    const frontendPath = join(process.cwd(), '../../apps/frontend/out');
     const indexPath = join(frontendPath, 'index.html');
     
     // Check if the requested path exists as a static file
