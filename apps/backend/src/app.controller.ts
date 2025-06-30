@@ -7,13 +7,13 @@ import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 @ApiTags('app')
 @Controller()
 export class AppController {
-  @Get()
-  @ApiOperation({ summary: 'Root endpoint' })
-  @ApiResponse({ status: 200, description: 'SabApp API is running' })
-  getRoot(@Res() res: Response) {
-    // გადამისამართება ფრონტენდის Next.js აპზე
-    return res.redirect('/_next/static');
-  }
+  // @Get()
+  // @ApiOperation({ summary: 'Root endpoint' })
+  // @ApiResponse({ status: 200, description: 'SabApp API is running' })
+  // getRoot(@Res() res: Response) {
+  //   // გადამისამართება ფრონტენდის Next.js აპზე
+  //   return res.redirect('/_next/static');
+  // }
 
   @Get('health')
   @ApiOperation({ summary: 'აპლიკაციის ჯანმრთელობის შემოწმება' })
