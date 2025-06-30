@@ -2,7 +2,7 @@ import axios, { AxiosResponse, AxiosError } from 'axios';
 
 // Use relative URL when served from backend, external URL for development
 const API_URL = process.env.NODE_ENV === 'production' 
-  ? '' // Use relative URL since backend serves static files and has /api prefix
+  ? (process.env.NEXT_PUBLIC_API_URL || 'https://saba-app-production.up.railway.app/api')
   : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api');
 
 console.log('🔧 API Configuration:', {
@@ -14,7 +14,8 @@ console.log('🔧 API Configuration:', {
 // Helper function to get correct API path
 export const getApiPath = (path: string): string => {
   if (process.env.NODE_ENV === 'production') {
-    return `/api${path}`;
+    // In production, use full URL since frontend and backend are separate
+    return `${API_URL}${path}`;
   }
   return path;
 };

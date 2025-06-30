@@ -14,13 +14,18 @@ const nextConfig = {
   // Environment variables configuration
   env: {
     NEXT_PUBLIC_GOOGLE_CLIENT_ID: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '',
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://sabap-production.up.railway.app/api',
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://saba-app-production.up.railway.app/api',
   },
   
   // Public runtime config for client-side access
   publicRuntimeConfig: {
     googleClientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '',
-    apiUrl: process.env.NEXT_PUBLIC_API_URL || 'https://sabap-production.up.railway.app/api',
+    apiUrl: process.env.NEXT_PUBLIC_API_URL || 'https://saba-app-production.up.railway.app/api',
+  },
+  
+  // Ensure environment variables are available at build time
+  generateBuildId: async () => {
+    return 'build-' + Date.now();
   },
   
   webpack: (config) => {
