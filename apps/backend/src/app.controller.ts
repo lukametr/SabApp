@@ -85,12 +85,6 @@ export class AppController {
       return res.status(404).json({ error: 'API endpoint not found' });
     }
     
-    // Skip static files that should be served by ServeStaticModule
-    if (url.includes('.') && !url.includes('?')) {
-      // This is likely a static file, let ServeStaticModule handle it
-      return res.status(404).json({ error: 'Static file not found' });
-    }
-    
     // Railway-ზე ფრონტენდის ფაილები არიან /app/apps/frontend/out-ზე
     const frontendPath = join(process.cwd(), '../frontend/out');
     const indexPath = join(frontendPath, 'index.html');
