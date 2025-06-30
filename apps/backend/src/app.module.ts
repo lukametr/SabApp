@@ -16,9 +16,9 @@ import { HealthModule } from './health.module';
     }),
     MongooseModule.forRoot(process.env.MONGODB_URI || 'mongodb://localhost:27017/sabap'),
     ServeStaticModule.forRoot({
-      rootPath: join(process.cwd(), 'apps/frontend/.next/static'),
+      rootPath: join(process.cwd(), 'apps/frontend/out'),
       exclude: ['/api*'],
-      serveRoot: '/_next/static',
+      serveRoot: '/',
     }),
     DocumentsModule,
     AuthModule,
