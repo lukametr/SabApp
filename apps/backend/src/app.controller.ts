@@ -43,8 +43,8 @@ export class AppController {
   @Get('debug')
   debugInfo() {
     const currentDir = process.cwd();
-    // Railway-ზე ფრონტენდის ფაილები იქნება root დირექტორიაში
-    const frontendPath = join(currentDir, '../../apps/frontend/out');
+    // Railway-ზე ფრონტენდის ფაილები არიან /app/apps/frontend/out-ზე
+    const frontendPath = join(currentDir, '../frontend/out');
     const indexPath = join(frontendPath, 'index.html');
     
     try {
@@ -78,14 +78,21 @@ export class AppController {
   // Catch-all route for SPA routing
   @All('*')
   serveFrontend(@Res() res: Response) {
-    // Railway-ზე ფრონტენდის ფაილები იქნება root დირექტორიაში
-    const frontendPath = join(process.cwd(), '../../apps/frontend/out');
+    const url = res.req.url || '/';
+    
+    // Skip API routes
+    if (url.startsWith('/api/') || url.startsWith('/health') || url.startsWith('/docs')) {
+      return res.status(404).json({ error: 'API endpoint not found' });
+    }
+    
+    // Railway-ზე ფრონტენდის ფაილები არიან /app/apps/frontend/out-ზე
+    const frontendPath = join(process.cwd(), '../frontend/out');
     const indexPath = join(frontendPath, 'index.html');
     
     // Check if the requested path exists as a static file
-    const requestedPath = join(frontendPath, res.req.url || '/');
+    const requestedPath = join(frontendPath, url);
     
-    if (existsSync(requestedPath) && !res.req.url?.startsWith('/api')) {
+    if (existsSync(requestedPath) && !url.startsWith('/api')) {
       // Serve the static file if it exists
       return res.sendFile(requestedPath);
     }
