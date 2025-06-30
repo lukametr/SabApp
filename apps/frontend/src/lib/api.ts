@@ -36,7 +36,7 @@ api.interceptors.request.use(
       method: config.method?.toUpperCase(),
       url: config.url,
       baseURL: config.baseURL,
-      fullURL: `${config.baseURL}${config.url}`,
+      fullURL: config.url ? `${config.baseURL}/${config.url}`.replace(/\/+/g, '/') : config.baseURL,
     });
     
     if (typeof window !== 'undefined') {
@@ -72,7 +72,7 @@ api.interceptors.response.use(
       data: error.response?.data,
       url: error.config?.url,
       baseURL: error.config?.baseURL,
-      fullURL: `${error.config?.baseURL}${error.config?.url}`,
+      fullURL: error.config?.url ? `${error.config?.baseURL}/${error.config?.url}`.replace(/\/+/g, '/') : error.config?.baseURL,
     });
     
     // Handle specific error cases

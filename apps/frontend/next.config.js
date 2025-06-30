@@ -28,13 +28,25 @@ const nextConfig = {
     return 'build-' + Date.now();
   },
   
-  webpack: (config) => {
+  webpack: (config, { isServer }) => {
     config.resolve.fallback = {
       ...config.resolve.fallback,
       fs: false,
       net: false,
       tls: false,
     };
+    
+    // Ensure environment variables are available in client-side code
+    if (!isServer) {
+      config.plugins.push(
+        new (require('webpack')).DefinePlugin({
+          'process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID': JSON.stringify(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ''),
+          'process.env.NEXT_PUBLIC_API_URL': JSON.stringify(process.env.NEXT_PUBLIC_API_URL || 'https://saba-app-production.up.railway.app/api'),
+          'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production'),
+        })
+      );
+    }
+    
     return config;
   },
 };
