@@ -16,7 +16,8 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "clean": "pnpm run --parallel clean",
     "build:prod": "bash scripts/build.sh",
-    "start:prod:script": "bash scripts/start.sh"
+    "start:prod:script": "bash scripts/start.sh",
+    "test": "bash scripts/test.sh"
   },
   "devDependencies": {
     "@types/node": "^20.19.0",

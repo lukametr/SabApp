@@ -15,6 +15,25 @@ cd apps/frontend
 pnpm build
 cd ../..
 
+# Verify frontend build
+echo "🔍 Verifying frontend build..."
+if [ ! -f "apps/frontend/out/index.html" ]; then
+    echo "❌ Frontend build failed: index.html not found"
+    exit 1
+fi
+
+if [ ! -f "apps/frontend/out/documents/index.html" ]; then
+    echo "❌ Frontend build failed: documents/index.html not found"
+    exit 1
+fi
+
+if [ ! -f "apps/frontend/out/profile/index.html" ]; then
+    echo "❌ Frontend build failed: profile/index.html not found"
+    exit 1
+fi
+
+echo "✅ Frontend build verified successfully"
+
 # Build backend
 echo "🏗️ Building backend..."
 cd apps/backend
