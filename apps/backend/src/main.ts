@@ -4,7 +4,6 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import compression from 'compression';
-import { Request, Response, NextFunction } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -17,20 +16,7 @@ async function bootstrap() {
     exclude: ['/health', '/docs'],
   });
 
-  // Debug middleware for API routes
-  // (შეგიძლიათ დატოვო ან წაშალო, მაგრამ მხოლოდ ერთი SPA fallback უნდა იყოს)
-
-  // SPA fallback მხოლოდ იმ რექვესთებზე, რომლებიც არ იწყება /api, /health, /docs
-  app.use((req: Request, _res: Response, next: NextFunction) => {
-    if (
-      req.url.startsWith('/api') ||
-      req.url.startsWith('/health') ||
-      req.url.startsWith('/docs')
-    ) {
-      return next();
-    }
-    next();
-  });
+  // Debug middleware და SPA fallback ამოღებულია, რადგან ServeStaticModule სწორად ემსახურება static ფაილებს და არ იჭერს API როუტებს
 
   // Security headers
   app.use(helmet({
