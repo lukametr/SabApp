@@ -2,17 +2,8 @@ import axios, { AxiosResponse, AxiosError } from 'axios';
 
 // Use relative URL when served from backend, external URL for development
 const getApiUrl = () => {
-  if (typeof window !== 'undefined') {
-    // Client-side: use relative URL for production, external for development
-    if (process.env.NODE_ENV === 'production') {
-      return '/api'; // Relative URL when served from same domain
-    } else {
-      return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
-    }
-  } else {
-    // Server-side: use environment variable
-    return process.env.NEXT_PUBLIC_API_URL || 'https://saba-app-production.up.railway.app/api';
-  }
+  // Always use env variable or fallback, regardless of environment
+  return process.env.NEXT_PUBLIC_API_URL || 'https://saba-app-production.up.railway.app/api';
 };
 
 const API_URL = getApiUrl();
@@ -98,4 +89,4 @@ api.interceptors.response.use(
   }
 );
 
-export default api; 
+export default api;

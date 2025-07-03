@@ -38,7 +38,8 @@ export const documentApi = {
     // Add photos if they exist
     if (data.photos && data.photos.length > 0) {
       data.photos.forEach((photo, _index) => {
-        if (photo instanceof File) {
+        // Universal check for File type (works in browser and Node build)
+        if ((photo as any) && typeof photo === 'object' && (photo as any).constructor && (photo as any).constructor.name === 'File') {
           formData.append('photos', photo);
         }
       });
@@ -73,7 +74,8 @@ export const documentApi = {
     // Add photos if they exist
     if (data.photos && data.photos.length > 0) {
       data.photos.forEach((photo, _index) => {
-        if (photo instanceof File) {
+        // Universal check for File type (works in browser and Node build)
+        if ((photo as any) && typeof photo === 'object' && (photo as any).constructor && (photo as any).constructor.name === 'File') {
           formData.append('photos', photo);
         }
       });
@@ -123,4 +125,4 @@ export const documentApi = {
     });
     return response.data;
   },
-}; 
+};
