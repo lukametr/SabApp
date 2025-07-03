@@ -4,6 +4,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import compression from 'compression';
+import { Request, Response, NextFunction } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -17,16 +18,17 @@ async function bootstrap() {
   });
 
   // Debug middleware for API routes
-  app.use((req, res, next) => {
-    console.log(`🔍 [${req.method}] ${req.url} - API Route Check`);
-    
-    // Check if this is an API route
-    if (req.url.startsWith('/api')) {
-      console.log(`✅ API Route detected: ${req.url}`);
-    } else if (!req.url.startsWith('/health') && !req.url.startsWith('/docs')) {
-      console.log(`📄 SPA Fallback for: ${req.url}`);
+  // (შეგიძლიათ დატოვო ან წაშალო, მაგრამ მხოლოდ ერთი SPA fallback უნდა იყოს)
+
+  // SPA fallback მხოლოდ იმ რექვესთებზე, რომლებიც არ იწყება /api, /health, /docs
+  app.use((req: Request, _res: Response, next: NextFunction) => {
+    if (
+      req.url.startsWith('/api') ||
+      req.url.startsWith('/health') ||
+      req.url.startsWith('/docs')
+    ) {
+      return next();
     }
-    
     next();
   });
 
