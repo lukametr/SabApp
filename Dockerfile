@@ -15,7 +15,7 @@ RUN npm install -g pnpm && pnpm install --no-frozen-lockfile --recursive
 COPY . .
 
 ARG CACHEBUST=1
-# Build frontend and backend
+# Build frontend და backend
 RUN pnpm --filter ./apps/frontend build
 RUN pnpm --filter ./apps/backend build
 
