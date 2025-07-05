@@ -50,4 +50,4 @@ export class AuthResponseDto {
     personalNumber: string;
     phoneNumber: string;
   };
-} 
+}

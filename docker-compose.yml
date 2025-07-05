@@ -1,21 +1,24 @@
-version: '3.8'
-
 services:
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
-      - "10000:10000"
+      - "3001:3001"
     environment:
-      - NODE_ENV=production
-      - PORT=10000
-      - MONGODB_URI=mongodb+srv://lukametr:akukelaAIO12@cluster0.l56lnkq.mongodb.net/saba?retryWrites=true&w=majority&appName=Cluster0
+      - NODE_ENV=development
+      - PORT=3001
+      - MONGODB_URI=mongodb://mongo:27017/saba
       - JWT_SECRET=saba-secure-jwt-key-2024-06-12
-      - NEXT_PUBLIC_API_URL=https://saba-app-production.up.railway.app
+      - NEXT_PUBLIC_API_URL=http://localhost:3001/api
       - NEXT_PUBLIC_GOOGLE_CLIENT_ID=675742559993-5quocp5mgvmog0fd2g8ue03vpleb23t5.apps.googleusercontent.com
     depends_on:
       - mongo
     volumes:
       - ./uploads:/app/uploads
+      - ./apps/backend/uploads:/app/apps/backend/uploads
+    networks:
+      - saba-network
 
   mongo:
     image: mongo:7
@@ -24,7 +27,13 @@ services:
     volumes:
       - mongo_data:/data/db
     environment:
-      - MONGO_INITDB_DATABASE=sabap
+      - MONGO_INITDB_DATABASE=saba
+    networks:
+      - saba-network
+
+networks:
+  saba-network:
+    driver: bridge
 
 volumes:
   mongo_data:

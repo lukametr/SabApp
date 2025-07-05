@@ -8,7 +8,7 @@ export enum DocumentFormat {
   TXT = 'txt',
   JPG = 'jpg',
   PNG = 'png',
-  JPEG = 'jpeg'
+  JPEG = 'jpeg',
 }
 
 export enum PersonCategory {
@@ -109,4 +109,4 @@ export class Document extends MongoDocument {
   photos: string[];
 }
 
-export const DocumentSchema = SchemaFactory.createForClass(Document); 
+export const DocumentSchema = SchemaFactory.createForClass(Document);

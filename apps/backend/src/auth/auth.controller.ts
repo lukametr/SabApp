@@ -1,5 +1,19 @@
-import { Controller, Post, Body, Get, UseGuards, Request, Res, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  UseGuards,
+  Request,
+  Res,
+  HttpStatus,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { GoogleAuthDto, AuthResponseDto } from '../users/dto/google-auth.dto';
@@ -19,9 +33,16 @@ export class AuthController {
 
   @Post('google')
   @ApiOperation({ summary: 'Google OAuth authentication' })
-  @ApiResponse({ status: 200, description: 'Successfully authenticated', type: AuthResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Successfully authenticated',
+    type: AuthResponseDto,
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 409, description: 'User already exists or data conflict' })
+  @ApiResponse({
+    status: 409,
+    description: 'User already exists or data conflict',
+  })
   async googleAuth(@Body() authDto: GoogleAuthDto): Promise<AuthResponseDto> {
     return this.authService.googleAuth(authDto);
   }
@@ -35,18 +56,22 @@ export class AuthController {
       // Handle Google OAuth callback
       // This endpoint can be used for server-side OAuth flow
       const { code } = req.query;
-      
+
       if (!code) {
         return res.status(HttpStatus.BAD_REQUEST).json({
-          message: 'Authorization code is required'
+          message: 'Authorization code is required',
         });
       }
 
       // Redirect to frontend with success message
-      return res.redirect(`${process.env.FRONTEND_URL || 'https://sabap-production.up.railway.app'}?auth=success`);
+      return res.redirect(
+        `${process.env.FRONTEND_URL || 'https://sabap-production.up.railway.app'}?auth=success`,
+      );
     } catch (error) {
       console.error('Google callback error:', error);
-      return res.redirect(`${process.env.FRONTEND_URL || 'https://sabap-production.up.railway.app'}?auth=error`);
+      return res.redirect(
+        `${process.env.FRONTEND_URL || 'https://sabap-production.up.railway.app'}?auth=error`,
+      );
     }
   }
 
@@ -54,14 +79,17 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get user profile' })
-  @ApiResponse({ status: 200, description: 'User profile retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'User profile retrieved successfully',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getProfile(@Request() req: any) {
     const user = await this.usersService.findById(req.user.id);
     if (!user) {
       throw new Error('User not found');
     }
-    
+
     return {
       id: user._id,
       name: user.name,
@@ -83,12 +111,18 @@ export class AuthController {
   @Roles(UserRole.ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all users (Admin only)' })
-  @ApiResponse({ status: 200, description: 'Users list retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Users list retrieved successfully',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Admin access required',
+  })
   async getAllUsers() {
     const users = await this.usersService.findAll();
-    return users.map(user => ({
+    return users.map((user) => ({
       id: user._id,
       name: user.name,
       email: user.email,
@@ -103,4 +137,4 @@ export class AuthController {
       updatedAt: user.updatedAt,
     }));
   }
-} 
+}

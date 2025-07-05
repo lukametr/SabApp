@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Body, Param, Delete, UseInterceptors, UploadedFiles, Patch, Res } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  UseInterceptors,
+  UploadedFiles,
+  Patch,
+  Res,
+} from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 import { DocumentsService } from './documents.service';
@@ -12,39 +23,44 @@ export class DocumentsController {
   constructor(private readonly documentsService: DocumentsService) {}
 
   @Post()
-  @UseInterceptors(FileFieldsInterceptor([
-    { name: 'photos', maxCount: 10 },
-    { name: 'hazardPhotos', maxCount: 50 }
-  ]))
-  async create(@Body() createDocumentDto: CreateDocumentDto, @UploadedFiles() files: any) {
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'photos', maxCount: 10 },
+      { name: 'hazardPhotos', maxCount: 50 },
+    ]),
+  )
+  async create(
+    @Body() createDocumentDto: CreateDocumentDto,
+    @UploadedFiles() files: any,
+  ) {
     console.log('Received document data:', createDocumentDto);
     console.log('Received files:', files);
-    
+
     // შევინახოთ ფაილები
     const savedPhotos: string[] = [];
-    
+
     if (files && files.hazardPhotos) {
       const uploadsDir = path.join(process.cwd(), 'uploads');
       if (!fs.existsSync(uploadsDir)) {
         fs.mkdirSync(uploadsDir, { recursive: true });
       }
-      
+
       for (const file of files.hazardPhotos) {
         const fileName = `${Date.now()}-${file.originalname}`;
         const filePath = path.join(uploadsDir, fileName);
-        
+
         // გადავიტანოთ ფაილი uploads დირექტორიაში
         fs.writeFileSync(filePath, file.buffer);
         savedPhotos.push(fileName);
       }
     }
-    
+
     // დავამატოთ შენახული ფოტოების სახელები დოკუმენტში
     const documentWithPhotos = {
       ...createDocumentDto,
-      photos: savedPhotos
+      photos: savedPhotos,
     };
-    
+
     return this.documentsService.create(documentWithPhotos);
   }
 
@@ -59,7 +75,10 @@ export class DocumentsController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateDocumentDto: UpdateDocumentDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateDocumentDto: UpdateDocumentDto,
+  ) {
     return this.documentsService.update(id, updateDocumentDto);
   }
 
@@ -76,13 +95,14 @@ export class DocumentsController {
   @Patch(':id/assessment')
   updateAssessment(
     @Param('id') id: string,
-    @Body() body: { assessmentA: number; assessmentSh: number; assessmentR: number }
+    @Body()
+    body: { assessmentA: number; assessmentSh: number; assessmentR: number },
   ) {
     return this.documentsService.updateAssessment(
       id,
       body.assessmentA,
       body.assessmentSh,
-      body.assessmentR
+      body.assessmentR,
     );
   }
 
@@ -97,12 +117,17 @@ export class DocumentsController {
   }
 
   @Post('download')
-  async downloadMultipleDocuments(@Body() body: { ids: string[] }, @Res() res: Response) {
-    const buffer = await this.documentsService.getMultipleDocumentFiles(body.ids);
+  async downloadMultipleDocuments(
+    @Body() body: { ids: string[] },
+    @Res() res: Response,
+  ) {
+    const buffer = await this.documentsService.getMultipleDocumentFiles(
+      body.ids,
+    );
     res.set({
       'Content-Type': 'application/octet-stream',
       'Content-Disposition': 'attachment; filename="documents.zip"',
     });
     res.send(buffer);
   }
-} 
+}

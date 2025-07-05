@@ -16,4 +16,4 @@ export class UpdateDocumentDto {
   @IsOptional()
   @IsDate()
   uploadDate?: Date;
-} 
+}
