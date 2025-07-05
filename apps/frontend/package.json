@@ -8,7 +8,7 @@
     "start": "next start -p 3000",
     "lint": "next lint --max-warnings=0 || true",
     "clean": "rm -rf .next out node_modules",
-    "postbuild": "echo Frontend built successfully && dir out"
+    "postbuild": "echo Frontend built successfully && ls -la out || echo 'Build completed'"
   },
   "dependencies": {
     "@emotion/react": "^11.11.3",
