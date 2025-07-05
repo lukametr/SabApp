@@ -159,6 +159,9 @@ async function bootstrap() {
       process.exit(1);
     }
 
+    // Start HTTP server
+    await app.listen(port);
+
     // Error handling
     process.on('uncaughtException', (error) => {
       console.error('Uncaught Exception:', error);
