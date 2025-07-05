@@ -1,12 +1,13 @@
 node_modules
+**/node_modules
 npm-debug.log
+*.log
 .git
 .gitignore
 README.md
 .env
 .nyc_output
 coverage
-.nyc_output
 .coverage
 .cache
 .next
@@ -14,4 +15,3 @@ out
 dist
 build
 .DS_Store
-*.log 
