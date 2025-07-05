@@ -84,12 +84,12 @@ async function bootstrap() {
   // SPA fallback middleware - serve index.html for non-API routes
   app.use((req: Request, res: Response, next: NextFunction) => {
     if (
-      !req.path.startsWith('/api') && 
-      !req.path.startsWith('/health') && 
+      !req.path.startsWith('/api') &&
+      !req.path.startsWith('/health') &&
       !req.path.startsWith('/docs') &&
       !req.path.includes('.')
     ) {
-      res.sendFile(join(process.cwd(), '../frontend/.next/server/pages/index.html'));
+      res.sendFile(join(process.cwd(), '../frontend/out/index.html'));
     } else {
       next();
     }
