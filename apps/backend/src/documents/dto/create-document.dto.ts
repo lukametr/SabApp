@@ -1,4 +1,12 @@
-import { IsString, IsOptional, IsDate, IsArray, IsNumber, ValidateNested, IsObject } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsDate,
+  IsArray,
+  IsNumber,
+  ValidateNested,
+  IsObject,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 class RiskDto {
@@ -84,4 +92,4 @@ export class CreateDocumentDto {
   @IsString({ each: true })
   @IsOptional()
   photos?: string[];
-} 
+}

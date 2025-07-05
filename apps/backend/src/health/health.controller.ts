@@ -22,7 +22,8 @@ export class HealthController {
       frontendUrl: process.env.FRONTEND_URL,
       hasMongoUri: !!process.env.MONGODB_URI,
       hasGoogleClientId: !!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
-      googleClientIdLength: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.length || 0,
+      googleClientIdLength:
+        process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.length || 0,
     };
   }
-} 
+}

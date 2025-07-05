@@ -11,7 +11,7 @@ import archiver from 'archiver';
 @Injectable()
 export class DocumentsService {
   constructor(
-    @InjectModel(Document.name) private documentModel: Model<Document>
+    @InjectModel(Document.name) private documentModel: Model<Document>,
   ) {}
 
   async create(createDocumentDto: CreateDocumentDto): Promise<Document> {
@@ -36,14 +36,19 @@ export class DocumentsService {
   }
 
   async remove(id: string): Promise<Document> {
-    const deletedDocument = await this.documentModel.findByIdAndDelete(id).exec();
+    const deletedDocument = await this.documentModel
+      .findByIdAndDelete(id)
+      .exec();
     if (!deletedDocument) {
       throw new NotFoundException('დოკუმენტი ვერ მოიძებნა');
     }
     return deletedDocument;
   }
 
-  async update(id: string, updateDocumentDto: UpdateDocumentDto): Promise<Document> {
+  async update(
+    id: string,
+    updateDocumentDto: UpdateDocumentDto,
+  ): Promise<Document> {
     const document = await this.documentModel
       .findByIdAndUpdate(id, updateDocumentDto, { new: true })
       .exec();
@@ -108,30 +113,32 @@ export class DocumentsService {
     }
 
     const archive = archiver('zip', {
-      zlib: { level: 9 }
+      zlib: { level: 9 },
     });
 
-    const files = documents.map(doc => {
-      if (!doc.filePath) {
-        return null;
-      }
+    const files = documents
+      .map((doc) => {
+        if (!doc.filePath) {
+          return null;
+        }
 
-      const filePath = path.join(process.cwd(), 'uploads', doc.filePath);
-      if (!fs.existsSync(filePath)) {
-        return null;
-      }
+        const filePath = path.join(process.cwd(), 'uploads', doc.filePath);
+        if (!fs.existsSync(filePath)) {
+          return null;
+        }
 
-      return {
-        name: doc.filePath,
-        path: filePath
-      };
-    }).filter(Boolean);
+        return {
+          name: doc.filePath,
+          path: filePath,
+        };
+      })
+      .filter(Boolean);
 
     if (files.length === 0) {
       throw new NotFoundException('No files found for the selected documents');
     }
 
-    files.forEach(file => {
+    files.forEach((file) => {
       if (file) {
         archive.file(file.path, { name: file.name });
       }
@@ -160,7 +167,7 @@ export class DocumentsService {
     }
 
     // განვაახლოთ დოკუმენტი
-    document.photos = document.photos.filter(photo => photo !== photoName);
+    document.photos = document.photos.filter((photo) => photo !== photoName);
     return document.save();
   }
 
@@ -186,14 +193,14 @@ export class DocumentsService {
     return new Promise((resolve, reject) => {
       const chunks: Buffer[] = [];
       const archive = archiver('zip', {
-        zlib: { level: 9 }
+        zlib: { level: 9 },
       });
 
       archive.on('data', (chunk: Buffer) => chunks.push(chunk));
       archive.on('end', () => resolve(Buffer.concat(chunks)));
       archive.on('error', (err: Error) => reject(err));
 
-      files.forEach(file => {
+      files.forEach((file) => {
         if (file && file.path && file.originalname) {
           archive.file(file.path, { name: file.originalname });
         }
@@ -202,4 +209,4 @@ export class DocumentsService {
       archive.finalize();
     });
   }
-} 
+}

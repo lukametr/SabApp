@@ -14,7 +14,9 @@ import { HealthModule } from './health.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    MongooseModule.forRoot(process.env.MONGODB_URI || 'mongodb://localhost:27017/sabap'),
+    MongooseModule.forRoot(
+      process.env.MONGODB_URI || 'mongodb://localhost:27017/sabap',
+    ),
     ServeStaticModule.forRoot({
       rootPath: join(process.cwd(), '../frontend/out'),
       exclude: ['/api*', '/health*', '/docs*'],

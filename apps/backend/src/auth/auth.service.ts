@@ -1,9 +1,17 @@
-import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  BadRequestException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { OAuth2Client } from 'google-auth-library';
 import { UsersService } from '../users/users.service';
-import { GoogleAuthDto, GoogleUserInfo, AuthResponseDto } from '../users/dto/google-auth.dto';
+import {
+  GoogleAuthDto,
+  GoogleUserInfo,
+  AuthResponseDto,
+} from '../users/dto/google-auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -57,9 +65,11 @@ export class AuthService {
     if (!user) {
       // New user registration - validate required fields
       if (!authDto.personalNumber || !authDto.phoneNumber) {
-        throw new BadRequestException('Personal number and phone number are required for new users');
+        throw new BadRequestException(
+          'Personal number and phone number are required for new users',
+        );
       }
-      
+
       // Create new user
       user = await this.usersService.createUser(
         googleUserInfo,
@@ -106,4 +116,4 @@ export class AuthService {
     }
     return user;
   }
-} 
+}
