@@ -6,7 +6,6 @@ import helmet from 'helmet';
 import compression from 'compression';
 import { Request, Response, NextFunction } from 'express';
 import { join } from 'path';
-import { join } from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
