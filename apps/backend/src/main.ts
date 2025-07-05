@@ -144,7 +144,12 @@ async function bootstrap() {
     }
 
     // Start HTTP server
-    await app.listen(port);
+    const host = '0.0.0.0';
+    await app.listen(port, host);
+    console.log(`✅ Application is running on: http://${host}:${port}`);
+    console.log(
+      `📚 API Documentation available at: http://${host}:${port}/docs`,
+    );
 
     // Error handling
     process.on('uncaughtException', (error) => {
@@ -191,16 +196,6 @@ async function bootstrap() {
           process.exit(1);
         });
     });
-
-    // Start the application
-    await app.listen(port, '0.0.0.0');
-    console.log(`✅ Application is running on: http://0.0.0.0:${port}`);
-    console.log(
-      `📚 API Documentation available at: http://0.0.0.0:${port}/docs`,
-    );
-    console.log(`🏥 Health check available at: http://0.0.0.0:${port}/health`);
-    console.log(`🌐 CORS Origin: ${corsOrigin}`);
-    console.log(`🔧 API Routes available at: http://0.0.0.0:${port}/api`);
 
     // Keep the process alive - this is crucial for Render
     console.log('🚀 Application started successfully and keeping alive...');
