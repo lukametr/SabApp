@@ -19,11 +19,11 @@ import { HealthModule } from './health.module';
     ),
     ServeStaticModule.forRoot({
       rootPath: join(process.cwd(), '../frontend/out'),
-      exclude: ['/api*', '/health*', '/docs*'],
+      exclude: ['/api/*', '/health*', '/docs*'],
       serveRoot: '/',
       serveStaticOptions: {
         index: 'index.html',
-        fallthrough: false,
+        fallthrough: true,
       },
     }),
     DocumentsModule,
