@@ -8,8 +8,16 @@ const nextConfig = {
   experimental: {
     esmExternals: false,
   },
-  output: 'export',
-  distDir: 'out',
+
+  // Proxy API requests to backend during development
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'http://localhost:3001/api/:path*',
+      },
+    ];
+  },
 
   // Environment variables configuration
   env: {
