@@ -8,8 +8,10 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=10000
-      - MONGODB_URI=mongodb://mongo:27017/sabap
-      - JWT_SECRET=your-secret-key
+      - MONGODB_URI=mongodb+srv://lukametr:akukelaAIO12@cluster0.l56lnkq.mongodb.net/saba?retryWrites=true&w=majority&appName=Cluster0
+      - JWT_SECRET=saba-secure-jwt-key-2024-06-12
+      - NEXT_PUBLIC_API_URL=https://saba-app-production.up.railway.app
+      - NEXT_PUBLIC_GOOGLE_CLIENT_ID=675742559993-5quocp5mgvmog0fd2g8ue03vpleb23t5.apps.googleusercontent.com
     depends_on:
       - mongo
     volumes:
@@ -25,4 +27,4 @@ services:
       - MONGO_INITDB_DATABASE=sabap
 
 volumes:
-  mongo_data: 
+  mongo_data:
