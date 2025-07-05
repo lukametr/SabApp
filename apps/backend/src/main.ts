@@ -4,8 +4,6 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import compression from 'compression';
-import { Request, Response, NextFunction } from 'express';
-import { join } from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -80,20 +78,6 @@ async function bootstrap() {
 
   // Compression
   app.use(compression());
-
-  // SPA fallback middleware - serve index.html for non-API routes
-  app.use((req: Request, res: Response, next: NextFunction) => {
-    if (
-      !req.path.startsWith('/api') &&
-      !req.path.startsWith('/health') &&
-      !req.path.startsWith('/docs') &&
-      !req.path.includes('.')
-    ) {
-      res.sendFile(join(process.cwd(), '../frontend/out/index.html'));
-    } else {
-      next();
-    }
-  });
 
   // CORS კონფიგურაცია
   const corsOrigin = process.env.CORS_ORIGIN || '*';
