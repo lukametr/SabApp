@@ -15,7 +15,7 @@ RUN npm install -g pnpm && pnpm install --no-frozen-lockfile --recursive
 COPY . .
 
 # Build frontend and backend
-RUN pnpm --filter ./apps/frontend build
+RUN pnpm --filter ./apps/frontend build && pnpm --filter ./apps/frontend export
 RUN pnpm --filter ./apps/backend build
 
 # Set working directory to backend for production
