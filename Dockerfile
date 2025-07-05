@@ -14,6 +14,7 @@ RUN npm install -g pnpm && pnpm install --no-frozen-lockfile --recursive
 # Copy the rest of the monorepo
 COPY . .
 
+ARG CACHEBUST=1
 # Build frontend and backend
 RUN pnpm --filter ./apps/frontend build
 RUN pnpm --filter ./apps/backend build
