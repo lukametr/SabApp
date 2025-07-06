@@ -18,7 +18,7 @@ RUN pnpm install --frozen-lockfile --recursive
 COPY . .
 
 ARG CACHEBUST=1
-# Build frontend და backend
+# Build frontend and backend
 RUN pnpm --filter ./apps/frontend build
 RUN pnpm --filter ./apps/backend build
 
@@ -27,6 +27,10 @@ WORKDIR /app/apps/backend
 
 # Create uploads directory
 RUN mkdir -p uploads
+
+# Copy frontend build output to backend's public directory
+RUN mkdir -p public
+RUN cp -r ../frontend/out/* public/
 
 # Expose port
 EXPOSE 3001
