@@ -1,14 +1,20 @@
 [build]
-builder = "nixpacks"
-buildCommand = "cd ../.. && pnpm install --frozen-lockfile && pnpm --filter ./apps/frontend build && pnpm --filter ./apps/backend build"
+builder = "dockerfile"
+dockerfile = "Dockerfile"
 
 [deploy]
-startCommand = "pnpm start:prod"
+startCommand = "node dist/main.js"
 healthcheckPath = "/health"
 healthcheckTimeout = 100
 restartPolicyType = "always"
 restartPolicyMaxRetries = 10
 
-[[services]]
-name = "sabapp-backend"
-sourceDir = "apps/backend" 
+[environments.production]
+[environments.production.variables]
+NODE_ENV = "production"
+PORT = "3001"
+MONGODB_URI = "mongodb://lukametr:akukelaAIO12@cluster0-shard-00-00.l56lnkq.mongodb.net:27017,cluster0-shard-00-01.l56lnkq.mongodb.net:27017,cluster0-shard-00-02.l56lnkq.mongodb.net:27017/saba?authSource=admin&replicaSet=atlas-cluster0-shard-0&ssl=true"
+JWT_SECRET = "${{ JWT_SECRET }}"
+NEXT_PUBLIC_API_URL = "https://${{ RAILWAY_PUBLIC_DOMAIN }}/api"
+NEXT_PUBLIC_GOOGLE_CLIENT_ID = "${{ NEXT_PUBLIC_GOOGLE_CLIENT_ID }}"
+CORS_ORIGIN = "https://${{ RAILWAY_PUBLIC_DOMAIN }}"
