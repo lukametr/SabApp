@@ -14,14 +14,24 @@ import { HealthModule } from './health.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    MongooseModule.forRoot(process.env.MONGODB_URI || 'mongodb://localhost:27017/sabap'),
+    MongooseModule.forRoot(
+      process.env.MONGODB_URI || 'mongodb://localhost:27017/sabap',
+      {
+        serverSelectionTimeoutMS: 5000,
+        socketTimeoutMS: 45000,
+        retryWrites: true,
+        retryReads: true,
+        ssl: true,
+        authSource: 'admin',
+      }
+    ),
     ServeStaticModule.forRoot({
-      rootPath: join(process.cwd(), '../frontend/out'),
-      exclude: ['/api*', '/health*', '/docs*'],
+      rootPath: join(process.cwd(), '../frontend/.next'),
+      exclude: ['/api/*', '/health*', '/docs*'],
       serveRoot: '/',
       serveStaticOptions: {
         index: 'index.html',
-        fallthrough: false,
+        fallthrough: true,
       },
     }),
     DocumentsModule,
