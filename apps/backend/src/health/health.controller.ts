@@ -1,35 +1,43 @@
 import { Controller, Get } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
-import { promisify } from 'util';
-import * as dns from 'dns';
-
-const lookup = promisify(dns.lookup);
-const resolveSrv = promisify(dns.resolveSrv);
+import * as net from 'net';
 
 @Controller('health')
 export class HealthController {
-  constructor(@InjectConnection() private readonly mongoConnection: Connection) {}
+  constructor(
+    @InjectConnection() private readonly mongoConnection: Connection
+  ) {}
 
   @Get()
   check() {
-    // Always return OK to pass Railway's healthcheck
     return {
       status: 'ok',
       timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV || 'development',
     };
   }
 
   @Get('db')
   async checkDb() {
     const isMongoConnected = this.mongoConnection.readyState === 1;
+    const readyStateMap = {
+      0: 'disconnected',
+      1: 'connected',
+      2: 'connecting',
+      3: 'disconnecting',
+      99: 'uninitialized'
+    };
     
     return {
-      status: isMongoConnected ? 'ok' : 'error',
+      status: 'ok',
       timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV || 'development',
-      database: isMongoConnected ? 'connected' : 'disconnected',
+      database: {
+        state: readyStateMap[this.mongoConnection.readyState],
+        connected: isMongoConnected,
+        host: this.mongoConnection.host,
+        port: this.mongoConnection.port,
+        name: this.mongoConnection.name
+      }
     };
   }
 
@@ -37,39 +45,49 @@ export class HealthController {
   async debug() {
     const isMongoConnected = this.mongoConnection.readyState === 1;
     
-    // Check DNS resolution
-    let dnsStatus = 'unknown';
-    try {
-      await lookup('cluster0.l56lnkq.mongodb.net');
-      dnsStatus = 'ok';
-    } catch (error) {
-      dnsStatus = `error: ${error.code}`;
-    }
+    // Test direct connection to mongo ports
+    const testPort = (host: string, port: number): Promise<boolean> => {
+      return new Promise((resolve) => {
+        const socket = new net.Socket();
+        socket.setTimeout(5000);
+        socket.on('connect', () => {
+          socket.end();
+          resolve(true);
+        });
+        socket.on('timeout', () => {
+          socket.destroy();
+          resolve(false);
+        });
+        socket.on('error', () => resolve(false));
+        
+        socket.connect(port, host);
+      });
+    };
 
-    // Try SRV record
-    let srvStatus = 'unknown';
-    try {
-      await resolveSrv('_mongodb._tcp.cluster0.mongodb.net');
-      srvStatus = 'ok';
-    } catch (error) {
-      srvStatus = `error: ${error.code}`;
-    }
+    // Test MongoDB hosts
+    const hosts = [
+      'cluster0-shard-00-00.l56lnkq.mongodb.net',
+      'cluster0-shard-00-01.l56lnkq.mongodb.net',
+      'cluster0-shard-00-02.l56lnkq.mongodb.net'
+    ];
+    
+    const portTests = await Promise.all(
+      hosts.map(async (host) => ({
+        host,
+        canConnect: await testPort(host, 27017)
+      }))
+    );
     
     return {
       status: 'ok',
       timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV || 'development',
-      port: process.env.PORT,
-      corsOrigin: process.env.CORS_ORIGIN,
-      hasMongoUri: !!process.env.MONGODB_URI,
-      mongoConnected: isMongoConnected,
-      mongoReadyState: this.mongoConnection.readyState,
-      dnsResolution: dnsStatus,
-      srvResolution: srvStatus,
-      hasGoogleClientId: !!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
-      googleClientIdLength: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.length || 0,
-      // Hide sensitive info but show format for debugging
-      mongoDbUri: process.env.MONGODB_URI?.replace(/\/\/([^:]+):([^@]+)@/, '//***:***@'),
+      environment: process.env.NODE_ENV,
+      database: {
+        state: isMongoConnected ? 'connected' : 'disconnected',
+        readyState: this.mongoConnection.readyState,
+        hosts: portTests,
+        uri: process.env.MONGODB_URI?.replace(/\/\/([^:]+):([^@]+)@/, '//***:***@')
+      }
     };
   }
 }
