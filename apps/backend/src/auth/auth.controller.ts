@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, UseGuards, Request, Res, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, Get, UseGuards, Request, Res, HttpStatus, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
@@ -42,8 +42,7 @@ export class AuthController {
   async googleCallback(@Request() req: any, @Res() res: Response) {
     try {
       // Handle Google OAuth callback
-      // This endpoint can be used for server-side OAuth flow
-      const { code } = req.query;
+      const { code, state } = req.query;
       
       if (!code) {
         return res.status(HttpStatus.BAD_REQUEST).json({
@@ -51,11 +50,38 @@ export class AuthController {
         });
       }
 
-      // Redirect to frontend with success message
-      return res.redirect(`${process.env.FRONTEND_URL || 'https://sabap-production.up.railway.app'}?auth=success`);
+      // Exchange code for tokens and get user info
+      const result = await this.authService.handleGoogleCallback(code, state);
+
+      // Return JSON response instead of redirect for API consistency
+      return res.json(result);
     } catch (error) {
       console.error('Google callback error:', error);
-      return res.redirect(`${process.env.FRONTEND_URL || 'https://sabap-production.up.railway.app'}?auth=error`);
+      return res.status(HttpStatus.BAD_REQUEST).json({
+        message: 'Authentication failed',
+        error: error.message
+      });
+    }
+  }
+
+  @Post('google/callback')
+  @ApiOperation({ summary: 'Google OAuth callback (POST)' })
+  @ApiResponse({ status: 200, description: 'Successfully authenticated' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async googleCallbackPost(@Body() body: { code: string; state: string }) {
+    try {
+      const { code, state } = body;
+      
+      if (!code) {
+        throw new BadRequestException('Authorization code is required');
+      }
+
+      // Exchange code for tokens and get user info
+      const result = await this.authService.handleGoogleCallback(code, state);
+      return result;
+    } catch (error) {
+      console.error('Google callback error:', error);
+      throw error;
     }
   }
 
