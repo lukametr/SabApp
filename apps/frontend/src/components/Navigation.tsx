@@ -110,7 +110,21 @@ export default function Navigation() {
     try {
       if (window.google && window.google.accounts) {
         // Show Google One Tap and sign-in popup
-        window.google.accounts.id.prompt();
+        try {
+          window.google.accounts.id.prompt();
+          
+          // If prompt() doesn't throw error but token retrieval fails,
+          // user will see "Error retrieving a token" in console.
+          // We can add a timeout to detect this and offer alternative
+          setTimeout(() => {
+            console.log('💡 If you see "Error retrieving a token", try the alternative method below');
+          }, 2000);
+          
+        } catch (promptError) {
+          console.error('Google prompt failed:', promptError);
+          console.log('🔄 Switching to redirect method due to prompt failure');
+          handleGoogleRedirectSignIn();
+        }
       } else {
         // If Google API is not loaded, use redirect method
         console.log('Google API not loaded, using redirect method');
@@ -119,6 +133,7 @@ export default function Navigation() {
     } catch (error) {
       console.error('Google Sign-In popup failed:', error);
       // Fallback to redirect method
+      console.log('🔄 Switching to redirect method due to error');
       handleGoogleRedirectSignIn();
     }
   }
@@ -165,23 +180,25 @@ export default function Navigation() {
     
     if (window.google && window.google.accounts) {
       console.log('✅ Google API loaded, initializing...');
-      window.google.accounts.id.initialize({
-        client_id: clientId,
-        callback: handleGoogleSuccess,
-        auto_select: false,
-        cancel_on_tap_outside: true,
-        prompt_parent_id: 'google-signin-container',
-        ux_mode: 'popup',
-        scope: 'openid email profile',
-        locale: 'ka', // Georgian locale
-      });
-      
-      // Show Google One Tap automatically only if user is not logged in
-      if (!user) {
-        console.log('🎯 Showing Google One Tap for unauthenticated user');
-        window.google.accounts.id.prompt();
+      try {
+        window.google.accounts.id.initialize({
+          client_id: clientId,
+          callback: handleGoogleSuccess,
+          auto_select: false,
+          cancel_on_tap_outside: true,
+          prompt_parent_id: 'google-signin-container',
+          ux_mode: 'popup',
+          scope: 'openid email profile',
+          locale: 'ka', // Georgian locale
+        });
+        
+        // Don't show automatic prompt - let user click button instead
+        // This avoids FedCM blocking issues
+        console.log('✅ Google Sign-In initialized successfully');
+      } catch (error) {
+        console.error('❌ Google Sign-In initialization failed:', error);
+        // Fallback: user will need to use manual button or redirect method
       }
-      console.log('✅ Google Sign-In initialized successfully');
     } else {
       console.error('❌ Google API not loaded - script may not have loaded yet');
     }
@@ -278,7 +295,7 @@ export default function Navigation() {
                   {/* Alternative method if popup fails */}
                   <div className="mt-2 text-center">
                     <span className="text-xs text-gray-500">
-                      პრობლემა Google Sign-In-თან? {' '}
+                      თუ Google Sign-In არ მუშაობს, {' '}
                       <button
                         onClick={handleGoogleRedirectSignIn}
                         className="text-blue-600 hover:text-blue-800 underline"
