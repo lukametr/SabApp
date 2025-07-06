@@ -14,22 +14,9 @@ import { HealthModule } from './health.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    MongooseModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: async () => {
-        const directUri = 'mongodb://lukametr:akukelaAIO12@ac-wbztgnk-shard-00-00.l56lnkq.mongodb.net:27017,ac-wbztgnk-shard-00-01.l56lnkq.mongodb.net:27017,ac-wbztgnk-shard-00-02.l56lnkq.mongodb.net:27017/saba?ssl=true&authSource=admin';
-        
-        console.log('📡 Connecting to MongoDB using direct connection...');
-        
-        return {
-          uri: directUri,
-          retryAttempts: 1,
-          ssl: true,
-          authSource: 'admin',
-          directConnection: true
-        };
-      },
-    }),
+    MongooseModule.forRoot(
+      process.env.MONGODB_URI || 'mongodb://localhost:27017/sabap'
+    ),
     ServeStaticModule.forRoot({
       rootPath: join(process.cwd(), '../frontend/.next'),
       exclude: ['/api/*', '/health*', '/docs*'],
