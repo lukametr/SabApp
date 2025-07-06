@@ -14,9 +14,11 @@ export class AuthService {
     private jwtService: JwtService,
     private configService: ConfigService,
   ) {
-    this.googleClient = new OAuth2Client(
-      this.configService.get<string>('GOOGLE_CLIENT_ID'),
-    );
+    const googleClientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
+    console.log('🔧 Auth Service - Google Client ID configured:', !!googleClientId);
+    console.log('🔧 Auth Service - Google Client ID length:', googleClientId?.length || 0);
+    
+    this.googleClient = new OAuth2Client(googleClientId);
   }
 
   async validateGoogleToken(idToken: string): Promise<GoogleUserInfo> {
@@ -48,55 +50,71 @@ export class AuthService {
   }
 
   async googleAuth(authDto: GoogleAuthDto): Promise<AuthResponseDto> {
-    // Validate Google token
-    const googleUserInfo = await this.validateGoogleToken(authDto.idToken);
+    console.log('🔧 Google Auth - Starting authentication process');
+    console.log('🔧 Google Auth - ID Token present:', !!authDto.idToken);
+    console.log('🔧 Google Auth - Personal Number:', authDto.personalNumber);
+    console.log('🔧 Google Auth - Phone Number:', authDto.phoneNumber);
 
-    // Check if user exists
-    let user = await this.usersService.findByGoogleId(googleUserInfo.sub);
+    try {
+      // Validate Google token
+      const googleUserInfo = await this.validateGoogleToken(authDto.idToken);
+      console.log('🔧 Google Auth - Token validated successfully for:', googleUserInfo.email);
 
-    if (!user) {
-      // New user registration - validate required fields
-      if (!authDto.personalNumber || !authDto.phoneNumber) {
-        throw new BadRequestException('Personal number and phone number are required for new users');
+      // Check if user exists
+      let user = await this.usersService.findByGoogleId(googleUserInfo.sub);
+
+      if (!user) {
+        console.log('🔧 Google Auth - New user registration');
+        // New user registration - validate required fields
+        if (!authDto.personalNumber || !authDto.phoneNumber) {
+          throw new BadRequestException('Personal number and phone number are required for new users');
+        }
+        
+        // Create new user
+        user = await this.usersService.createUser(
+          googleUserInfo,
+          authDto.personalNumber,
+          authDto.phoneNumber,
+        );
+        console.log('🔧 Google Auth - New user created successfully');
+      } else {
+        console.log('🔧 Google Auth - Existing user login');
+        // Existing user login - update last login
+        await this.usersService.updateLastLogin(String(user._id));
       }
-      
-      // Create new user
-      user = await this.usersService.createUser(
-        googleUserInfo,
-        authDto.personalNumber,
-        authDto.phoneNumber,
-      );
-    } else {
-      // Existing user login - update last login
-      await this.usersService.updateLastLogin(String(user._id));
-    }
 
-    // Generate JWT token
-    const payload = {
-      sub: String(user._id),
-      email: user.email,
-      role: user.role,
-      status: user.status,
-    };
-
-    const accessToken = this.jwtService.sign(payload, {
-      secret: this.configService.get<string>('JWT_SECRET'),
-      expiresIn: this.configService.get<string>('JWT_EXPIRES_IN', '7d'),
-    });
-
-    return {
-      accessToken,
-      user: {
-        id: String(user._id),
-        name: user.name,
+      // Generate JWT token
+      const payload = {
+        sub: String(user._id),
         email: user.email,
-        picture: user.picture,
         role: user.role,
         status: user.status,
-        personalNumber: user.personalNumber,
-        phoneNumber: user.phoneNumber,
-      },
-    };
+      };
+
+      const accessToken = this.jwtService.sign(payload, {
+        secret: this.configService.get<string>('JWT_SECRET'),
+        expiresIn: this.configService.get<string>('JWT_EXPIRES_IN', '7d'),
+      });
+
+      console.log('🔧 Google Auth - JWT token generated successfully');
+
+      return {
+        accessToken,
+        user: {
+          id: String(user._id),
+          name: user.name,
+          email: user.email,
+          picture: user.picture,
+          role: user.role,
+          status: user.status,
+          personalNumber: user.personalNumber,
+          phoneNumber: user.phoneNumber,
+        },
+      };
+    } catch (error) {
+      console.error('🔧 Google Auth - Error:', error);
+      throw error;
+    }
   }
 
   async validateUser(userId: string): Promise<any> {
