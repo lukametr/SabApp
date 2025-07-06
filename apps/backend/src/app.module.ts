@@ -15,7 +15,33 @@ import { HealthModule } from './health.module';
       isGlobal: true,
     }),
     MongooseModule.forRoot(
-      process.env.MONGODB_URI || 'mongodb://localhost:27017/sabap'
+      process.env.MONGODB_URI || 'mongodb://localhost:27017/sabap',
+      {
+        serverSelectionTimeoutMS: 5000,
+        retryWrites: true,
+        retryReads: true,
+        connectTimeoutMS: 10000,
+        socketTimeoutMS: 45000,
+        ssl: true,
+        authSource: 'admin',
+        connectionFactory: (connection) => {
+          connection.on('connected', () => {
+            console.log('✅ MongoDB is connected');
+            console.log('📊 Connection details:', {
+              host: connection.host,
+              port: connection.port,
+              name: connection.name,
+            });
+          });
+          connection.on('disconnected', () => {
+            console.log('❌ MongoDB is disconnected');
+          });
+          connection.on('error', (error: Error) => {
+            console.error('❌ MongoDB connection error:', error);
+          });
+          return connection;
+        },
+      }
     ),
     ServeStaticModule.forRoot({
       rootPath: join(process.cwd(), '../frontend/.next'),
