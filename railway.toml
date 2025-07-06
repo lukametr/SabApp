@@ -2,6 +2,10 @@
 builder = "dockerfile"
 dockerfile = "Dockerfile"
 
+[build.buildArgs]
+NEXT_PUBLIC_GOOGLE_CLIENT_ID = "${{ NEXT_PUBLIC_GOOGLE_CLIENT_ID }}"
+NEXT_PUBLIC_API_URL = "https://${{ RAILWAY_PUBLIC_DOMAIN }}/api"
+
 [deploy]
 startCommand = "node dist/main.js"
 healthcheckPath = "/health"

@@ -18,6 +18,12 @@ RUN pnpm install --frozen-lockfile --recursive
 COPY . .
 
 ARG CACHEBUST=1
+# Set environment variables for frontend build
+ARG NEXT_PUBLIC_GOOGLE_CLIENT_ID=675742559993-5quocp5mgvmog0fd2g8ue03vpleb23t5.apps.googleusercontent.com
+ARG NEXT_PUBLIC_API_URL=https://saba-app-production.up.railway.app/api
+ENV NEXT_PUBLIC_GOOGLE_CLIENT_ID=${NEXT_PUBLIC_GOOGLE_CLIENT_ID}
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+
 # Build frontend and backend
 RUN pnpm --filter ./apps/frontend build
 RUN pnpm --filter ./apps/backend build
