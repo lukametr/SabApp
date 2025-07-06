@@ -13,7 +13,7 @@ async function bootstrap() {
 
   // Set global prefix for all API routes
   app.setGlobalPrefix('api', {
-    exclude: ['/health', '/docs', '/'],
+    exclude: ['/health', '/docs'],
   });
 
   // Debug middleware და SPA fallback ამოღებულია, რადგან ServeStaticModule სწორად ემსახურება static ფაილებს და არ იჭერს API როუტებს

@@ -5,10 +5,10 @@ import { existsSync, readdirSync } from 'fs';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 @ApiTags('app')
-@Controller()
+@Controller('api')
 export class AppController {
   @Get()
-  @ApiOperation({ summary: 'Root endpoint' })
+  @ApiOperation({ summary: 'API Root endpoint' })
   @ApiResponse({ status: 200, description: 'SabApp API is running' })
   getRoot(@Res() res: Response) {
     return res.status(HttpStatus.OK).json({
@@ -35,18 +35,6 @@ export class AppController {
       memory: process.memoryUsage(),
       version: process.env.npm_package_version || '1.0.0',
     };
-  }
-
-  @Get('/health')
-  getRootHealth(@Res() res: Response) {
-    // იგივე პასუხი, რაც /api/health-ზე
-    return res.status(HttpStatus.OK).json({
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      memory: process.memoryUsage(),
-      version: process.env.npm_package_version || '1.0.0',
-    });
   }
 
   @Get('debug')

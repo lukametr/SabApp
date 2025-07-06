@@ -30,7 +30,9 @@ RUN mkdir -p uploads
 
 # Copy frontend build output to backend's public directory
 RUN mkdir -p public
-RUN cp -r ../frontend/out/* public/
+RUN ls -la ../frontend/out/ || echo "Frontend out directory not found"
+RUN cp -r ../frontend/out/* public/ || echo "Failed to copy frontend files"
+RUN ls -la public/ || echo "Public directory is empty"
 
 # Expose port
 EXPOSE 3001
