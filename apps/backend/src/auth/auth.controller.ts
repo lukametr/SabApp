@@ -2,7 +2,7 @@ import { Controller, Post, Body, Get, UseGuards, Request, Res, HttpStatus } from
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
-import { GoogleAuthDto, AuthResponseDto } from '../users/dto/google-auth.dto';
+import { GoogleAuthDto, AuthResponseDto, CompleteRegistrationDto } from '../users/dto/google-auth.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { Roles } from './decorators/roles.decorator';
@@ -24,6 +24,15 @@ export class AuthController {
   @ApiResponse({ status: 409, description: 'User already exists or data conflict' })
   async googleAuth(@Body() authDto: GoogleAuthDto): Promise<AuthResponseDto> {
     return this.authService.googleAuth(authDto);
+  }
+
+  @Post('google/complete-registration')
+  @ApiOperation({ summary: 'Complete Google user registration with additional info' })
+  @ApiResponse({ status: 200, description: 'Registration completed successfully', type: AuthResponseDto })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
+  async completeGoogleRegistration(@Body() registrationDto: CompleteRegistrationDto): Promise<AuthResponseDto> {
+    return this.authService.googleAuth(registrationDto);
   }
 
   @Get('google/callback')

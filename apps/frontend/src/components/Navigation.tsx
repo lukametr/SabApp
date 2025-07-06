@@ -8,13 +8,15 @@ import { useRouter } from 'next/navigation'
 import { CredentialResponse } from '@react-oauth/google'
 import Image from 'next/image'
 import api from '../lib/api'
-import RegistrationForm from './RegistrationForm'
+import RegistrationModal from './RegistrationModal'
 
 interface ApiError {
   response?: {
     status: number;
     data: {
       message: string;
+      code?: string;
+      userInfo?: any;
     };
   };
   message: string;
@@ -52,7 +54,9 @@ export default function Navigation() {
   const { user, logout, login, loadFromStorage } = useAuthStore()
   const [showRegistration, setShowRegistration] = useState(false)
   const [pendingIdToken, setPendingIdToken] = useState<string | null>(null)
+  const [pendingUserInfo, setPendingUserInfo] = useState<any>(null)
   const [loading, setLoading] = useState(false)
+  const [authError, setAuthError] = useState<string>('')
 
   useEffect(() => {
     loadFromStorage()
@@ -74,8 +78,7 @@ export default function Navigation() {
       try {
         const res = await api.post('/auth/google', {
           idToken,
-          personalNumber: '',
-          phoneNumber: '',
+          // Don't send empty personalNumber and phoneNumber for initial check
         })
         console.log('Auth response:', res.data);
         login(res.data)
@@ -83,18 +86,23 @@ export default function Navigation() {
       } catch (err: unknown) {
         const error = err as ApiError
         console.error('Auth API error:', error);
-        if (error?.response?.status === 409 && error?.response?.data?.message?.includes('Personal number')) {
+        
+        // Check if this is a registration required error
+        if (error?.response?.status === 400 && 
+            error?.response?.data?.code === 'REGISTRATION_REQUIRED') {
           // User doesn't exist, show registration form
           setPendingIdToken(idToken)
+          setPendingUserInfo(error.response.data.userInfo)
           setShowRegistration(true)
+          setAuthError('')
         } else {
-          alert('ავტორიზაციის შეცდომა: ' + (error?.response?.data?.message || error?.message || 'უცნობი შეცდომა'))
+          setAuthError('ავტორიზაციის შეცდომა: ' + (error?.response?.data?.message || error?.message || 'უცნობი შეცდომა'))
         }
       }
     } catch (err: unknown) {
       const error = err as ApiError
       console.error('Google Sign-In error:', error);
-      alert('ავტორიზაციის შეცდომა: ' + (error?.response?.data?.message || error?.message || 'უცნობი შეცდომა'))
+      setAuthError('ავტორიზაციის შეცდომა: ' + (error?.response?.data?.message || error?.message || 'უცნობი შეცდომა'))
     }
   }, [login, router])
 
@@ -152,23 +160,25 @@ export default function Navigation() {
 
   const isActive = (path: string) => pathname === path
 
-  const handleRegistrationSubmit = async (personalNumber: string, phoneNumber: string) => {
+  const handleRegistrationSubmit = async (data: { personalNumber: string; phoneNumber: string }) => {
     if (!pendingIdToken) return
 
     setLoading(true)
+    setAuthError('')
     try {
-      const res = await api.post('/auth/google', {
+      const res = await api.post('/auth/google/complete-registration', {
         idToken: pendingIdToken,
-        personalNumber,
-        phoneNumber,
+        personalNumber: data.personalNumber,
+        phoneNumber: data.phoneNumber,
       })
       login(res.data)
       setShowRegistration(false)
       setPendingIdToken(null)
+      setPendingUserInfo(null)
       router.refresh()
     } catch (err: unknown) {
       const error = err as ApiError
-      alert('რეგისტრაციის შეცდომა: ' + (error?.response?.data?.message || error?.message || 'უცნობი შეცდომა'))
+      setAuthError('რეგისტრაციის შეცდომა: ' + (error?.response?.data?.message || error?.message || 'უცნობი შეცდომა'))
     } finally {
       setLoading(false)
     }
@@ -217,6 +227,11 @@ export default function Navigation() {
             <div className="flex items-center space-x-4">
               {!user && (
                 <div id="google-signin-container">
+                  {authError && (
+                    <div className="mb-2 p-2 bg-red-100 border border-red-400 text-red-700 rounded">
+                      {authError}
+                    </div>
+                  )}
                   {/* Custom Georgian button */}
                   <button
                     onClick={handleCustomGoogleSignIn}
@@ -259,14 +274,18 @@ export default function Navigation() {
         </div>
       </nav>
 
-      <RegistrationForm
+      <RegistrationModal
         open={showRegistration}
         onClose={() => {
           setShowRegistration(false)
           setPendingIdToken(null)
+          setPendingUserInfo(null)
+          setAuthError('')
         }}
         onSubmit={handleRegistrationSubmit}
+        userInfo={pendingUserInfo}
         loading={loading}
+        error={authError}
       />
     </>
   )

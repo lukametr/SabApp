@@ -78,9 +78,14 @@ export class AuthService {
 
       if (!user) {
         console.log('🔧 Google Auth - New user registration');
-        // New user registration - validate required fields
+        // New user registration - check if additional info is provided
         if (!authDto.personalNumber || !authDto.phoneNumber) {
-          throw new BadRequestException('Personal number and phone number are required for new users');
+          // Return special response indicating registration is needed
+          throw new BadRequestException({
+            message: 'Additional registration information required',
+            code: 'REGISTRATION_REQUIRED',
+            userInfo: googleUserInfo
+          });
         }
         
         // Create new user
