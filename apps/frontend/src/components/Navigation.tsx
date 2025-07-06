@@ -106,13 +106,42 @@ export default function Navigation() {
     }
   }, [login, router])
 
-  const handleCustomGoogleSignIn = () => {
-    if (window.google && window.google.accounts) {
-      // Show Google One Tap and sign-in popup
-      window.google.accounts.id.prompt();
-    } else {
-      alert('Google Sign-In არ არის ხელმისაწვდომი');
+  const handleCustomGoogleSignIn = async () => {
+    try {
+      if (window.google && window.google.accounts) {
+        // Show Google One Tap and sign-in popup
+        window.google.accounts.id.prompt();
+      } else {
+        // If Google API is not loaded, use redirect method
+        console.log('Google API not loaded, using redirect method');
+        handleGoogleRedirectSignIn();
+      }
+    } catch (error) {
+      console.error('Google Sign-In popup failed:', error);
+      // Fallback to redirect method
+      handleGoogleRedirectSignIn();
     }
+  }
+
+  const handleGoogleRedirectSignIn = () => {
+    // Fallback method using redirect flow
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    const redirectUri = `${window.location.origin}/auth/google/callback`;
+    const scope = 'openid email profile';
+    const responseType = 'code';
+    const state = Math.random().toString(36).substring(2, 15);
+    
+    // Store state in localStorage for security
+    localStorage.setItem('google_oauth_state', state);
+    
+    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+      `client_id=${clientId}&` +
+      `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+      `response_type=${responseType}&` +
+      `scope=${encodeURIComponent(scope)}&` +
+      `state=${state}`;
+    
+    window.location.href = googleAuthUrl;
   }
 
   useEffect(() => {
@@ -232,7 +261,7 @@ export default function Navigation() {
                       {authError}
                     </div>
                   )}
-                  {/* Custom Georgian button */}
+                  {/* Primary Google Sign-In button */}
                   <button
                     onClick={handleCustomGoogleSignIn}
                     className="px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 flex items-center"
@@ -245,6 +274,19 @@ export default function Navigation() {
                     </svg>
                     შესვლა Google ანგარიშით
                   </button>
+                  
+                  {/* Alternative method if popup fails */}
+                  <div className="mt-2 text-center">
+                    <span className="text-xs text-gray-500">
+                      პრობლემა Google Sign-In-თან? {' '}
+                      <button
+                        onClick={handleGoogleRedirectSignIn}
+                        className="text-blue-600 hover:text-blue-800 underline"
+                      >
+                        სცადეთ ალტერნატიული მეთოდი
+                      </button>
+                    </span>
+                  </div>
                 </div>
               )}
               {user && (

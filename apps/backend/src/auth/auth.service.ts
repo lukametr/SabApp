@@ -135,6 +135,83 @@ export class AuthService {
     }
   }
 
+  async handleGoogleCallback(code: string, _state: string): Promise<AuthResponseDto> {
+    try {
+      console.log('🔧 Handling Google OAuth callback with code:', !!code);
+      
+      // Exchange authorization code for tokens
+      const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          code,
+          client_id: this.configService.get<string>('GOOGLE_CLIENT_ID') || '',
+          client_secret: this.configService.get<string>('GOOGLE_CLIENT_SECRET') || '',
+          redirect_uri: `${this.configService.get<string>('FRONTEND_URL') || 'https://saba-app-production.up.railway.app'}/auth/google/callback`,
+          grant_type: 'authorization_code',
+        } as Record<string, string>),
+      });
+
+      if (!tokenResponse.ok) {
+        throw new UnauthorizedException('Failed to exchange authorization code');
+      }
+
+      const tokens = await tokenResponse.json() as { id_token: string; access_token: string; };
+      
+      // Validate the ID token
+      const googleUserInfo = await this.validateGoogleToken(tokens.id_token);
+      
+      // Check if user exists
+      let user = await this.usersService.findByGoogleId(googleUserInfo.sub);
+
+      if (!user) {
+        // New user - this should trigger registration flow
+        throw new BadRequestException({
+          message: 'Additional registration information required',
+          code: 'REGISTRATION_REQUIRED',
+          userInfo: googleUserInfo
+        });
+      }
+
+      // Existing user login
+      await this.usersService.updateLastLogin(String(user._id));
+
+      // Generate JWT token
+      const payload = {
+        sub: String(user._id),
+        email: user.email,
+        role: user.role,
+        status: user.status,
+      };
+
+      const accessToken = this.jwtService.sign(payload, {
+        secret: this.configService.get<string>('JWT_SECRET'),
+        expiresIn: this.configService.get<string>('JWT_EXPIRES_IN', '7d'),
+      });
+
+      console.log('🔧 Google OAuth callback - JWT token generated successfully');
+
+      return {
+        accessToken,
+        user: {
+          id: String(user._id),
+          name: user.name,
+          email: user.email,
+          picture: user.picture,
+          role: user.role,
+          status: user.status,
+          personalNumber: user.personalNumber,
+          phoneNumber: user.phoneNumber,
+        },
+      };
+    } catch (error) {
+      console.error('🔧 Google OAuth callback - Error:', error);
+      throw error;
+    }
+  }
+
   async validateUser(userId: string): Promise<any> {
     const user = await this.usersService.findById(userId);
     if (!user) {
@@ -142,4 +219,4 @@ export class AuthService {
     }
     return user;
   }
-} 
+}
