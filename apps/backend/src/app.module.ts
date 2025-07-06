@@ -15,16 +15,7 @@ import { HealthModule } from './health.module';
       isGlobal: true,
     }),
     MongooseModule.forRoot(
-      (process.env.MONGODB_URI || 'mongodb://localhost:27017/sabap').replace('mongodb+srv://', 'mongodb://'),
-      {
-        autoCreate: true,
-        retryAttempts: 5,
-        retryDelay: 3000,
-        serverSelectionTimeoutMS: 10000,
-        socketTimeoutMS: 45000,
-        family: 4,
-        directConnection: true
-      }
+      process.env.MONGODB_URI || 'mongodb://localhost:27017/sabap'
     ),
     ServeStaticModule.forRoot({
       rootPath: join(process.cwd(), '../frontend/.next'),
