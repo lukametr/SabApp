@@ -23,19 +23,31 @@ export class AuthService {
 
   async validateGoogleToken(idToken: string): Promise<GoogleUserInfo> {
     try {
+      console.log('🔧 Validating Google token...');
+      const audience = this.configService.get<string>('GOOGLE_CLIENT_ID');
+      console.log('🔧 Google Client ID for verification:', !!audience);
+      
       const ticket = await this.googleClient.verifyIdToken({
         idToken,
-        audience: this.configService.get<string>('GOOGLE_CLIENT_ID'),
+        audience: audience,
       });
 
       const payload = ticket.getPayload();
       if (!payload) {
+        console.error('🔧 Google token validation failed: No payload');
         throw new UnauthorizedException('Invalid Google token');
       }
 
       if (!payload.sub || !payload.email || !payload.name) {
+        console.error('🔧 Google token validation failed: Missing required fields', {
+          hasSub: !!payload.sub,
+          hasEmail: !!payload.email,
+          hasName: !!payload.name
+        });
         throw new UnauthorizedException('Invalid Google token payload');
       }
+
+      console.log('🔧 Google token validated successfully for user:', payload.email);
 
       return {
         sub: payload.sub,
@@ -45,6 +57,7 @@ export class AuthService {
         email_verified: payload.email_verified || false,
       };
     } catch (error) {
+      console.error('🔧 Google token validation error:', error.message);
       throw new UnauthorizedException('Invalid Google token');
     }
   }

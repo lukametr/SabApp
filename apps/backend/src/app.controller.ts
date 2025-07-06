@@ -60,6 +60,10 @@ export class AppController {
           NODE_ENV: process.env.NODE_ENV,
           PORT: process.env.PORT,
           CORS_ORIGIN: process.env.CORS_ORIGIN,
+          GOOGLE_CLIENT_ID: !!process.env.GOOGLE_CLIENT_ID,
+          GOOGLE_CLIENT_ID_LENGTH: process.env.GOOGLE_CLIENT_ID?.length || 0,
+          NEXT_PUBLIC_GOOGLE_CLIENT_ID: !!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+          NEXT_PUBLIC_GOOGLE_CLIENT_ID_LENGTH: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.length || 0,
         }
       };
     } catch (error) {
