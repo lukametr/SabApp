@@ -17,26 +17,16 @@ import { HealthModule } from './health.module';
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async () => {
-        const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/sabap';
+        const directUri = 'mongodb://lukametr:akukelaAIO12@ac-wbztgnk-shard-00-00.l56lnkq.mongodb.net:27017,ac-wbztgnk-shard-00-01.l56lnkq.mongodb.net:27017,ac-wbztgnk-shard-00-02.l56lnkq.mongodb.net:27017/saba?ssl=true&authSource=admin';
         
-        console.log('📡 Attempting to connect to MongoDB...');
+        console.log('📡 Connecting to MongoDB using direct connection...');
         
         return {
-          uri,
-          autoCreate: true,
-          retryAttempts: 0,
-          connectionFactory: (connection) => {
-            connection.on('connected', () => {
-              console.log('✅ MongoDB connection established');
-            });
-            connection.on('disconnected', () => {
-              console.log('❌ MongoDB connection lost');
-            });
-            connection.on('error', (err: Error) => {
-              console.error('MongoDB connection error:', err);
-            });
-            return connection;
-          }
+          uri: directUri,
+          retryAttempts: 1,
+          ssl: true,
+          authSource: 'admin',
+          directConnection: true
         };
       },
     }),

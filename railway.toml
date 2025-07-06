@@ -13,8 +13,8 @@ restartPolicyMaxRetries = 10
 [environments.production.variables]
 NODE_ENV = "production"
 PORT = "3001"
-# Using direct connection string for MongoDB Atlas
-MONGODB_URI = "mongodb://lukametr:akukelaAIO12@cluster0-shard-00-00.l56lnkq.mongodb.net:27017,cluster0-shard-00-01.l56lnkq.mongodb.net:27017,cluster0-shard-00-02.l56lnkq.mongodb.net:27017/saba?ssl=true&replicaSet=atlas-i0dhnx-shard-0&authSource=admin"
+# Using direct connection without DNS SRV
+MONGODB_URI = "mongodb://lukametr:akukelaAIO12@ac-wbztgnk-shard-00-00.l56lnkq.mongodb.net:27017,ac-wbztgnk-shard-00-01.l56lnkq.mongodb.net:27017,ac-wbztgnk-shard-00-02.l56lnkq.mongodb.net:27017/saba?ssl=true&authSource=admin"
 JWT_SECRET = "${{ JWT_SECRET }}"
 NEXT_PUBLIC_API_URL = "https://${{ RAILWAY_PUBLIC_DOMAIN }}/api"
 NEXT_PUBLIC_GOOGLE_CLIENT_ID = "${{ NEXT_PUBLIC_GOOGLE_CLIENT_ID }}"
