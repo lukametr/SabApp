@@ -9,20 +9,22 @@ const nextConfig = {
   experimental: {
     esmExternals: false,
   },
-  output: 'export',
-  distDir: 'out',
+  // Only use export mode in production
+  ...(process.env.NODE_ENV === 'production' && {
+    output: 'export',
+    distDir: 'out',
+  }),
 
   // Environment variables configuration
   env: {
     NEXT_PUBLIC_GOOGLE_CLIENT_ID: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '',
-    NEXT_PUBLIC_API_URL:
-      process.env.NEXT_PUBLIC_API_URL || 'https://saba-app-production.up.railway.app/api',
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:10000/api',
   },
 
   // Public runtime config for client-side access
   publicRuntimeConfig: {
     googleClientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '',
-    apiUrl: process.env.NEXT_PUBLIC_API_URL || 'https://saba-app-production.up.railway.app/api',
+    apiUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:10000/api',
   },
 
   webpack: (config, { isServer }) => {

@@ -68,6 +68,7 @@ async function bootstrap() {
     transform: true,
     whitelist: true,
     forbidNonWhitelisted: true,
+    skipMissingProperties: true, // Skip validation for missing optional properties
   }));
 
   // Setup Swagger
