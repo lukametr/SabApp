@@ -17,13 +17,14 @@ import { HealthModule } from './health.module';
     MongooseModule.forRoot(
       process.env.MONGODB_URI || 'mongodb://localhost:27017/sabap',
       {
-        serverSelectionTimeoutMS: 5000,
-        retryWrites: true,
-        retryReads: true,
-        connectTimeoutMS: 10000,
+        serverSelectionTimeoutMS: 15000,
         socketTimeoutMS: 45000,
         ssl: true,
         authSource: 'admin',
+        replicaSet: 'atlas-cluster0-shard-0',
+        directConnection: false,
+        retryAttempts: 3,
+        retryDelay: 1000,
         connectionFactory: (connection) => {
           connection.on('connected', () => {
             console.log('✅ MongoDB is connected');
@@ -31,6 +32,7 @@ import { HealthModule } from './health.module';
               host: connection.host,
               port: connection.port,
               name: connection.name,
+              replicaSet: connection.config.replicaSet,
             });
           });
           connection.on('disconnected', () => {
@@ -38,6 +40,10 @@ import { HealthModule } from './health.module';
           });
           connection.on('error', (error: Error) => {
             console.error('❌ MongoDB connection error:', error);
+            console.error('Connection config:', {
+              uri: process.env.MONGODB_URI,
+              options: connection.config,
+            });
           });
           return connection;
         },
