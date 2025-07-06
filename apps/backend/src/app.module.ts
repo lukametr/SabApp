@@ -18,8 +18,20 @@ import { HealthModule } from './health.module';
       process.env.MONGODB_URI || 'mongodb://localhost:27017/sabap',
       {
         autoCreate: true,
-        retryAttempts: 3,
-        retryDelay: 1000
+        retryAttempts: 0,  // Don't retry on startup
+        retryDelay: 1000,
+        connectionFactory: (connection) => {
+          connection.on('connected', () => {
+            console.log('✅ MongoDB connection established');
+          });
+          connection.on('disconnected', () => {
+            console.log('❌ MongoDB connection lost');
+          });
+          connection.on('error', (err: Error) => {
+            console.error('MongoDB connection error:', err);
+          });
+          return connection;
+        }
       }
     ),
     ServeStaticModule.forRoot({
