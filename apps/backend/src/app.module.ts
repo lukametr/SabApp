@@ -14,26 +14,30 @@ import { HealthModule } from './health.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    MongooseModule.forRoot(
-      process.env.MONGODB_URI || 'mongodb://localhost:27017/sabap',
-      {
-        autoCreate: true,
-        retryAttempts: 0,  // Don't retry on startup
-        retryDelay: 1000,
-        connectionFactory: (connection) => {
-          connection.on('connected', () => {
-            console.log('✅ MongoDB connection established');
-          });
-          connection.on('disconnected', () => {
-            console.log('❌ MongoDB connection lost');
-          });
-          connection.on('error', (err: Error) => {
-            console.error('MongoDB connection error:', err);
-          });
-          return connection;
-        }
-      }
-    ),
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async () => {
+        // Replace mongodb+srv URL with direct connection URLs
+        const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/sabap';
+        const directUri = uri
+          .replace('mongodb+srv://', 'mongodb://')
+          .replace('cluster0.mongodb.net', 'cluster0-shard-00-00.l56lnkq.mongodb.net:27017,cluster0-shard-00-01.l56lnkq.mongodb.net:27017,cluster0-shard-00-02.l56lnkq.mongodb.net:27017')
+          + '&ssl=true&replicaSet=atlas-i0dhnx-shard-0&authSource=admin';
+
+        console.log('📡 Connecting to MongoDB using:', directUri.replace(/\/\/([^:]+):([^@]+)@/, '//***:***@'));
+        
+        return {
+          uri: directUri,
+          autoCreate: true,
+          retryAttempts: 3,
+          retryDelay: 1000,
+          connectTimeoutMS: 10000,
+          socketTimeoutMS: 45000,
+          ssl: true,
+          directConnection: false,
+        };
+      },
+    }),
     ServeStaticModule.forRoot({
       rootPath: join(process.cwd(), '../frontend/.next'),
       exclude: ['/api/*', '/health*', '/docs*'],

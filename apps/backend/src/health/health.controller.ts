@@ -1,6 +1,11 @@
 import { Controller, Get } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
+import { promisify } from 'util';
+import * as dns from 'dns';
+
+const lookup = promisify(dns.lookup);
+const resolveSrv = promisify(dns.resolveSrv);
 
 @Controller('health')
 export class HealthController {
@@ -32,6 +37,24 @@ export class HealthController {
   async debug() {
     const isMongoConnected = this.mongoConnection.readyState === 1;
     
+    // Check DNS resolution
+    let dnsStatus = 'unknown';
+    try {
+      await lookup('cluster0.l56lnkq.mongodb.net');
+      dnsStatus = 'ok';
+    } catch (error) {
+      dnsStatus = `error: ${error.code}`;
+    }
+
+    // Try SRV record
+    let srvStatus = 'unknown';
+    try {
+      await resolveSrv('_mongodb._tcp.cluster0.mongodb.net');
+      srvStatus = 'ok';
+    } catch (error) {
+      srvStatus = `error: ${error.code}`;
+    }
+    
     return {
       status: 'ok',
       timestamp: new Date().toISOString(),
@@ -41,6 +64,8 @@ export class HealthController {
       hasMongoUri: !!process.env.MONGODB_URI,
       mongoConnected: isMongoConnected,
       mongoReadyState: this.mongoConnection.readyState,
+      dnsResolution: dnsStatus,
+      srvResolution: srvStatus,
       hasGoogleClientId: !!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
       googleClientIdLength: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.length || 0,
       // Hide sensitive info but show format for debugging
