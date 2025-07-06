@@ -139,24 +139,42 @@ export default function Navigation() {
   }
 
   const handleGoogleRedirectSignIn = () => {
-    // Fallback method using redirect flow
-    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-    const redirectUri = `${window.location.origin}/auth/google/callback`;
-    const scope = 'openid email profile';
-    const responseType = 'code';
-    const state = Math.random().toString(36).substring(2, 15);
-    
-    // Store state in localStorage for security
-    localStorage.setItem('google_oauth_state', state);
-    
-    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-      `client_id=${clientId}&` +
-      `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-      `response_type=${responseType}&` +
-      `scope=${encodeURIComponent(scope)}&` +
-      `state=${state}`;
-    
-    window.location.href = googleAuthUrl;
+    // Alternative method: use popup with manual rendering
+    if (window.google && window.google.accounts) {
+      console.log('Using alternative popup method instead of redirect');
+      
+      // Create a temporary container for Google button
+      const tempContainer = document.createElement('div');
+      tempContainer.style.position = 'fixed';
+      tempContainer.style.top = '-9999px';
+      tempContainer.style.left = '-9999px';
+      document.body.appendChild(tempContainer);
+      
+      try {
+        // Render Google sign-in button programmatically
+        window.google.accounts.id.renderButton(tempContainer, {
+          theme: 'outline',
+          size: 'large'
+        });
+        
+        // Trigger click on the rendered button
+        setTimeout(() => {
+          const googleButton = tempContainer.querySelector('div[role="button"]') as HTMLElement;
+          if (googleButton) {
+            googleButton.click();
+          }
+          // Clean up
+          document.body.removeChild(tempContainer);
+        }, 100);
+        
+      } catch (error) {
+        console.error('Alternative popup method failed:', error);
+        document.body.removeChild(tempContainer);
+        setAuthError('Google ავტორიზაცია ვერ მოხერხდა. გთხოვთ სცადოთ მოგვიანებით.');
+      }
+    } else {
+      setAuthError('Google API არ არის ჩატვირთული. გთხოვთ განაახლოთ გვერდი.');
+    }
   }
 
   useEffect(() => {
