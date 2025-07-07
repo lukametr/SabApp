@@ -16,6 +16,19 @@ async function bootstrap() {
     exclude: ['/health', '/docs'],
   });
 
+  // Request logging middleware
+  app.use((req: any, _res: any, next: any) => {
+    if (req.method === 'PATCH' || req.method === 'POST') {
+      console.log(`🔍 ${req.method} ${req.url}`, {
+        contentType: req.headers['content-type'],
+        bodySize: req.body ? Object.keys(req.body).length : 0,
+        params: req.params,
+        query: req.query
+      });
+    }
+    next();
+  });
+
   // Debug middleware და SPA fallback ამოღებულია, რადგან ServeStaticModule სწორად ემსახურება static ფაილებს და არ იჭერს API როუტებს
 
   // Security headers
@@ -68,10 +81,14 @@ async function bootstrap() {
     transform: true,
     whitelist: true,
     forbidNonWhitelisted: false, // Allow non-whitelisted properties for FormData
-    skipMissingProperties: true, // Skip validation for missing optional properties
+    skipMissingProperties: false, // Don't skip validation for missing properties
     validationError: { target: false, value: false },
     exceptionFactory: (errors) => {
-      console.log('📋 Validation errors:', errors);
+      console.error('📋 Validation errors:', errors.map(error => ({
+        property: error.property,
+        value: error.value,
+        constraints: error.constraints
+      })));
       return errors;
     }
   }));
