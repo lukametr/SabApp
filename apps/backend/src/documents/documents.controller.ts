@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete, UseInterceptors, UploadedFiles, Patch, Res } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, UseInterceptors, UploadedFiles, Patch, Res, UseGuards, Request } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 import { DocumentsService } from './documents.service';
@@ -8,6 +8,7 @@ import { UpdateDocumentDto } from './dto/update-document.dto';
 import { existsSync } from 'fs';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { OptionalAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('documents')
 export class DocumentsController {
@@ -17,12 +18,15 @@ export class DocumentsController {
   ) {}
 
   @Post()
+  @UseGuards(OptionalAuthGuard)
   @UseInterceptors(FileFieldsInterceptor([
     { name: 'photos', maxCount: 10 },
     { name: 'hazardPhotos', maxCount: 50 }
   ]))
-  async create(@Body() createDocumentDto: CreateDocumentDto, @UploadedFiles() files: any) {
+  async create(@Body() createDocumentDto: CreateDocumentDto, @UploadedFiles() files: any, @Request() req: any) {
     try {
+      const userId = req.user?.id || req.user?.sub; // Get user ID from JWT token
+      console.log('📋 Creating document for user:', userId || 'anonymous');
       console.log('📋 Received document data:', createDocumentDto);
       console.log('📸 Received files:', files);
       
@@ -113,7 +117,7 @@ export class DocumentsController {
       }))
     });
     
-    return this.documentsService.create(documentWithPhotos);
+    return this.documentsService.create(documentWithPhotos, userId);
     } catch (error) {
       console.error('❌ Error creating document:', error);
       throw error;
@@ -121,23 +125,32 @@ export class DocumentsController {
   }
 
   @Get()
-  findAll() {
-    return this.documentsService.findAll();
+  @UseGuards(OptionalAuthGuard)
+  findAll(@Request() req: any) {
+    const userId = req.user?.id || req.user?.sub; // Get user ID from JWT token
+    console.log('📋 Fetching documents for user:', userId || 'all users');
+    return this.documentsService.findAll(userId);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.documentsService.findOne(id);
+  @UseGuards(OptionalAuthGuard)
+  findOne(@Param('id') id: string, @Request() req: any) {
+    const userId = req.user?.id || req.user?.sub; // Get user ID from JWT token
+    console.log('📋 Fetching document:', id, 'for user:', userId || 'anonymous');
+    return this.documentsService.findOne(id, userId);
   }
 
   @Patch(':id')
+  @UseGuards(OptionalAuthGuard)
   @UseInterceptors(FileFieldsInterceptor([
     { name: 'photos', maxCount: 10 },
     { name: 'hazardPhotos', maxCount: 50 }
   ]))
-  async update(@Param('id') id: string, @Body() updateDocumentDto: UpdateDocumentDto, @UploadedFiles() files: any) {
+  async update(@Param('id') id: string, @Body() updateDocumentDto: UpdateDocumentDto, @UploadedFiles() files: any, @Request() req: any) {
     try {
-      console.log('📋 Updating document:', id, updateDocumentDto);
+      const userId = req.user?.id || req.user?.sub; // Get user ID from JWT token
+      console.log('📋 Updating document:', id, 'for user:', userId || 'anonymous');
+      console.log('📋 Update data:', updateDocumentDto);
       console.log('📸 Received files for update:', files);
       
       // Validate ID
@@ -220,7 +233,7 @@ export class DocumentsController {
       }))
     });
     
-    return this.documentsService.update(id, documentWithPhotos);
+    return this.documentsService.update(id, documentWithPhotos, userId);
     } catch (error) {
       console.error('❌ Error updating document:', error);
       throw error;
@@ -228,8 +241,11 @@ export class DocumentsController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.documentsService.remove(id);
+  @UseGuards(OptionalAuthGuard)
+  remove(@Param('id') id: string, @Request() req: any) {
+    const userId = req.user?.id || req.user?.sub; // Get user ID from JWT token
+    console.log('🗑️ Deleting document:', id, 'for user:', userId || 'anonymous');
+    return this.documentsService.remove(id, userId);
   }
 
   @Post(':id/favorite')
