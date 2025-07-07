@@ -144,7 +144,8 @@ export const documentApi = {
   },
 };
 
-export const getPhotoUrl = (filename: string): string => {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
-  return `${baseUrl}/documents/files/${filename}`;
-};
+// Helper function no longer needed - photos are stored as base64 in database
+// export const getPhotoUrl = (filename: string): string => {
+//   const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+//   return `${baseUrl}/documents/files/${filename}`;
+// };

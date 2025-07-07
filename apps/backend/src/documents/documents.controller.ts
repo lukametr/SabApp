@@ -4,8 +4,6 @@ import { Response } from 'express';
 import { DocumentsService } from './documents.service';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
-import * as fs from 'fs';
-import * as path from 'path';
 
 @Controller('documents')
 export class DocumentsController {
@@ -35,43 +33,25 @@ export class DocumentsController {
       }
     }
     
-    // შევინახოთ ფაილები
+    // Convert files to base64 and store in database
     const savedPhotos: string[] = [];
     const savedHazardPhotos: string[] = [];
     
     if (files && files.photos) {
-      const uploadsDir = path.join(process.cwd(), 'uploads');
-      if (!fs.existsSync(uploadsDir)) {
-        fs.mkdirSync(uploadsDir, { recursive: true });
-      }
-      
       for (const file of files.photos) {
-        const fileName = `${Date.now()}-${file.originalname}`;
-        const filePath = path.join(uploadsDir, fileName);
-        
-        // გადავიტანოთ ფაილი uploads დირექტორიაში
-        fs.writeFileSync(filePath, file.buffer);
-        savedPhotos.push(fileName);
+        const base64Data = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
+        savedPhotos.push(base64Data);
       }
     }
     
     if (files && files.hazardPhotos) {
-      const uploadsDir = path.join(process.cwd(), 'uploads');
-      if (!fs.existsSync(uploadsDir)) {
-        fs.mkdirSync(uploadsDir, { recursive: true });
-      }
-      
       for (const file of files.hazardPhotos) {
-        const fileName = `${Date.now()}-${file.originalname}`;
-        const filePath = path.join(uploadsDir, fileName);
-        
-        // გადავიტანოთ ფაილი uploads დირექტორიაში
-        fs.writeFileSync(filePath, file.buffer);
-        savedHazardPhotos.push(fileName);
+        const base64Data = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
+        savedHazardPhotos.push(base64Data);
       }
     }
     
-    // დავამატოთ შენახული ფოტოების სახელები hazards-ებში
+    // Add base64 photos to hazards
     if (hazards.length > 0 && savedHazardPhotos.length > 0) {
       hazards = hazards.map((hazard: any, index: number) => ({
         ...hazard,
@@ -79,14 +59,14 @@ export class DocumentsController {
       }));
     }
     
-    // დავამატოთ შენახული ფოტოების სახელები დოკუმენტში
+    // Create document with base64 photos stored in database
     const documentWithPhotos = {
       ...createDocumentDto,
       hazards,
       photos: savedPhotos
     };
     
-    console.log('✅ Final document data:', documentWithPhotos);
+    console.log('✅ Final document data with base64 photos');
     
     return this.documentsService.create(documentWithPhotos);
   }
@@ -149,35 +129,5 @@ export class DocumentsController {
     res.send(buffer);
   }
 
-  @Get('files/:filename')
-  async serveFile(@Param('filename') filename: string, @Res() res: Response): Promise<void> {
-    try {
-      const filePath = path.join(process.cwd(), 'uploads', filename);
-      
-      if (!fs.existsSync(filePath)) {
-        res.status(404).json({ message: 'ფაილი ვერ მოიძებნა' });
-        return;
-      }
-      
-      // Set appropriate headers
-      const ext = path.extname(filename).toLowerCase();
-      const mimeTypes: { [key: string]: string } = {
-        '.jpg': 'image/jpeg',
-        '.jpeg': 'image/jpeg',
-        '.png': 'image/png',
-        '.gif': 'image/gif',
-        '.pdf': 'application/pdf',
-      };
-      
-      const mimeType = mimeTypes[ext] || 'application/octet-stream';
-      res.setHeader('Content-Type', mimeType);
-      res.setHeader('Cache-Control', 'public, max-age=31536000'); // 1 year cache
-      
-      const fileStream = fs.createReadStream(filePath);
-      fileStream.pipe(res);
-    } catch (error) {
-      console.error('File serving error:', error);
-      res.status(500).json({ message: 'ფაილის ჩატვირთვის შეცდომა' });
-    }
-  }
+  // File serving endpoint removed - photos are now stored as base64 in database
 }
