@@ -9,9 +9,6 @@ import {
   Grid, 
   Card, 
   CardContent,
-  AppBar,
-  Toolbar,
-  IconButton,
   Stack,
   Chip,
   useTheme
@@ -23,7 +20,6 @@ import {
   Shield, 
   Speed, 
   Phone, 
-  CheckCircle,
   ArrowForward
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
@@ -33,10 +29,6 @@ export default function LandingPage() {
   const router = useRouter();
 
   const handleGetStarted = () => {
-    router.push('/auth/login');
-  };
-
-  const handleLogin = () => {
     router.push('/auth/login');
   };
 
@@ -83,31 +75,6 @@ export default function LandingPage() {
 
   return (
     <Box sx={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
-      {/* Header */}
-      <AppBar position="static" elevation={0} sx={{ backgroundColor: 'white', color: 'black' }}>
-        <Toolbar>
-          <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
-            <Shield sx={{ mr: 1, color: theme.palette.primary.main }} />
-            <Typography variant="h6" component="div" sx={{ fontWeight: 'bold' }}>
-              SabApp
-            </Typography>
-          </Box>
-          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-            <Button color="inherit">მთავარი</Button>
-            <Button color="inherit">ჩვენი მიზანი</Button>
-            <Button color="inherit">ფორმების ნიმუშები</Button>
-            <Button color="inherit">კავშირი</Button>
-            <Button 
-              variant="contained" 
-              onClick={handleLogin}
-              sx={{ ml: 2 }}
-            >
-              შესვლა / რეგისტრაცია
-            </Button>
-          </Box>
-        </Toolbar>
-      </AppBar>
-
       {/* Hero Section */}
       <Box sx={{ 
         backgroundColor: 'white', 
