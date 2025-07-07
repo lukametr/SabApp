@@ -112,7 +112,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
           <Box sx={{ textAlign: 'center', mb: 4 }}>
             <Shield sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
             <Typography variant="h4" gutterBottom>
-              SafetyApp
+              SabApp
             </Typography>
             <Typography variant="h6" color="text.secondary">
               შესვლა სისტემაში

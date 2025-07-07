@@ -43,7 +43,7 @@ export default function LandingPage() {
   const steps = [
     {
       icon: <Security sx={{ fontSize: 40, color: theme.palette.primary.main }} />,
-      title: 'რეგისტრირდი',
+      title: 'დარეგისტრირდი',
       description: 'შექმენი ანგარიში უსაფრთხოების პლატფორმაზე'
     },
     {
@@ -62,7 +62,7 @@ export default function LandingPage() {
     {
       icon: <Speed sx={{ fontSize: 40, color: theme.palette.primary.main }} />,
       title: 'დროის ეკონომია',
-      description: 'სწრაფი ფორმების ავსება და გადმოწერა'
+      description: 'სწრაფი ფორმების შევსება და გადმოწერა'
     },
     {
       icon: <Phone sx={{ fontSize: 40, color: theme.palette.primary.main }} />,
@@ -89,7 +89,7 @@ export default function LandingPage() {
           <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
             <Shield sx={{ mr: 1, color: theme.palette.primary.main }} />
             <Typography variant="h6" component="div" sx={{ fontWeight: 'bold' }}>
-              SafetyApp
+              SabApp
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
@@ -294,7 +294,7 @@ export default function LandingPage() {
             დარეგისტრირდი ახლავე
           </Typography>
           <Typography variant="h6" sx={{ mb: 4, opacity: 0.9 }}>
-            გახდი ციფრული უსაფრთხოების ოფიცერი — შეავსე ფორმები სწრაფად და მარტივად
+             შეავსე ფორმები სწრაფად და მარტივად
           </Typography>
           <Button 
             variant="contained"
@@ -320,7 +320,7 @@ export default function LandingPage() {
             <Grid item xs={12} md={4}>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                 <Shield sx={{ mr: 1 }} />
-                <Typography variant="h6">SafetyApp</Typography>
+                <Typography variant="h6">SabApp</Typography>
               </Box>
               <Typography variant="body2" color="grey.400">
                 უსაფრთხოების შეფასების ციფრული პლატფორმა
