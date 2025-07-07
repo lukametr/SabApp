@@ -35,17 +35,96 @@ export const DocumentView: React.FC<DocumentViewProps> = ({ document, onEdit, on
 
   const handleDownload = async () => {
     try {
+      console.log('📥 Starting download for document:', document.id);
       const blob = await downloadDocument(document.id);
       const url = window.URL.createObjectURL(blob);
       const a = window.document.createElement('a');
       a.href = url;
-      a.download = document.filePath || 'document';
+      
+      // Create descriptive filename
+      const sanitizedName = document.objectName 
+        ? document.objectName.replace(/[^a-zA-Z0-9\u10A0-\u10FF\s-]/g, '') 
+        : 'document';
+      
+      const filename = `${sanitizedName}_${document.evaluatorName || 'unknown'}_${new Date().toISOString().split('T')[0]}.zip`;
+      
+      a.download = filename;
+      console.log('📦 Download filename:', filename);
+      
       window.document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       window.document.body.removeChild(a);
+      
+      console.log('✅ Download completed');
     } catch (error) {
-      console.error('Error downloading document:', error);
+      console.error('❌ Error downloading document:', error);
+    }
+  };
+
+  const handleDownloadExcel = async () => {
+    try {
+      console.log('📊 Starting Excel download for document:', document.id);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/documents/${document.id}/download/excel`);
+      
+      if (!response.ok) {
+        throw new Error('Excel ფაილის ჩამოტვირთვა ვერ მოხერხდა');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = window.document.createElement('a');
+      a.href = url;
+      
+      const sanitizedName = document.objectName 
+        ? document.objectName.replace(/[^a-zA-Z0-9\u10A0-\u10FF\s-]/g, '') 
+        : 'document';
+      
+      const filename = `უსაფრთხოების-შეფასება-${sanitizedName}-${new Date().toISOString().split('T')[0]}.xlsx`;
+      
+      a.download = filename;
+      window.document.body.appendChild(a);
+      a.click();
+      window.document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      
+      console.log('✅ Excel download completed:', filename);
+    } catch (error) {
+      console.error('❌ Excel download failed:', error);
+      alert('Excel რეპორტის ჩამოტვირთვა ვერ მოხერხდა');
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    try {
+      console.log('📄 Starting PDF download for document:', document.id);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/documents/${document.id}/download/pdf`);
+      
+      if (!response.ok) {
+        throw new Error('PDF ფაილის ჩამოტვირთვა ვერ მოხერხდა');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = window.document.createElement('a');
+      a.href = url;
+      
+      const sanitizedName = document.objectName 
+        ? document.objectName.replace(/[^a-zA-Z0-9\u10A0-\u10FF\s-]/g, '') 
+        : 'document';
+      
+      const filename = `უსაფრთხოების-შეფასება-${sanitizedName}-${new Date().toISOString().split('T')[0]}.pdf`;
+      
+      a.download = filename;
+      window.document.body.appendChild(a);
+      a.click();
+      window.document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      
+      console.log('✅ PDF download completed:', filename);
+    } catch (error) {
+      console.error('❌ PDF download failed:', error);
+      alert('PDF რეპორტის ჩამოტვირთვა ვერ მოხერხდა');
     }
   };
 
@@ -68,9 +147,19 @@ export const DocumentView: React.FC<DocumentViewProps> = ({ document, onEdit, on
                 {document.isFavorite ? <Favorite color="error" /> : <FavoriteBorder />}
               </IconButton>
             </Tooltip>
-            <Tooltip title="ჩამოტვირთვა">
+            <Tooltip title="ჩამოტვირთვა (ZIP)">
               <IconButton onClick={handleDownload}>
                 <Download />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Excel რეპორტი">
+              <IconButton onClick={handleDownloadExcel} color="success">
+                📊
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="PDF რეპორტი">
+              <IconButton onClick={handleDownloadPDF} color="error">
+                📄
               </IconButton>
             </Tooltip>
             {onEdit && (
