@@ -9,6 +9,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { ka } from 'date-fns/locale';
 import { CreateDocumentDto } from '../types/document';
 import { Delete, Add } from '@mui/icons-material';
+import { getPhotoUrl } from '../services/api/documentApi';
 
 const PERSONS = [
   'დასაქმებული',
@@ -258,6 +259,22 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
                       height={150}
                       style={{ maxWidth: 200, borderRadius: 8, objectFit: 'cover' }}
                     />
+                  </Box>
+                )}
+                {/* Show existing saved photos */}
+                {(hazard as any).photos && (hazard as any).photos.length > 0 && !hazard.mediaPreview && (
+                  <Box mt={2}>
+                    <Typography variant="body2" mb={1}>შენახული ფოტო:</Typography>
+                    {(hazard as any).photos.map((photoFilename: string, index: number) => (
+                      <Image 
+                        key={index}
+                        src={getPhotoUrl(photoFilename)}
+                        alt={`ფოტო ${index + 1}`}
+                        width={200}
+                        height={150}
+                        style={{ maxWidth: 200, borderRadius: 8, objectFit: 'cover', marginRight: 8 }}
+                      />
+                    ))}
                   </Box>
                 )}
               </Grid>

@@ -143,3 +143,8 @@ export const documentApi = {
     return response.data;
   },
 };
+
+export const getPhotoUrl = (filename: string): string => {
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+  return `${baseUrl}/documents/files/${filename}`;
+};

@@ -148,4 +148,36 @@ export class DocumentsController {
     });
     res.send(buffer);
   }
-} 
+
+  @Get('files/:filename')
+  async serveFile(@Param('filename') filename: string, @Res() res: Response): Promise<void> {
+    try {
+      const filePath = path.join(process.cwd(), 'uploads', filename);
+      
+      if (!fs.existsSync(filePath)) {
+        res.status(404).json({ message: 'ფაილი ვერ მოიძებნა' });
+        return;
+      }
+      
+      // Set appropriate headers
+      const ext = path.extname(filename).toLowerCase();
+      const mimeTypes: { [key: string]: string } = {
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.png': 'image/png',
+        '.gif': 'image/gif',
+        '.pdf': 'application/pdf',
+      };
+      
+      const mimeType = mimeTypes[ext] || 'application/octet-stream';
+      res.setHeader('Content-Type', mimeType);
+      res.setHeader('Cache-Control', 'public, max-age=31536000'); // 1 year cache
+      
+      const fileStream = fs.createReadStream(filePath);
+      fileStream.pipe(res);
+    } catch (error) {
+      console.error('File serving error:', error);
+      res.status(500).json({ message: 'ფაილის ჩატვირთვის შეცდომა' });
+    }
+  }
+}
