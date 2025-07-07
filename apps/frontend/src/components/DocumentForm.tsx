@@ -375,7 +375,7 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
                     value={hazard.initialRisk.probability}
                     onChange={(e) => {
                       const prob = Number(e.target.value);
-                      const total = prob + hazard.initialRisk.severity;
+                      const total = prob * hazard.initialRisk.severity;
                       updateHazard(hazard.id, { 
                         initialRisk: { ...hazard.initialRisk, probability: prob, total } 
                       });
@@ -391,7 +391,7 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
                     value={hazard.initialRisk.severity}
                     onChange={(e) => {
                       const sev = Number(e.target.value);
-                      const total = hazard.initialRisk.probability + sev;
+                      const total = hazard.initialRisk.probability * sev;
                       updateHazard(hazard.id, { 
                         initialRisk: { ...hazard.initialRisk, severity: sev, total } 
                       });
@@ -430,7 +430,7 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
                     value={hazard.residualRisk.probability}
                     onChange={(e) => {
                       const prob = Number(e.target.value);
-                      const total = prob + hazard.residualRisk.severity;
+                      const total = prob * hazard.residualRisk.severity;
                       updateHazard(hazard.id, { 
                         residualRisk: { ...hazard.residualRisk, probability: prob, total } 
                       });
@@ -446,7 +446,7 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
                     value={hazard.residualRisk.severity}
                     onChange={(e) => {
                       const sev = Number(e.target.value);
-                      const total = hazard.residualRisk.probability + sev;
+                      const total = hazard.residualRisk.probability * sev;
                       updateHazard(hazard.id, { 
                         residualRisk: { ...hazard.residualRisk, severity: sev, total } 
                       });
