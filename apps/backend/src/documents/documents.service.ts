@@ -16,34 +16,39 @@ export class DocumentsService {
   ) {}
 
   async create(createDocumentDto: CreateDocumentDto): Promise<Document> {
-    console.log('💾 Creating document with data:', {
-      hazardsCount: Array.isArray(createDocumentDto.hazards) ? createDocumentDto.hazards.length : 0,
-      photosCount: createDocumentDto.photos?.length || 0,
-      hazardPhotos: Array.isArray(createDocumentDto.hazards) ? createDocumentDto.hazards.map((h: any) => ({
-        id: h.id,
-        photosCount: h.photos?.length || 0
-      })) : []
-    });
-    
-    const createdDocument = new this.documentModel({
-      ...createDocumentDto,
-      authorId: 'default-user', // TODO: Get from authentication
-      photos: createDocumentDto.photos || [], // დავამატოთ ფოტოების სახელები
-      isFavorite: false,
-      assessmentA: 0,
-      assessmentSh: 0,
-      assessmentR: 0,
-    });
-    
-    console.log('💾 Saving document to database...');
-    const savedDocument = await createdDocument.save();
-    console.log('✅ Document saved successfully:', {
-      id: savedDocument._id,
-      hazardsCount: savedDocument.hazards?.length || 0,
-      photosCount: savedDocument.photos?.length || 0
-    });
-    
-    return savedDocument.toJSON() as Document;
+    try {
+      console.log('💾 Creating document with data:', {
+        hazardsCount: Array.isArray(createDocumentDto.hazards) ? createDocumentDto.hazards.length : 0,
+        photosCount: createDocumentDto.photos?.length || 0,
+        hazardPhotos: Array.isArray(createDocumentDto.hazards) ? createDocumentDto.hazards.map((h: any) => ({
+          id: h.id,
+          photosCount: h.photos?.length || 0
+        })) : []
+      });
+      
+      const createdDocument = new this.documentModel({
+        ...createDocumentDto,
+        authorId: 'default-user', // TODO: Get from authentication
+        photos: createDocumentDto.photos || [], // დავამატოთ ფოტოების სახელები
+        isFavorite: false,
+        assessmentA: 0,
+        assessmentSh: 0,
+        assessmentR: 0,
+      });
+      
+      console.log('💾 Saving document to database...');
+      const savedDocument = await createdDocument.save();
+      console.log('✅ Document saved successfully:', {
+        id: savedDocument._id,
+        hazardsCount: savedDocument.hazards?.length || 0,
+        photosCount: savedDocument.photos?.length || 0
+      });
+      
+      return savedDocument.toJSON() as Document;
+    } catch (error) {
+      console.error('❌ Error creating document:', error);
+      throw error;
+    }
   }
 
   async findAll(): Promise<Document[]> {
@@ -90,24 +95,29 @@ export class DocumentsService {
   }
 
   async update(id: string, updateDocumentDto: UpdateDocumentDto): Promise<Document> {
-    console.log('📋 Updating document in service:', id, {
-      hazardsCount: updateDocumentDto.hazards?.length || 0,
-      photosCount: updateDocumentDto.photos?.length || 0
-    });
-    
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      throw new NotFoundException(`Invalid document ID: ${id}`);
+    try {
+      console.log('📋 Updating document in service:', id, {
+        hazardsCount: updateDocumentDto.hazards?.length || 0,
+        photosCount: updateDocumentDto.photos?.length || 0
+      });
+      
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        throw new NotFoundException(`Invalid document ID: ${id}`);
+      }
+      
+      const document = await this.documentModel
+        .findByIdAndUpdate(id, updateDocumentDto, { new: true })
+        .exec();
+      if (!document) {
+        throw new NotFoundException(`Document with ID ${id} not found`);
+      }
+      
+      console.log('✅ Document updated successfully:', document._id);
+      return document.toJSON() as Document;
+    } catch (error) {
+      console.error('❌ Error updating document:', error);
+      throw error;
     }
-    
-    const document = await this.documentModel
-      .findByIdAndUpdate(id, updateDocumentDto, { new: true })
-      .exec();
-    if (!document) {
-      throw new NotFoundException(`Document with ID ${id} not found`);
-    }
-    
-    console.log('✅ Document updated successfully:', document._id);
-    return document.toJSON() as Document;
   }
 
   async toggleFavorite(id: string): Promise<Document> {
