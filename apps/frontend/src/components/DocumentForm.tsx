@@ -485,6 +485,7 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
       maxWidth="md"
       fullWidth
       aria-labelledby="document-form-dialog"
+      disableRestoreFocus
     >
       <DialogTitle id="document-form-dialog">
         <Box display="flex" justifyContent="space-between" alignItems="center">
