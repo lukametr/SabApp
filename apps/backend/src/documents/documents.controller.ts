@@ -37,6 +37,7 @@ export class DocumentsController {
         try {
           hazards = JSON.parse(createDocumentDto.hazards);
           console.log('📋 Parsed hazards from string:', hazards.length);
+          console.log('📋 First hazard structure:', JSON.stringify(hazards[0], null, 2));
         } catch (error) {
           console.error('❌ Error parsing hazards:', error);
           hazards = [];
