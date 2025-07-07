@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import * as ExcelJS from 'exceljs';
 import * as puppeteer from 'puppeteer';
+import { existsSync } from 'fs';
 
 @Injectable()
 export class ReportService {
@@ -99,31 +100,84 @@ export class ReportService {
    * დოკუმენტის PDF ფაილის შექმნა
    */
   async generatePDFReport(document: any): Promise<Buffer> {
-    const html = this.generateHTMLReport(document);
-    
-    const browser = await puppeteer.launch({ 
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
-    });
-    
     try {
-      const page = await browser.newPage();
-      await page.setContent(html, { waitUntil: 'networkidle0' });
+      const html = this.generateHTMLReport(document);
       
-      const pdfBuffer = await page.pdf({
-        format: 'A4',
-        printBackground: true,
-        margin: {
-          top: '20px',
-          right: '20px',
-          bottom: '20px',
-          left: '20px'
+      // Production-ისთვის Chrome executable path და arguments
+      const isProduction = process.env.NODE_ENV === 'production';
+      const browserOptions: any = { 
+        headless: true,
+        args: [
+          '--no-sandbox', 
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-accelerated-2d-canvas',
+          '--no-first-run',
+          '--no-zygote',
+          '--single-process', // For Railway/Render
+          '--disable-gpu'
+        ]
+      };
+
+      // Production-ში executablePath-ის მითითება
+      if (isProduction) {
+        // Production-ზე Google Chrome-ის პოვნა
+        const possiblePaths = [
+          process.env.PUPPETEER_EXECUTABLE_PATH,
+          process.env.CHROME_BIN,
+          '/usr/bin/google-chrome-stable',
+          '/usr/bin/google-chrome',
+          '/usr/bin/chromium-browser',
+          '/usr/bin/chromium'
+        ].filter(Boolean);
+        
+        console.log('🔍 Checking possible Chrome paths:', possiblePaths);
+        
+        // რეალური ფაილის არსებობის შემოწმება
+        let chromiumPath = possiblePaths[0] || '/usr/bin/google-chrome-stable';
+        for (const path of possiblePaths) {
+          if (path && existsSync(path)) {
+            chromiumPath = path;
+            console.log('✅ Found Chrome at:', path);
+            break;
+          }
         }
-      });
+        
+        browserOptions.executablePath = chromiumPath;
+        console.log('🔧 Using Chrome path:', chromiumPath);
+      }
       
-      return Buffer.from(pdfBuffer);
-    } finally {
-      await browser.close();
+      console.log('🚀 Launching Puppeteer with options:', JSON.stringify(browserOptions, null, 2));
+      const browser = await puppeteer.launch(browserOptions);
+      
+      try {
+        const page = await browser.newPage();
+        await page.setContent(html, { waitUntil: 'networkidle0' });
+        
+        const pdfBuffer = await page.pdf({
+          format: 'A4',
+          printBackground: true,
+          margin: {
+            top: '20px',
+            right: '20px',
+            bottom: '20px',
+            left: '20px'
+          }
+        });
+        
+        console.log('✅ PDF generated successfully, size:', pdfBuffer.length, 'bytes');
+        return Buffer.from(pdfBuffer);
+      } finally {
+        await browser.close();
+      }
+    } catch (error) {
+      console.error('❌ PDF Generation Error:', error);
+      console.error('🔍 Environment details:', {
+        NODE_ENV: process.env.NODE_ENV,
+        PUPPETEER_EXECUTABLE_PATH: process.env.PUPPETEER_EXECUTABLE_PATH,
+        platform: process.platform
+      });
+      throw new Error(`PDF გენერაცია ვერ მოხერხდა: ${error.message}`);
     }
   }
 
