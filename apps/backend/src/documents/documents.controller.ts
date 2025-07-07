@@ -5,6 +5,9 @@ import { DocumentsService } from './documents.service';
 import { ReportService } from './report.service';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
+import { existsSync } from 'fs';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 
 @Controller('documents')
 export class DocumentsController {
@@ -335,6 +338,48 @@ export class DocumentsController {
     } catch (error) {
       console.error('❌ PDF რეპორტის შეცდომა:', error);
       res.status(500).json({ message: 'PDF რეპორტის გენერაცია ვერ მოხერხდა', error: error.message });
+    }
+  }
+
+  // PDF დიაგნოსტიკის ენდპოინტი
+  @Get('diagnostics/pdf')
+  async getPDFDiagnostics(@Res() res: Response) {
+    try {
+      const execAsync = promisify(exec);
+      
+      const possiblePaths = [
+        process.env.PUPPETEER_EXECUTABLE_PATH,
+        process.env.CHROME_BIN,
+        '/usr/bin/chromium-browser',
+        '/usr/bin/chromium',
+        '/usr/bin/google-chrome-stable',
+        '/usr/bin/google-chrome'
+      ].filter(Boolean);
+      
+      const diagnostics = {
+        environment: {
+          NODE_ENV: process.env.NODE_ENV,
+          PUPPETEER_EXECUTABLE_PATH: process.env.PUPPETEER_EXECUTABLE_PATH,
+          CHROME_BIN: process.env.CHROME_BIN,
+          platform: process.platform,
+          arch: process.arch
+        },
+        possiblePaths,
+        existingPaths: possiblePaths.filter(path => path && existsSync(path)),
+        systemInfo: {}
+      };
+      
+      try {
+        const { stdout } = await execAsync('which chromium-browser || which chromium || which google-chrome');
+        diagnostics.systemInfo = { chromiumLocation: stdout.trim() };
+      } catch (error) {
+        diagnostics.systemInfo = { error: 'Chromium not found in PATH' };
+      }
+      
+      res.json(diagnostics);
+    } catch (error) {
+      console.error('❌ PDF დიაგნოსტიკის შეცდომა:', error);
+      res.status(500).json({ message: 'დიაგნოსტიკის შეცდომა', error: error.message });
     }
   }
 
