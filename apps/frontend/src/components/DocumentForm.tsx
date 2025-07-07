@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Box, Button, TextField, Typography, Grid, Checkbox, FormControlLabel, Alert, Chip, Dialog, DialogTitle, DialogContent, IconButton, Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
@@ -43,6 +43,7 @@ interface HazardData {
   requiredMeasures: string;
   responsiblePerson: string;
   reviewDate: Date;
+  photos: string[]; // Base64 data URLs
 }
 
 interface HazardSectionProps {
@@ -70,6 +71,7 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
       requiredMeasures: '',
       responsiblePerson: '',
       reviewDate: new Date(),
+      photos: []
     };
     console.log('✅ Added new hazard:', newHazard.id);
     onHazardsChange([...hazards, newHazard]);
@@ -285,20 +287,39 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
                   </Box>
                 )}
                 {/* Show existing saved photos (base64) */}
-                {(hazard as any).photos && (hazard as any).photos.length > 0 && !hazard.mediaPreview && (
+                {hazard.photos && hazard.photos.length > 0 && !hazard.mediaPreview && (
                   <Box mt={2}>
-                    <Typography variant="body2" mb={1}>შენახული ფოტო:</Typography>
-                    {(hazard as any).photos.map((base64Photo: string, index: number) => (
-                      <Image 
-                        key={index}
-                        src={base64Photo} // base64 data URL
-                        alt={`ფოტო ${index + 1}`}
-                        width={200}
-                        height={150}
-                        unoptimized
-                        style={{ maxWidth: 200, borderRadius: 8, objectFit: 'cover', marginRight: 8 }}
-                      />
-                    ))}
+                    <Typography variant="body2" mb={1}>შენახული ფოტოები:</Typography>
+                    <Box display="flex" flexWrap="wrap" gap={1}>
+                      {hazard.photos.map((base64Photo: string, index: number) => (
+                        <Box key={index} position="relative">
+                          <Image 
+                            src={base64Photo} // base64 data URL
+                            alt={`ფოტო ${index + 1}`}
+                            width={150}
+                            height={120}
+                            unoptimized
+                            style={{ maxWidth: 150, borderRadius: 8, objectFit: 'cover' }}
+                          />
+                          <IconButton
+                            size="small"
+                            onClick={() => {
+                              const updatedPhotos = hazard.photos.filter((_: string, i: number) => i !== index);
+                              updateHazard(hazard.id, { photos: updatedPhotos } as any);
+                            }}
+                            sx={{
+                              position: 'absolute',
+                              top: 2,
+                              right: 2,
+                              bgcolor: 'rgba(255, 255, 255, 0.8)',
+                              '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.9)' }
+                            }}
+                          >
+                            <Delete fontSize="small" />
+                          </IconButton>
+                        </Box>
+                      ))}
+                    </Box>
                   </Box>
                 )}
               </Grid>
@@ -491,10 +512,10 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
 }
 
 export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, defaultValues, open, onClose }: Props) {
-  const [hazards, setHazards] = useState<HazardData[]>(defaultValues?.hazards as HazardData[] ?? []);
+  const [hazards, setHazards] = useState<HazardData[]>([]);
 
-  const { control, handleSubmit: submitForm, formState: { errors } } = useForm<CreateDocumentDto>({
-    defaultValues: defaultValues || {
+  const { control, handleSubmit: submitForm, formState: { errors }, reset } = useForm<CreateDocumentDto>({
+    defaultValues: {
       evaluatorName: '',
       evaluatorLastName: '',
       objectName: '',
@@ -505,6 +526,62 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
       photos: []
     },
   });
+
+  // Update form values when defaultValues change
+  useEffect(() => {
+    if (defaultValues) {
+      console.log('🔄 DocumentForm received defaultValues:', defaultValues);
+      
+      // Convert hazards to internal format
+      const formattedHazards: HazardData[] = (defaultValues.hazards || []).map((hazard: any) => ({
+        id: hazard.id || `hazard_${Date.now()}_${Math.random()}`,
+        hazardIdentification: hazard.hazardIdentification || '',
+        affectedPersons: hazard.affectedPersons || [],
+        injuryDescription: hazard.injuryDescription || '',
+        existingControlMeasures: hazard.existingControlMeasures || '',
+        initialRisk: hazard.initialRisk || { probability: 0, severity: 0, total: 0 },
+        additionalControlMeasures: hazard.additionalControlMeasures || '',
+        residualRisk: hazard.residualRisk || { probability: 0, severity: 0, total: 0 },
+        requiredMeasures: hazard.requiredMeasures || '',
+        responsiblePerson: hazard.responsiblePerson || '',
+        reviewDate: hazard.reviewDate ? new Date(hazard.reviewDate) : new Date(),
+        photos: hazard.photos || []
+      }));
+      
+      setHazards(formattedHazards);
+      
+      // Reset form with new values
+      reset({
+        evaluatorName: defaultValues.evaluatorName || '',
+        evaluatorLastName: defaultValues.evaluatorLastName || '',
+        objectName: defaultValues.objectName || '',
+        workDescription: defaultValues.workDescription || '',
+        date: defaultValues.date ? new Date(defaultValues.date) : new Date(),
+        time: defaultValues.time ? new Date(defaultValues.time) : new Date(),
+        hazards: formattedHazards as any,
+        photos: defaultValues.photos || []
+      });
+      
+      console.log('✅ Form reset with values:', {
+        evaluatorName: defaultValues.evaluatorName,
+        hazardsCount: formattedHazards.length,
+        photosCount: defaultValues.photos?.length || 0
+      });
+    } else {
+      // Reset to empty form
+      setHazards([]);
+      reset({
+        evaluatorName: '',
+        evaluatorLastName: '',
+        objectName: '',
+        workDescription: '',
+        date: new Date(),
+        time: new Date(),
+        hazards: [],
+        photos: []
+      });
+    }
+  }, [defaultValues, reset]);
 
   const handleFormSubmitInternal = async (data: CreateDocumentDto) => {
     const formattedData: CreateDocumentDto = {

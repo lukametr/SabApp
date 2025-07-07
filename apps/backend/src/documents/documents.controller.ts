@@ -107,8 +107,90 @@ export class DocumentsController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateDocumentDto: UpdateDocumentDto) {
-    return this.documentsService.update(id, updateDocumentDto);
+  @UseInterceptors(FileFieldsInterceptor([
+    { name: 'photos', maxCount: 10 },
+    { name: 'hazardPhotos', maxCount: 50 }
+  ]))
+  async update(@Param('id') id: string, @Body() updateDocumentDto: UpdateDocumentDto, @UploadedFiles() files: any) {
+    console.log('📋 Updating document:', id, updateDocumentDto);
+    console.log('📸 Received files for update:', files);
+    
+    // Parse hazards from string if it's a string
+    let hazards = [];
+    if (updateDocumentDto.hazards) {
+      if (typeof updateDocumentDto.hazards === 'string') {
+        try {
+          hazards = JSON.parse(updateDocumentDto.hazards as any);
+          console.log('📋 Parsed hazards from string:', hazards.length);
+        } catch (error) {
+          console.error('❌ Error parsing hazards:', error);
+          hazards = [];
+        }
+      } else {
+        hazards = updateDocumentDto.hazards;
+        console.log('📋 Received hazards as array:', hazards.length);
+      }
+    }
+    
+    // Convert files to base64 and store in database
+    const savedPhotos: string[] = [];
+    const savedHazardPhotos: string[] = [];
+    
+    if (files && files.photos) {
+      console.log('📸 Processing', files.photos.length, 'document photos');
+      for (const file of files.photos) {
+        const base64Data = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
+        savedPhotos.push(base64Data);
+      }
+    }
+    
+    if (files && files.hazardPhotos) {
+      console.log('📸 Processing', files.hazardPhotos.length, 'hazard photos');
+      for (const file of files.hazardPhotos) {
+        const base64Data = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
+        savedHazardPhotos.push(base64Data);
+      }
+    }
+    
+    // Add base64 photos to hazards in order
+    if (hazards.length > 0) {
+      let photoIndex = 0;
+      hazards = hazards.map((hazard: any, hazardIndex: number) => {
+        const hazardWithPhotos = {
+          ...hazard,
+          id: hazard.id || `hazard_${Date.now()}_${hazardIndex}`, // Ensure unique ID
+          photos: hazard.photos || [] as string[]
+        };
+        
+        // Add one photo per hazard if available
+        if (photoIndex < savedHazardPhotos.length) {
+          hazardWithPhotos.photos.push(savedHazardPhotos[photoIndex]);
+          console.log('📸 Added photo to hazard:', hazardWithPhotos.id, 'at index', photoIndex);
+          photoIndex++;
+        }
+        
+        return hazardWithPhotos;
+      });
+    }
+    
+    // Update document with base64 photos stored in database
+    const documentWithPhotos = {
+      ...updateDocumentDto,
+      hazards,
+      photos: savedPhotos.length > 0 ? savedPhotos : updateDocumentDto.photos
+    };
+    
+    console.log('✅ Final update data with base64 photos:', {
+      hazardsCount: hazards.length,
+      photosCount: savedPhotos.length,
+      hazardPhotosCount: savedHazardPhotos.length,
+      hazardWithPhotos: hazards.map((h: any) => ({
+        id: h.id,
+        photosCount: h.photos?.length || 0
+      }))
+    });
+    
+    return this.documentsService.update(id, documentWithPhotos);
   }
 
   @Delete(':id')

@@ -54,6 +54,13 @@ export default function DocumentsClient() {
 
   // ფუნქცია Document-ის CreateDocumentDto-ში გადასაყვანად
   const convertDocumentToCreateDto = (doc: Document): Partial<CreateDocumentDto> => {
+    console.log('🔄 Converting document to DTO:', {
+      id: doc.id,
+      objectName: doc.objectName,
+      hazardsCount: doc.hazards?.length || 0,
+      photosCount: doc.photos?.length || 0
+    });
+    
     return {
       evaluatorName: doc.evaluatorName,
       evaluatorLastName: doc.evaluatorLastName,
@@ -61,11 +68,8 @@ export default function DocumentsClient() {
       workDescription: doc.workDescription,
       date: doc.date,
       time: doc.time,
-      hazards: doc.hazards.map(hazard => ({
-        ...hazard,
-        photos: [] // ფოტოები ცარიელია რედაქტირებისას
-      })),
-      photos: [] // ფოტოები ცარიელია რედაქტირებისას
+      hazards: doc.hazards || [],
+      photos: [] // Photos will be handled separately for editing
     };
   };
 

@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import * as mongoose from 'mongoose';
 import { Document } from './schemas/document.schema';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
@@ -89,13 +90,24 @@ export class DocumentsService {
   }
 
   async update(id: string, updateDocumentDto: UpdateDocumentDto): Promise<Document> {
+    console.log('📋 Updating document in service:', id, {
+      hazardsCount: updateDocumentDto.hazards?.length || 0,
+      photosCount: updateDocumentDto.photos?.length || 0
+    });
+    
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw new NotFoundException(`Invalid document ID: ${id}`);
+    }
+    
     const document = await this.documentModel
       .findByIdAndUpdate(id, updateDocumentDto, { new: true })
       .exec();
     if (!document) {
       throw new NotFoundException(`Document with ID ${id} not found`);
     }
-    return document;
+    
+    console.log('✅ Document updated successfully:', document._id);
+    return document.toJSON() as Document;
   }
 
   async toggleFavorite(id: string): Promise<Document> {

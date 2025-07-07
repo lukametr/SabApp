@@ -93,14 +93,37 @@ export const documentApi = {
     if (data.date) formData.append('date', data.date.toISOString());
     if (data.time) formData.append('time', data.time.toISOString());
 
-    // Add hazards data
+    // Process hazards and extract photos
+    const hazardPhotos: File[] = [];
     if (data.hazards && data.hazards.length > 0) {
-      data.hazards.forEach((hazard, _index) => {
-        formData.append('hazards', JSON.stringify(hazard));
+      const processedHazards = data.hazards.map(hazard => {
+        const processedHazard = {
+          ...hazard,
+          photos: hazard.photos || [] as string[] // Keep existing photos
+        };
+        
+        // Extract new photos from hazard
+        if ((hazard as any).mediaFile) {
+          hazardPhotos.push((hazard as any).mediaFile);
+          console.log('📸 Added hazard photo for update:', (hazard as any).mediaFile.name);
+        }
+        
+        return processedHazard;
+      });
+
+      console.log('📋 Processed hazards for update:', processedHazards.length);
+      console.log('📸 Total hazard photos for update:', hazardPhotos.length);
+
+      // Add processed hazards data
+      formData.append('hazards', JSON.stringify(processedHazards));
+
+      // Add hazard photos
+      hazardPhotos.forEach((photo, index) => {
+        formData.append('hazardPhotos', photo);
       });
     }
 
-    // Add photos if they exist
+    // Add general photos if they exist
     if (data.photos && data.photos.length > 0) {
       data.photos.forEach((photo, _index) => {
         // Universal check for File type (works in browser and Node build)
@@ -110,11 +133,19 @@ export const documentApi = {
       });
     }
 
+    console.log('📋 Updating document with ID:', data.id);
     const response = await api.patch(`/documents/${data.id}`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
     });
+    
+    console.log('📋 Updated document response:', {
+      id: response.data.id,
+      hazardsCount: response.data.hazards?.length || 0,
+      photosCount: response.data.photos?.length || 0
+    });
+    
     return response.data;
   },
 
