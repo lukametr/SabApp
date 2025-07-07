@@ -39,10 +39,14 @@ export const documentApi = {
       // Extract photos from hazard
       if ((hazard as any).mediaFile) {
         hazardPhotos.push((hazard as any).mediaFile);
+        console.log('📸 Added hazard photo:', (hazard as any).mediaFile.name);
       }
       
       return processedHazard;
     });
+
+    console.log('📋 Processed hazards:', processedHazards.length);
+    console.log('📸 Total hazard photos:', hazardPhotos.length);
 
     // Add processed hazards data
     formData.append('hazards', JSON.stringify(processedHazards));
@@ -67,6 +71,13 @@ export const documentApi = {
         'Content-Type': 'multipart/form-data',
       },
     });
+    
+    console.log('📋 Created document response:', {
+      id: response.data.id,
+      hazardsCount: response.data.hazards?.length || 0,
+      photosCount: response.data.photos?.length || 0
+    });
+    
     return response.data;
   },
 

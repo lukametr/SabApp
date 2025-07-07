@@ -15,8 +15,8 @@ export class DocumentsController {
     { name: 'hazardPhotos', maxCount: 50 }
   ]))
   async create(@Body() createDocumentDto: CreateDocumentDto, @UploadedFiles() files: any) {
-    console.log('✅ Received document data:', createDocumentDto);
-    console.log('✅ Received files:', files);
+    console.log('📋 Received document data:', createDocumentDto);
+    console.log('📸 Received files:', files);
     
     // Parse hazards from string if it's a string
     let hazards = [];
@@ -24,12 +24,14 @@ export class DocumentsController {
       if (typeof createDocumentDto.hazards === 'string') {
         try {
           hazards = JSON.parse(createDocumentDto.hazards);
+          console.log('📋 Parsed hazards from string:', hazards.length);
         } catch (error) {
           console.error('❌ Error parsing hazards:', error);
           hazards = [];
         }
       } else {
         hazards = createDocumentDto.hazards;
+        console.log('📋 Received hazards as array:', hazards.length);
       }
     }
     
@@ -38,6 +40,7 @@ export class DocumentsController {
     const savedHazardPhotos: string[] = [];
     
     if (files && files.photos) {
+      console.log('📸 Processing', files.photos.length, 'document photos');
       for (const file of files.photos) {
         const base64Data = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
         savedPhotos.push(base64Data);
@@ -45,18 +48,32 @@ export class DocumentsController {
     }
     
     if (files && files.hazardPhotos) {
+      console.log('📸 Processing', files.hazardPhotos.length, 'hazard photos');
       for (const file of files.hazardPhotos) {
         const base64Data = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
         savedHazardPhotos.push(base64Data);
       }
     }
     
-    // Add base64 photos to hazards
-    if (hazards.length > 0 && savedHazardPhotos.length > 0) {
-      hazards = hazards.map((hazard: any, index: number) => ({
-        ...hazard,
-        photos: savedHazardPhotos[index] ? [savedHazardPhotos[index]] : []
-      }));
+    // Add base64 photos to hazards in order
+    if (hazards.length > 0) {
+      let photoIndex = 0;
+      hazards = hazards.map((hazard: any, hazardIndex: number) => {
+        const hazardWithPhotos = {
+          ...hazard,
+          id: hazard.id || `hazard_${Date.now()}_${hazardIndex}`, // Ensure unique ID
+          photos: [] as string[]
+        };
+        
+        // Add one photo per hazard if available
+        if (photoIndex < savedHazardPhotos.length) {
+          hazardWithPhotos.photos.push(savedHazardPhotos[photoIndex]);
+          console.log('📸 Added photo to hazard:', hazardWithPhotos.id, 'at index', photoIndex);
+          photoIndex++;
+        }
+        
+        return hazardWithPhotos;
+      });
     }
     
     // Create document with base64 photos stored in database
@@ -66,7 +83,15 @@ export class DocumentsController {
       photos: savedPhotos
     };
     
-    console.log('✅ Final document data with base64 photos');
+    console.log('✅ Final document data with base64 photos:', {
+      hazardsCount: hazards.length,
+      photosCount: savedPhotos.length,
+      hazardPhotosCount: savedHazardPhotos.length,
+      hazardWithPhotos: hazards.map((h: any) => ({
+        id: h.id,
+        photosCount: h.photos?.length || 0
+      }))
+    });
     
     return this.documentsService.create(documentWithPhotos);
   }

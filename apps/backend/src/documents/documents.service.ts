@@ -15,7 +15,14 @@ export class DocumentsService {
   ) {}
 
   async create(createDocumentDto: CreateDocumentDto): Promise<Document> {
-    console.log('💾 Creating document with data:', createDocumentDto);
+    console.log('💾 Creating document with data:', {
+      hazardsCount: Array.isArray(createDocumentDto.hazards) ? createDocumentDto.hazards.length : 0,
+      photosCount: createDocumentDto.photos?.length || 0,
+      hazardPhotos: Array.isArray(createDocumentDto.hazards) ? createDocumentDto.hazards.map((h: any) => ({
+        id: h.id,
+        photosCount: h.photos?.length || 0
+      })) : []
+    });
     
     const createdDocument = new this.documentModel({
       ...createDocumentDto,
@@ -29,13 +36,30 @@ export class DocumentsService {
     
     console.log('💾 Saving document to database...');
     const savedDocument = await createdDocument.save();
-    console.log('✅ Document saved successfully:', savedDocument._id);
+    console.log('✅ Document saved successfully:', {
+      id: savedDocument._id,
+      hazardsCount: savedDocument.hazards?.length || 0,
+      photosCount: savedDocument.photos?.length || 0
+    });
     
     return savedDocument;
   }
 
   async findAll(): Promise<Document[]> {
-    return this.documentModel.find().exec();
+    const documents = await this.documentModel.find().exec();
+    console.log('📋 Found', documents.length, 'documents');
+    documents.forEach((doc, index) => {
+      console.log(`📋 Document ${index + 1}:`, {
+        id: doc._id,
+        hazardsCount: doc.hazards?.length || 0,
+        photosCount: doc.photos?.length || 0,
+        hazardPhotos: doc.hazards?.map((h: any) => ({
+          id: h.id,
+          photosCount: h.photos?.length || 0
+        })) || []
+      });
+    });
+    return documents;
   }
 
   async findOne(id: string): Promise<Document> {

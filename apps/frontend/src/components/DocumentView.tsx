@@ -5,6 +5,7 @@ import { Favorite, FavoriteBorder, Download, Edit, Delete, ExpandMore } from '@m
 import { useDocumentStore } from '../store/documentStore';
 import { format } from 'date-fns';
 import { ka } from 'date-fns/locale';
+import Image from 'next/image';
 
 interface DocumentViewProps {
   document: Document;
@@ -14,6 +15,19 @@ interface DocumentViewProps {
 
 export const DocumentView: React.FC<DocumentViewProps> = ({ document, onEdit, onDelete }) => {
   const { toggleFavorite, downloadDocument } = useDocumentStore();
+
+  React.useEffect(() => {
+    console.log('📋 Document view loaded:', {
+      id: document.id,
+      hazardsCount: document.hazards?.length || 0,
+      photosCount: document.photos?.length || 0,
+      hazardPhotos: document.hazards?.map((h, index) => ({
+        index,
+        id: h.id,
+        photosCount: h.photos?.length || 0
+      })) || []
+    });
+  }, [document]);
 
   const handleFavoriteClick = async () => {
     await toggleFavorite(document.id);
@@ -101,6 +115,32 @@ export const DocumentView: React.FC<DocumentViewProps> = ({ document, onEdit, on
             </Typography>
             <Typography variant="body1">{document.workDescription}</Typography>
           </Grid>
+
+          {/* Display document photos if available */}
+          {document.photos && document.photos.length > 0 && (
+            <Grid item xs={12}>
+              <Typography variant="subtitle2" color="textSecondary" sx={{ mb: 1 }}>
+                დოკუმენტის ფოტოები
+              </Typography>
+              <Box display="flex" flexWrap="wrap" gap={1}>
+                {document.photos.map((base64Photo, photoIndex) => (
+                  <Image
+                    key={photoIndex}
+                    src={typeof base64Photo === 'string' ? base64Photo : ''}
+                    alt={`დოკუმენტის ფოტო ${photoIndex + 1}`}
+                    width={200}
+                    height={150}
+                    unoptimized
+                    style={{ 
+                      borderRadius: 8, 
+                      objectFit: 'cover',
+                      border: '1px solid #e0e0e0'
+                    }}
+                  />
+                ))}
+              </Box>
+            </Grid>
+          )}
 
           <Grid item xs={12}>
             <Typography variant="h6" gutterBottom>
@@ -221,6 +261,42 @@ export const DocumentView: React.FC<DocumentViewProps> = ({ document, onEdit, on
                         {format(new Date(hazard.reviewDate), 'dd MMMM yyyy', { locale: ka })}
                       </Typography>
                     </Grid>
+
+                    {/* Display base64 photos if available */}
+                    {hazard.photos && hazard.photos.length > 0 && (
+                      <Grid item xs={12}>
+                        <Typography variant="subtitle2" color="textSecondary" sx={{ mb: 1 }}>
+                          ფოტოები ({hazard.photos.length})
+                        </Typography>
+                        <Box display="flex" flexWrap="wrap" gap={1}>
+                          {hazard.photos.map((base64Photo, photoIndex) => {
+                            console.log('📸 Rendering photo:', { 
+                              hazardIndex: index, 
+                              photoIndex, 
+                              photoType: typeof base64Photo,
+                              photoStart: typeof base64Photo === 'string' ? base64Photo.substring(0, 30) : 'not string'
+                            });
+                            return (
+                              <Image
+                                key={photoIndex}
+                                src={typeof base64Photo === 'string' ? base64Photo : ''}
+                                alt={`საფრთხე ${index + 1} ფოტო ${photoIndex + 1}`}
+                                width={200}
+                                height={150}
+                                unoptimized
+                                style={{ 
+                                  borderRadius: 8, 
+                                  objectFit: 'cover',
+                                  border: '1px solid #e0e0e0'
+                                }}
+                                onLoad={() => console.log('✅ Hazard photo loaded:', { hazardIndex: index, photoIndex })}
+                                onError={(e) => console.error('❌ Hazard photo failed to load:', { hazardIndex: index, photoIndex, error: e })}
+                              />
+                            );
+                          })}
+                        </Box>
+                      </Grid>
+                    )}
                   </Grid>
                 </AccordionDetails>
               </Accordion>

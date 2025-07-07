@@ -13,6 +13,10 @@ class RiskDto {
 }
 
 class HazardDto {
+  @IsOptional()
+  @IsString()
+  id?: string;
+
   @IsString()
   hazardIdentification: string;
 

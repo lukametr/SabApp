@@ -28,7 +28,7 @@ export interface Hazard {
   requiredMeasures: string;
   responsiblePerson: string;
   reviewDate: Date;
-  photos: File[];
+  photos: string[]; // Base64 data URLs
 }
 
 export interface Document {
@@ -46,7 +46,7 @@ export interface Document {
   assessmentA: number;
   assessmentSh: number;
   assessmentR: number;
-  photos: string[];
+  photos: string[]; // Base64 data URLs
   createdAt: Date;
   updatedAt: Date;
 }
@@ -71,5 +71,5 @@ export interface UpdateDocumentDto {
   date?: Date;
   time?: Date;
   hazards?: Hazard[];
-  photos?: string[];
+  photos?: string[]; // Base64 data URLs
 } 
