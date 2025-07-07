@@ -333,7 +333,7 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
               label={
                 <Typography variant="body2">
                   ვეთანხმები{' '}
-                  <Link href="#" sx={{ textDecoration: 'none' }}>
+                  <Link href="/terms" sx={{ textDecoration: 'none' }}>
                     წესებსა და პირობებს
                   </Link>
                 </Typography>

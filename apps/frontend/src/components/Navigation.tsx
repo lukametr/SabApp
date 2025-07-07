@@ -82,6 +82,7 @@ export default function Navigation() {
         })
         console.log('Auth response:', res.data);
         login(res.data)
+        router.push('/dashboard')
         router.refresh()
       } catch (err: unknown) {
         const error = err as ApiError
@@ -110,70 +111,21 @@ export default function Navigation() {
     try {
       if (window.google && window.google.accounts) {
         // Show Google One Tap and sign-in popup
-        try {
-          window.google.accounts.id.prompt();
-          
-          // If prompt() doesn't throw error but token retrieval fails,
-          // user will see "Error retrieving a token" in console.
-          // We can add a timeout to detect this and offer alternative
-          setTimeout(() => {
-            console.log('💡 If you see "Error retrieving a token", try the alternative method below');
-          }, 2000);
-          
-        } catch (promptError) {
-          console.error('Google prompt failed:', promptError);
-          console.log('🔄 Switching to redirect method due to prompt failure');
-          handleGoogleRedirectSignIn();
-        }
+        window.google.accounts.id.prompt();
+        
+        // If prompt() doesn't throw error but token retrieval fails,
+        // user will see "Error retrieving a token" in console.
+        setTimeout(() => {
+          console.log('💡 If you see "Error retrieving a token", the Google Sign-In popup may have been blocked');
+        }, 2000);
       } else {
-        // If Google API is not loaded, use redirect method
-        console.log('Google API not loaded, using redirect method');
-        handleGoogleRedirectSignIn();
+        // If Google API is not loaded
+        console.log('Google API not loaded');
+        setAuthError('Google API არ არის ჩატვირთული. გთხოვთ განაახლოთ გვერდი.');
       }
     } catch (error) {
       console.error('Google Sign-In popup failed:', error);
-      // Fallback to redirect method
-      console.log('🔄 Switching to redirect method due to error');
-      handleGoogleRedirectSignIn();
-    }
-  }
-
-  const handleGoogleRedirectSignIn = () => {
-    // Alternative method: use popup with manual rendering
-    if (window.google && window.google.accounts) {
-      console.log('Using alternative popup method instead of redirect');
-      
-      // Create a temporary container for Google button
-      const tempContainer = document.createElement('div');
-      tempContainer.style.position = 'fixed';
-      tempContainer.style.top = '-9999px';
-      tempContainer.style.left = '-9999px';
-      document.body.appendChild(tempContainer);
-      
-      try {
-        // Render Google sign-in button programmatically
-        window.google.accounts.id.renderButton(tempContainer, {
-          theme: 'outline',
-          size: 'large'
-        });
-        
-        // Trigger click on the rendered button
-        setTimeout(() => {
-          const googleButton = tempContainer.querySelector('div[role="button"]') as HTMLElement;
-          if (googleButton) {
-            googleButton.click();
-          }
-          // Clean up
-          document.body.removeChild(tempContainer);
-        }, 100);
-        
-      } catch (error) {
-        console.error('Alternative popup method failed:', error);
-        document.body.removeChild(tempContainer);
-        setAuthError('Google ავტორიზაცია ვერ მოხერხდა. გთხოვთ სცადოთ მოგვიანებით.');
-      }
-    } else {
-      setAuthError('Google API არ არის ჩატვირთული. გთხოვთ განაახლოთ გვერდი.');
+      setAuthError('Google ავტორიზაცია ვერ მოხერხდა. გთხოვთ სცადოთ მოგვიანებით.');
     }
   }
 
@@ -239,6 +191,7 @@ export default function Navigation() {
       setShowRegistration(false)
       setPendingIdToken(null)
       setPendingUserInfo(null)
+      router.push('/dashboard')
       router.refresh()
     } catch (err: unknown) {
       const error = err as ApiError
@@ -266,34 +219,50 @@ export default function Navigation() {
                 </Link>
               </div>
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                <Link
-                  href="/"
-                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                    isActive('/')
-                      ? 'border-primary-500 text-gray-900'
-                      : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                  }`}
-                >
-                  მთავარი
-                </Link>
-                <Link
-                  href="/#about"
-                  className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                >
-                  ჩვენი მიზანი
-                </Link>
-                <Link
-                  href="/#demo"
-                  className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                >
-                  ფორმების ნიმუშები
-                </Link>
-                <Link
-                  href="/#contact"
-                  className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                >
-                  კავშირი
-                </Link>
+                {!user && (
+                  <>
+                    <Link
+                      href="/"
+                      className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                        isActive('/')
+                          ? 'border-primary-500 text-gray-900'
+                          : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                      }`}
+                    >
+                      მთავარი
+                    </Link>
+                    <Link
+                      href="/#about"
+                      className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                    >
+                      ჩვენი მიზანი
+                    </Link>
+                    <Link
+                      href="/#demo"
+                      className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                    >
+                      ფორმების ნიმუშები
+                    </Link>
+                    <Link
+                      href="/#contact"
+                      className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                    >
+                      კავშირი
+                    </Link>
+                  </>
+                )}
+                {user && (
+                  <Link
+                    href="/dashboard"
+                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                      isActive('/dashboard')
+                        ? 'border-primary-500 text-gray-900'
+                        : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                    }`}
+                  >
+                    სამუშაო სივრცე
+                  </Link>
+                )}
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -324,19 +293,6 @@ export default function Navigation() {
                       </svg>
                       შესვლა Google ანგარიშით
                     </button>
-                    
-                    {/* Alternative method if popup fails */}
-                    <div className="mt-2 text-center">
-                      <span className="text-xs text-gray-500">
-                        თუ Google Sign-In არ მუშაობს, {' '}
-                        <button
-                          onClick={handleGoogleRedirectSignIn}
-                          className="text-blue-600 hover:text-blue-800 underline"
-                        >
-                          სცადეთ ალტერნატიული მეთოდი
-                        </button>
-                      </span>
-                    </div>
                   </div>
                 </>
               )}
