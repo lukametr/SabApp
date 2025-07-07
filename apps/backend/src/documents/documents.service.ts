@@ -153,8 +153,14 @@ export class DocumentsService {
       throw new NotFoundException(`Document with ID ${id} not found`);
     }
 
-    // Handle new documents with base64 photos
-    if (document.photos && document.photos.length > 0) {
+    // Check if document has any photos (document photos or hazard photos)
+    const hasDocumentPhotos = document.photos && document.photos.length > 0;
+    const hasHazardPhotos = document.hazards && document.hazards.some(hazard => hazard.photos && hazard.photos.length > 0);
+
+    console.log(`🔍 Document ${id} - hasDocumentPhotos: ${hasDocumentPhotos}, hasHazardPhotos: ${hasHazardPhotos}`);
+
+    // Handle new documents with base64 photos (document photos or hazard photos)
+    if (hasDocumentPhotos || hasHazardPhotos) {
       return this.createDocumentZipFromBase64(document);
     }
 
