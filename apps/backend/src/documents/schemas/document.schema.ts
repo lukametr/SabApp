@@ -112,4 +112,14 @@ export class Document extends MongoDocument {
   photos: string[];
 }
 
-export const DocumentSchema = SchemaFactory.createForClass(Document); 
+export const DocumentSchema = SchemaFactory.createForClass(Document);
+
+// Transform _id to id for frontend compatibility
+DocumentSchema.set('toJSON', {
+  transform: function(_doc, ret) {
+    ret.id = ret._id;
+    delete ret._id;
+    delete ret.__v;
+    return ret;
+  }
+}); 

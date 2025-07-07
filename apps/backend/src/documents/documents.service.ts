@@ -42,7 +42,7 @@ export class DocumentsService {
       photosCount: savedDocument.photos?.length || 0
     });
     
-    return savedDocument;
+    return savedDocument.toJSON() as Document;
   }
 
   async findAll(): Promise<Document[]> {
@@ -59,7 +59,9 @@ export class DocumentsService {
         })) || []
       });
     });
-    return documents;
+    
+    // Convert to JSON to apply transform (_id -> id)
+    return documents.map(doc => doc.toJSON()) as Document[];
   }
 
   async findOne(id: string): Promise<Document> {
@@ -67,15 +69,23 @@ export class DocumentsService {
     if (!document) {
       throw new NotFoundException('დოკუმენტი ვერ მოიძებნა');
     }
-    return document;
+    return document.toJSON() as Document;
   }
 
   async remove(id: string): Promise<Document> {
+    console.log('🗑️ Removing document with ID:', id);
+    
+    if (!id || id === 'undefined') {
+      console.error('❌ Invalid ID provided for deletion:', id);
+      throw new NotFoundException('არასწორი დოკუმენტის ID');
+    }
+    
     const deletedDocument = await this.documentModel.findByIdAndDelete(id).exec();
     if (!deletedDocument) {
       throw new NotFoundException('დოკუმენტი ვერ მოიძებნა');
     }
-    return deletedDocument;
+    console.log('✅ Document deleted successfully:', deletedDocument._id);
+    return deletedDocument.toJSON() as Document;
   }
 
   async update(id: string, updateDocumentDto: UpdateDocumentDto): Promise<Document> {

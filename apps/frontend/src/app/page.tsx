@@ -34,6 +34,7 @@ export default function Home() {
   }, []);
 
   const handleDelete = useCallback(async (doc: Document) => {
+    console.log('🗑️ Main page delete called for:', { id: doc.id, objectName: doc.objectName });
     await deleteDocument(doc.id);
     fetchDocuments();
   }, [deleteDocument, fetchDocuments]);
