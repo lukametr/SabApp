@@ -30,6 +30,9 @@ class Risk {
 
 @Schema({ _id: false })
 class Hazard {
+  @Prop({ required: false })
+  id?: string;
+
   @Prop({ required: true })
   hazardIdentification: string;
 

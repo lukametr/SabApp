@@ -71,6 +71,7 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
       responsiblePerson: '',
       reviewDate: new Date(),
     };
+    console.log('✅ Added new hazard:', newHazard.id);
     onHazardsChange([...hazards, newHazard]);
     setExpandedHazard(newHazard.id);
   };
@@ -111,14 +112,24 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
       canvas.getContext('2d')?.drawImage(videoRef.current, 0, 0);
       canvas.toBlob(blob => {
         if (blob) {
-          const capturedFile = new File([blob], 'capture.jpg', { type: 'image/jpeg' });
-          const hazard = hazards.find(h => h.id === hazardId);
-          if (hazard) {
-            updateHazard(hazardId, {
-              mediaFile: capturedFile,
-              mediaPreview: URL.createObjectURL(blob)
-            });
-          }
+          // Convert blob to base64 data URL instead of blob URL
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const base64DataUrl = reader.result as string;
+            const capturedFile = new File([blob], 'capture.jpg', { type: 'image/jpeg' });
+            console.log('📸 Captured photo:', { base64DataUrl: base64DataUrl.substring(0, 50) + '...' });
+            const hazard = hazards.find(h => h.id === hazardId);
+            if (hazard) {
+              updateHazard(hazardId, {
+                mediaFile: capturedFile,
+                mediaPreview: base64DataUrl // Use base64 data URL instead of blob URL
+              });
+            }
+          };
+          reader.onerror = (error) => {
+            console.error('Error reading captured photo:', error);
+          };
+          reader.readAsDataURL(blob);
         }
       }, 'image/jpeg');
     }
@@ -133,10 +144,20 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
     if (f) {
       const hazard = hazards.find(h => h.id === hazardId);
       if (hazard) {
-        updateHazard(hazardId, {
-          mediaFile: f,
-          mediaPreview: URL.createObjectURL(f)
-        });
+        // Convert file to base64 data URL for preview
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64DataUrl = reader.result as string;
+          console.log('📁 File uploaded:', { fileName: f.name, base64DataUrl: base64DataUrl.substring(0, 50) + '...' });
+          updateHazard(hazardId, {
+            mediaFile: f,
+            mediaPreview: base64DataUrl // Use base64 data URL instead of blob URL
+          });
+        };
+        reader.onerror = (error) => {
+          console.error('Error reading file:', error);
+        };
+        reader.readAsDataURL(f);
       }
     }
   };
@@ -256,7 +277,10 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
                       alt="preview" 
                       width={200}
                       height={150}
+                      unoptimized
                       style={{ maxWidth: 200, borderRadius: 8, objectFit: 'cover' }}
+                      onLoad={() => console.log('✅ Preview image loaded for hazard:', hazard.id)}
+                      onError={(e) => console.error('❌ Preview image failed to load:', e)}
                     />
                   </Box>
                 )}
@@ -271,6 +295,7 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
                         alt={`ფოტო ${index + 1}`}
                         width={200}
                         height={150}
+                        unoptimized
                         style={{ maxWidth: 200, borderRadius: 8, objectFit: 'cover', marginRight: 8 }}
                       />
                     ))}
@@ -486,6 +511,16 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
       ...data,
       hazards: hazards as unknown as CreateDocumentDto['hazards'],
     };
+    
+    console.log('📊 Form submission data:', {
+      hazardsCount: hazards.length,
+      hazardPhotos: hazards.map(h => ({
+        id: h.id,
+        hasMediaFile: !!(h as any).mediaFile,
+        hasMediaPreview: !!(h as any).mediaPreview
+      }))
+    });
+    
     try {
         await handleFormSubmit(formattedData);
       onClose();
