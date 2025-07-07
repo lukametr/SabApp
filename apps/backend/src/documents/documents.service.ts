@@ -15,11 +15,12 @@ export class DocumentsService {
     @InjectModel(Document.name) private documentModel: Model<Document>
   ) {}
 
-  async create(createDocumentDto: CreateDocumentDto): Promise<Document> {
+  async create(createDocumentDto: CreateDocumentDto, userId?: string): Promise<Document> {
     try {
       console.log('💾 Creating document with data:', {
         hazardsCount: Array.isArray(createDocumentDto.hazards) ? createDocumentDto.hazards.length : 0,
         photosCount: createDocumentDto.photos?.length || 0,
+        userId: userId || 'anonymous',
         hazardPhotos: Array.isArray(createDocumentDto.hazards) ? createDocumentDto.hazards.map((h: any) => ({
           id: h.id,
           photosCount: h.photos?.length || 0
@@ -28,7 +29,7 @@ export class DocumentsService {
       
       const createdDocument = new this.documentModel({
         ...createDocumentDto,
-        authorId: 'default-user', // TODO: Get from authentication
+        authorId: userId || 'anonymous-user', // Use provided userId or default
         photos: createDocumentDto.photos || [], // დავამატოთ ფოტოების სახელები
         isFavorite: false,
         assessmentA: 0,
@@ -51,12 +52,15 @@ export class DocumentsService {
     }
   }
 
-  async findAll(): Promise<Document[]> {
-    const documents = await this.documentModel.find().exec();
-    console.log('📋 Found', documents.length, 'documents');
+  async findAll(userId?: string): Promise<Document[]> {
+    // If userId is provided, filter by authorId, otherwise return all (for backward compatibility)
+    const filter = userId ? { authorId: userId } : {};
+    const documents = await this.documentModel.find(filter).exec();
+    console.log('📋 Found', documents.length, 'documents for user:', userId || 'all users');
     documents.forEach((doc, index) => {
       console.log(`📋 Document ${index + 1}:`, {
         id: doc._id,
+        authorId: doc.authorId,
         hazardsCount: doc.hazards?.length || 0,
         photosCount: doc.photos?.length || 0,
         hazardPhotos: doc.hazards?.map((h: any) => ({
@@ -70,33 +74,46 @@ export class DocumentsService {
     return documents.map(doc => doc.toJSON()) as Document[];
   }
 
-  async findOne(id: string): Promise<Document> {
-    const document = await this.documentModel.findById(id).exec();
+  async findOne(id: string, userId?: string): Promise<Document> {
+    // Build filter - if userId provided, ensure document belongs to user
+    const filter: any = { _id: id };
+    if (userId) {
+      filter.authorId = userId;
+    }
+    
+    const document = await this.documentModel.findOne(filter).exec();
     if (!document) {
-      throw new NotFoundException('დოკუმენტი ვერ მოიძებნა');
+      throw new NotFoundException('დოკუმენტი ვერ მოიძებნა ან წვდომა არ გაქვთ');
     }
     return document.toJSON() as Document;
   }
 
-  async remove(id: string): Promise<Document> {
-    console.log('🗑️ Removing document with ID:', id);
+  async remove(id: string, userId?: string): Promise<Document> {
+    console.log('🗑️ Removing document with ID:', id, 'for user:', userId);
     
     if (!id || id === 'undefined') {
       console.error('❌ Invalid ID provided for deletion:', id);
       throw new NotFoundException('არასწორი დოკუმენტის ID');
     }
     
-    const deletedDocument = await this.documentModel.findByIdAndDelete(id).exec();
+    // Build filter - if userId provided, ensure document belongs to user
+    const filter: any = { _id: id };
+    if (userId) {
+      filter.authorId = userId;
+    }
+    
+    const deletedDocument = await this.documentModel.findOneAndDelete(filter).exec();
     if (!deletedDocument) {
-      throw new NotFoundException('დოკუმენტი ვერ მოიძებნა');
+      throw new NotFoundException('დოკუმენტი ვერ მოიძებნა ან წვდომა არ გაქვთ');
     }
     console.log('✅ Document deleted successfully:', deletedDocument._id);
     return deletedDocument.toJSON() as Document;
   }
 
-  async update(id: string, updateDocumentDto: UpdateDocumentDto): Promise<Document> {
+  async update(id: string, updateDocumentDto: UpdateDocumentDto, userId?: string): Promise<Document> {
     try {
       console.log('📋 Updating document in service:', id, {
+        userId: userId || 'anonymous',
         hazardsCount: updateDocumentDto.hazards?.length || 0,
         photosCount: updateDocumentDto.photos?.length || 0
       });
@@ -105,11 +122,17 @@ export class DocumentsService {
         throw new NotFoundException(`Invalid document ID: ${id}`);
       }
       
+      // Build filter - if userId provided, ensure document belongs to user
+      const filter: any = { _id: id };
+      if (userId) {
+        filter.authorId = userId;
+      }
+      
       const document = await this.documentModel
-        .findByIdAndUpdate(id, updateDocumentDto, { new: true })
+        .findOneAndUpdate(filter, updateDocumentDto, { new: true })
         .exec();
       if (!document) {
-        throw new NotFoundException(`Document with ID ${id} not found`);
+        throw new NotFoundException('დოკუმენტი ვერ მოიძებნა ან წვდომა არ გაქვთ');
       }
       
       console.log('✅ Document updated successfully:', document._id);
