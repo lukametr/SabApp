@@ -7,10 +7,9 @@ import Script from 'next/script';
 
 // Font optimization with proper configuration
 const inter = Inter({ 
-  subsets: ['latin', 'latin-ext'],
+  subsets: ['latin'],
   display: 'swap',
   variable: '--font-inter',
-  preload: true,
   fallback: ['system-ui', 'arial'],
 });
 
@@ -35,7 +34,7 @@ export default function RootLayout({
   return (
     <html lang="ka" className={inter.variable}>
       <head>
-        {/* Font preloading */}
+        {/* Font preconnect for better performance */}
         <link
           rel="preconnect"
           href="https://fonts.googleapis.com"
