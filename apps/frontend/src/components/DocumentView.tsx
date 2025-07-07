@@ -147,7 +147,20 @@ export const DocumentView: React.FC<DocumentViewProps> = ({ document, onEdit, on
               საფრთხეთა იდენტიფიკაცია ({document.hazards?.length || 0} საფრთხე)
             </Typography>
             
-            {document.hazards?.map((hazard, index) => (
+            {document.hazards?.map((hazard, index) => {
+              // Safe access to risk data with fallbacks
+              const residualRisk = hazard.residualRisk || { probability: 0, severity: 0, total: 0 };
+              const initialRisk = hazard.initialRisk || { probability: 0, severity: 0, total: 0 };
+              
+              // Calculate total if missing (fallback for old data)
+              if (residualRisk.total === undefined || residualRisk.total === null) {
+                residualRisk.total = (residualRisk.probability || 0) * (residualRisk.severity || 0);
+              }
+              if (initialRisk.total === undefined || initialRisk.total === null) {
+                initialRisk.total = (initialRisk.probability || 0) * (initialRisk.severity || 0);
+              }
+
+              return (
               <Accordion key={hazard.id || index} sx={{ mb: 2 }}>
                 <AccordionSummary expandIcon={<ExpandMore />}>
                   <Box display="flex" justifyContent="space-between" alignItems="center" width="100%">
@@ -155,8 +168,8 @@ export const DocumentView: React.FC<DocumentViewProps> = ({ document, onEdit, on
                       საფრთხე #{index + 1}: {hazard.hazardIdentification}
                     </Typography>
                     <Chip 
-                      label={`რისკი: ${hazard.residualRisk.total}`}
-                      color={getRiskColor(hazard.residualRisk.total) as 'success' | 'warning' | 'error'}
+                      label={`რისკი: ${residualRisk.total}`}
+                      color={getRiskColor(residualRisk.total) as 'success' | 'warning' | 'error'}
                       size="small"
                     />
                   </Box>
@@ -191,19 +204,19 @@ export const DocumentView: React.FC<DocumentViewProps> = ({ document, onEdit, on
                           <Typography variant="subtitle2" color="textSecondary">
                             ალბათობა
                           </Typography>
-                          <Typography variant="body1">{hazard.initialRisk.probability}</Typography>
+                          <Typography variant="body1">{initialRisk.probability}</Typography>
                         </Grid>
                         <Grid item xs={4}>
                           <Typography variant="subtitle2" color="textSecondary">
                             სიმძიმე
                           </Typography>
-                          <Typography variant="body1">{hazard.initialRisk.severity}</Typography>
+                          <Typography variant="body1">{initialRisk.severity}</Typography>
                         </Grid>
                         <Grid item xs={4}>
                           <Typography variant="subtitle2" color="textSecondary">
                             ჯამი
                           </Typography>
-                          <Typography variant="body1">{hazard.initialRisk.total}</Typography>
+                          <Typography variant="body1">{initialRisk.total}</Typography>
                         </Grid>
                       </Grid>
                     </Grid>
@@ -222,19 +235,19 @@ export const DocumentView: React.FC<DocumentViewProps> = ({ document, onEdit, on
                           <Typography variant="subtitle2" color="textSecondary">
                             ალბათობა
                           </Typography>
-                          <Typography variant="body1">{hazard.residualRisk.probability}</Typography>
+                          <Typography variant="body1">{residualRisk.probability}</Typography>
                         </Grid>
                         <Grid item xs={4}>
                           <Typography variant="subtitle2" color="textSecondary">
                             სიმძიმე
                           </Typography>
-                          <Typography variant="body1">{hazard.residualRisk.severity}</Typography>
+                          <Typography variant="body1">{residualRisk.severity}</Typography>
                         </Grid>
                         <Grid item xs={4}>
                           <Typography variant="subtitle2" color="textSecondary">
                             ჯამი
                           </Typography>
-                          <Typography variant="body1">{hazard.residualRisk.total}</Typography>
+                          <Typography variant="body1">{residualRisk.total}</Typography>
                         </Grid>
                       </Grid>
                     </Grid>
@@ -300,7 +313,8 @@ export const DocumentView: React.FC<DocumentViewProps> = ({ document, onEdit, on
                   </Grid>
                 </AccordionDetails>
               </Accordion>
-            ))}
+            );
+            })}
           </Grid>
         </Grid>
       </CardContent>
