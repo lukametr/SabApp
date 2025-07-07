@@ -15,8 +15,20 @@ export class DocumentsController {
     { name: 'hazardPhotos', maxCount: 50 }
   ]))
   async create(@Body() createDocumentDto: CreateDocumentDto, @UploadedFiles() files: any) {
-    console.log('📋 Received document data:', createDocumentDto);
-    console.log('📸 Received files:', files);
+    try {
+      console.log('📋 Received document data:', createDocumentDto);
+      console.log('📸 Received files:', files);
+      
+      // Validate required fields
+      if (!createDocumentDto.evaluatorName || !createDocumentDto.evaluatorLastName || 
+          !createDocumentDto.objectName || !createDocumentDto.workDescription) {
+        throw new Error('Required fields are missing');
+      }
+      
+      // Validate dates
+      if (!createDocumentDto.date || !createDocumentDto.time) {
+        throw new Error('Date and time are required');
+      }
     
     // Parse hazards from string if it's a string
     let hazards = [];
@@ -94,6 +106,10 @@ export class DocumentsController {
     });
     
     return this.documentsService.create(documentWithPhotos);
+    } catch (error) {
+      console.error('❌ Error creating document:', error);
+      throw error;
+    }
   }
 
   @Get()
@@ -112,8 +128,14 @@ export class DocumentsController {
     { name: 'hazardPhotos', maxCount: 50 }
   ]))
   async update(@Param('id') id: string, @Body() updateDocumentDto: UpdateDocumentDto, @UploadedFiles() files: any) {
-    console.log('📋 Updating document:', id, updateDocumentDto);
-    console.log('📸 Received files for update:', files);
+    try {
+      console.log('📋 Updating document:', id, updateDocumentDto);
+      console.log('📸 Received files for update:', files);
+      
+      // Validate ID
+      if (!id || id.trim() === '') {
+        throw new Error('Document ID is required');
+      }
     
     // Parse hazards from string if it's a string
     let hazards = [];
@@ -191,6 +213,10 @@ export class DocumentsController {
     });
     
     return this.documentsService.update(id, documentWithPhotos);
+    } catch (error) {
+      console.error('❌ Error updating document:', error);
+      throw error;
+    }
   }
 
   @Delete(':id')

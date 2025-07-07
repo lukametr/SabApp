@@ -67,8 +67,13 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({
     transform: true,
     whitelist: true,
-    forbidNonWhitelisted: true,
+    forbidNonWhitelisted: false, // Allow non-whitelisted properties for FormData
     skipMissingProperties: true, // Skip validation for missing optional properties
+    validationError: { target: false, value: false },
+    exceptionFactory: (errors) => {
+      console.log('📋 Validation errors:', errors);
+      return errors;
+    }
   }));
 
   // Setup Swagger

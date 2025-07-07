@@ -1,5 +1,5 @@
 import { IsString, IsOptional, IsDate, IsArray, IsNumber, ValidateNested, IsObject } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 
 class RiskDto {
   @IsNumber()
@@ -71,15 +71,27 @@ export class CreateDocumentDto {
   @IsString()
   workDescription: string;
 
+  @Transform(({ value }) => value ? new Date(value) : undefined)
   @IsDate()
   @Type(() => Date)
   date: Date;
 
+  @Transform(({ value }) => value ? new Date(value) : undefined)
   @IsDate()
   @Type(() => Date)
   time: Date;
 
   @IsOptional()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return [];
+      }
+    }
+    return value;
+  })
   hazards?: HazardDto[] | string; // Can be array or JSON string
 
   @IsArray()
