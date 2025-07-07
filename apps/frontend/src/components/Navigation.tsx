@@ -262,7 +262,7 @@ export default function Navigation() {
             <div className="flex">
               <div className="flex-shrink-0 flex items-center">
                 <Link href="/" className="text-xl font-bold text-primary-600">
-                  SabaP
+                  SabApp
                 </Link>
               </div>
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
@@ -275,16 +275,6 @@ export default function Navigation() {
                   }`}
                 >
                   მთავარი
-                </Link>
-                <Link
-                  href="/documents"
-                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                    isActive('/documents')
-                      ? 'border-primary-500 text-gray-900'
-                      : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                  }`}
-                >
-                  დოკუმენტები
                 </Link>
               </div>
             </div>

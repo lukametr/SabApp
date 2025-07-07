@@ -158,7 +158,7 @@ export default function Dashboard({ user }: DashboardProps) {
           <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
             <Shield sx={{ mr: 1 }} />
             <Typography variant="h6" component="div" sx={{ fontWeight: 'bold' }}>
-              SafetyApp
+              SabApp
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
