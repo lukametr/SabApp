@@ -15,12 +15,23 @@ export class DocumentsService {
   ) {}
 
   async create(createDocumentDto: CreateDocumentDto): Promise<Document> {
+    console.log('💾 Creating document with data:', createDocumentDto);
+    
     const createdDocument = new this.documentModel({
       ...createDocumentDto,
       authorId: 'default-user', // TODO: Get from authentication
       photos: createDocumentDto.photos || [], // დავამატოთ ფოტოების სახელები
+      isFavorite: false,
+      assessmentA: 0,
+      assessmentSh: 0,
+      assessmentR: 0,
     });
-    return createdDocument.save();
+    
+    console.log('💾 Saving document to database...');
+    const savedDocument = await createdDocument.save();
+    console.log('✅ Document saved successfully:', savedDocument._id);
+    
+    return savedDocument;
   }
 
   async findAll(): Promise<Document[]> {
