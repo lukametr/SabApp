@@ -57,6 +57,7 @@ export default function Navigation() {
   const [pendingUserInfo, setPendingUserInfo] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [authError, setAuthError] = useState<string>('')
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   useEffect(() => {
     loadFromStorage()
@@ -109,22 +110,36 @@ export default function Navigation() {
 
   const handleCustomGoogleSignIn = async () => {
     try {
+      // Check if we're on mobile
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
       if (window.google && window.google.accounts) {
-        // Show Google One Tap and sign-in popup
-        window.google.accounts.id.prompt();
+        if (isMobile) {
+          // For mobile devices, use popup but with better mobile configuration
+          window.google.accounts.id.initialize({
+            client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
+            callback: handleGoogleSuccess,
+            auto_select: false,
+            cancel_on_tap_outside: true,
+            ux_mode: 'popup',
+            scope: 'openid email profile',
+            locale: 'ka',
+          });
+          window.google.accounts.id.prompt();
+        } else {
+          // For desktop, use popup flow
+          window.google.accounts.id.prompt();
+        }
         
-        // If prompt() doesn't throw error but token retrieval fails,
-        // user will see "Error retrieving a token" in console.
         setTimeout(() => {
           console.log('💡 If you see "Error retrieving a token", the Google Sign-In popup may have been blocked');
         }, 2000);
       } else {
-        // If Google API is not loaded
         console.log('Google API not loaded');
         setAuthError('Google API არ არის ჩატვირთული. გთხოვთ განაახლოთ გვერდი.');
       }
     } catch (error) {
-      console.error('Google Sign-In popup failed:', error);
+      console.error('Google Sign-In failed:', error);
       setAuthError('Google ავტორიზაცია ვერ მოხერხდა. გთხოვთ სცადოთ მოგვიანებით.');
     }
   }
@@ -151,6 +166,9 @@ export default function Navigation() {
     if (window.google && window.google.accounts) {
       console.log('✅ Google API loaded, initializing...');
       try {
+        // Check if we're on mobile
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
         window.google.accounts.id.initialize({
           client_id: clientId,
           callback: handleGoogleSuccess,
@@ -160,14 +178,16 @@ export default function Navigation() {
           ux_mode: 'popup',
           scope: 'openid email profile',
           locale: 'ka', // Georgian locale
+          // Mobile-specific optimizations
+          ...(isMobile && {
+            context: 'signin',
+            itp_support: true,
+          }),
         });
         
-        // Don't show automatic prompt - let user click button instead
-        // This avoids FedCM blocking issues
         console.log('✅ Google Sign-In initialized successfully');
       } catch (error) {
         console.error('❌ Google Sign-In initialization failed:', error);
-        // Fallback: user will need to use manual button or redirect method
       }
     } else {
       console.error('❌ Google API not loaded - script may not have loaded yet');
@@ -218,6 +238,7 @@ export default function Navigation() {
                   SabApp
                 </Link>
               </div>
+              {/* Desktop Menu */}
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
                 {!user && (
                   <>
@@ -265,33 +286,34 @@ export default function Navigation() {
                 )}
               </div>
             </div>
-            <div className="flex items-center space-x-4">
+            
+            {/* Desktop Right Side */}
+            <div className="hidden sm:flex sm:items-center sm:space-x-4">
               {!user && (
                 <>
                   <Link
                     href="/auth/login"
-                    className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+                    className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
                   >
-                    შესვლა / რეგისტრაცია
+                    შესვლა
                   </Link>
                   <div id="google-signin-container">
                     {authError && (
-                      <div className="mb-2 p-2 bg-red-100 border border-red-400 text-red-700 rounded">
+                      <div className="mb-2 p-2 bg-red-100 border border-red-400 text-red-700 rounded text-xs">
                         {authError}
                       </div>
                     )}
-                    {/* Primary Google Sign-In button */}
                     <button
                       onClick={handleCustomGoogleSignIn}
-                      className="px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 flex items-center"
+                      className="px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 flex items-center"
                     >
-                      <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
                         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                         <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
                         <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                         <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                       </svg>
-                      შესვლა Google ანგარიშით
+                      Google
                     </button>
                   </div>
                 </>
@@ -308,19 +330,171 @@ export default function Navigation() {
                         className="rounded-full"
                       />
                     )}
-                    <span className="font-medium text-gray-700">{user.name}</span>
+                    <span className="font-medium text-gray-700 hidden lg:inline">{user.name}</span>
                   </Link>
                   <button
                     onClick={handleLogout}
-                    className="ml-2 px-3 py-1 rounded bg-red-500 text-white hover:bg-red-600"
+                    className="px-3 py-2 rounded bg-red-500 text-white hover:bg-red-600 text-sm"
                   >
                     გამოსვლა
                   </button>
                 </>
               )}
             </div>
+
+            {/* Mobile menu button */}
+            <div className="sm:hidden flex items-center">
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500"
+                aria-expanded="false"
+              >
+                <span className="sr-only">Open main menu</span>
+                {!mobileMenuOpen ? (
+                  <svg className="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                ) : (
+                  <svg className="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                )}
+              </button>
+            </div>
           </div>
         </div>
+
+        {/* Mobile menu */}
+        {mobileMenuOpen && (
+          <div className="sm:hidden">
+            <div className="pt-2 pb-3 space-y-1">
+              {!user && (
+                <>
+                  <Link
+                    href="/"
+                    className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
+                      isActive('/') 
+                        ? 'bg-primary-50 border-primary-500 text-primary-700' 
+                        : 'border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300'
+                    }`}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    მთავარი
+                  </Link>
+                  <Link
+                    href="/#about"
+                    className="border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    ჩვენი მიზანი
+                  </Link>
+                  <Link
+                    href="/#demo"
+                    className="border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    ფორმების ნიმუშები
+                  </Link>
+                  <Link
+                    href="/#contact"
+                    className="border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    კავშირი
+                  </Link>
+                </>
+              )}
+              {user && (
+                <Link
+                  href="/dashboard"
+                  className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
+                    isActive('/dashboard') 
+                      ? 'bg-primary-50 border-primary-500 text-primary-700' 
+                      : 'border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300'
+                  }`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  სამუშაო სივრცე
+                </Link>
+              )}
+            </div>
+            
+            {/* Mobile auth section */}
+            <div className="pt-4 pb-3 border-t border-gray-200">
+              {!user && (
+                <div className="space-y-3 px-3">
+                  <Link
+                    href="/auth/login"
+                    className="block w-full text-left px-4 py-2 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-md"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    შესვლა / რეგისტრაცია
+                  </Link>
+                  
+                  {authError && (
+                    <div className="p-2 bg-red-100 border border-red-400 text-red-700 rounded text-sm">
+                      {authError}
+                    </div>
+                  )}
+                  
+                  <button
+                    onClick={() => {
+                      handleCustomGoogleSignIn()
+                      setMobileMenuOpen(false)
+                    }}
+                    className="w-full flex items-center justify-center px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  >
+                    <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
+                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    შესვლა Google ანგარიშით
+                  </button>
+                </div>
+              )}
+              
+              {user && (
+                <div className="px-3 space-y-3">
+                  <div className="flex items-center space-x-3 px-4 py-2">
+                    {user.picture && (
+                      <Image 
+                        src={user.picture} 
+                        alt="profile" 
+                        width={40}
+                        height={40}
+                        className="rounded-full"
+                      />
+                    )}
+                    <div>
+                      <div className="text-base font-medium text-gray-800">{user.name}</div>
+                      <div className="text-sm text-gray-500">{user.email}</div>
+                    </div>
+                  </div>
+                  
+                  <Link
+                    href="/profile"
+                    className="block px-4 py-2 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-md"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    პროფილი
+                  </Link>
+                  
+                  <button
+                    onClick={() => {
+                      handleLogout()
+                      setMobileMenuOpen(false)
+                    }}
+                    className="w-full text-left px-4 py-2 text-base font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md"
+                  >
+                    გამოსვლა
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </nav>
 
       <RegistrationModal
