@@ -43,7 +43,7 @@ async function bootstrap() {
   // CORS კონფიგურაცია
   const corsOrigin = process.env.CORS_ORIGIN || '*';
   app.enableCors({
-    origin: corsOrigin === '*' ? true : [corsOrigin, 'http://localhost:3000', 'http://localhost:3001', 'http://localhost:10000'],
+    origin: corsOrigin === '*' ? true : [corsOrigin, 'http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002', 'http://localhost:10000'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     credentials: false,
     allowedHeaders: [

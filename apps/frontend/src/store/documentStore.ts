@@ -75,7 +75,14 @@ export const useDocumentStore = create<DocumentStore>((set) => ({
   updateDocument: async (data: UpdateDocumentDto) => {
     set({ isLoading: true, error: null });
     try {
+      console.log('📋 Store updating document:', data.id);
       const updatedDocument = await documentApi.update(data);
+      console.log('✅ Store received updated document:', {
+        id: updatedDocument.id,
+        objectName: updatedDocument.objectName,
+        hazardsCount: updatedDocument.hazards?.length || 0
+      });
+      
       set(state => ({
         documents: state.documents.map(doc =>
           doc.id === data.id ? updatedDocument : doc
@@ -84,6 +91,7 @@ export const useDocumentStore = create<DocumentStore>((set) => ({
         isLoading: false
       }));
     } catch (error) {
+      console.error('❌ Store document update failed:', error);
       set({ error: 'დოკუმენტის განახლება ვერ მოხერხდა', isLoading: false });
     }
   },
