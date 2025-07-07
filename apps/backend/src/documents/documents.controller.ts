@@ -17,11 +17,43 @@ export class DocumentsController {
     { name: 'hazardPhotos', maxCount: 50 }
   ]))
   async create(@Body() createDocumentDto: CreateDocumentDto, @UploadedFiles() files: any) {
-    console.log('Received document data:', createDocumentDto);
-    console.log('Received files:', files);
+    console.log('✅ Received document data:', createDocumentDto);
+    console.log('✅ Received files:', files);
+    
+    // Parse hazards from string if it's a string
+    let hazards = [];
+    if (createDocumentDto.hazards) {
+      if (typeof createDocumentDto.hazards === 'string') {
+        try {
+          hazards = JSON.parse(createDocumentDto.hazards);
+        } catch (error) {
+          console.error('❌ Error parsing hazards:', error);
+          hazards = [];
+        }
+      } else {
+        hazards = createDocumentDto.hazards;
+      }
+    }
     
     // შევინახოთ ფაილები
     const savedPhotos: string[] = [];
+    const savedHazardPhotos: string[] = [];
+    
+    if (files && files.photos) {
+      const uploadsDir = path.join(process.cwd(), 'uploads');
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
+      
+      for (const file of files.photos) {
+        const fileName = `${Date.now()}-${file.originalname}`;
+        const filePath = path.join(uploadsDir, fileName);
+        
+        // გადავიტანოთ ფაილი uploads დირექტორიაში
+        fs.writeFileSync(filePath, file.buffer);
+        savedPhotos.push(fileName);
+      }
+    }
     
     if (files && files.hazardPhotos) {
       const uploadsDir = path.join(process.cwd(), 'uploads');
@@ -35,15 +67,26 @@ export class DocumentsController {
         
         // გადავიტანოთ ფაილი uploads დირექტორიაში
         fs.writeFileSync(filePath, file.buffer);
-        savedPhotos.push(fileName);
+        savedHazardPhotos.push(fileName);
       }
+    }
+    
+    // დავამატოთ შენახული ფოტოების სახელები hazards-ებში
+    if (hazards.length > 0 && savedHazardPhotos.length > 0) {
+      hazards = hazards.map((hazard: any, index: number) => ({
+        ...hazard,
+        photos: savedHazardPhotos[index] ? [savedHazardPhotos[index]] : []
+      }));
     }
     
     // დავამატოთ შენახული ფოტოების სახელები დოკუმენტში
     const documentWithPhotos = {
       ...createDocumentDto,
+      hazards,
       photos: savedPhotos
     };
+    
+    console.log('✅ Final document data:', documentWithPhotos);
     
     return this.documentsService.create(documentWithPhotos);
   }

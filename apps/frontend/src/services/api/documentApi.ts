@@ -28,14 +28,31 @@ export const documentApi = {
     formData.append('date', data.date.toISOString());
     formData.append('time', data.time.toISOString());
 
-    // Add hazards data
-    if (data.hazards && data.hazards.length > 0) {
-      data.hazards.forEach((hazard, _index) => {
-        formData.append('hazards', JSON.stringify(hazard));
-      });
-    }
+    // Process hazards and extract photos
+    const hazardPhotos: File[] = [];
+    const processedHazards = data.hazards.map(hazard => {
+      const processedHazard = {
+        ...hazard,
+        photos: [] as string[] // Remove File objects, will be added by backend
+      };
+      
+      // Extract photos from hazard
+      if ((hazard as any).mediaFile) {
+        hazardPhotos.push((hazard as any).mediaFile);
+      }
+      
+      return processedHazard;
+    });
 
-    // Add photos if they exist
+    // Add processed hazards data
+    formData.append('hazards', JSON.stringify(processedHazards));
+
+    // Add hazard photos
+    hazardPhotos.forEach((photo, index) => {
+      formData.append('hazardPhotos', photo);
+    });
+
+    // Add general photos if they exist
     if (data.photos && data.photos.length > 0) {
       data.photos.forEach((photo, _index) => {
         // Universal check for File type (works in browser and Node build)

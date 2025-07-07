@@ -75,10 +75,8 @@ export class CreateDocumentDto {
   @Type(() => Date)
   time: Date;
 
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => HazardDto)
-  hazards: HazardDto[];
+  @IsOptional()
+  hazards?: HazardDto[] | string; // Can be array or JSON string
 
   @IsArray()
   @IsString({ each: true })
