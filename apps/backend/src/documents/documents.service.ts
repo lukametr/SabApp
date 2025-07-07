@@ -153,8 +153,14 @@ export class DocumentsService {
       throw new NotFoundException(`Document with ID ${id} not found`);
     }
 
+    // Handle new documents with base64 photos
+    if (document.photos && document.photos.length > 0) {
+      return this.createDocumentZipFromBase64(document);
+    }
+
+    // Handle old documents with file paths (legacy support)
     if (!document.filePath) {
-      throw new NotFoundException(`No file found for document with ID ${id}`);
+      throw new NotFoundException(`No file or photos found for document with ID ${id}`);
     }
 
     const filePath = path.join(process.cwd(), 'uploads', document.filePath);
@@ -269,4 +275,83 @@ export class DocumentsService {
       archive.finalize();
     });
   }
-} 
+
+  private async createDocumentZipFromBase64(document: any): Promise<Buffer> {
+    const archive = archiver('zip', {
+      zlib: { level: 9 }
+    });
+
+    // Create document info as JSON
+    const documentInfo = {
+      id: document._id,
+      evaluatorName: document.evaluatorName,
+      evaluatorLastName: document.evaluatorLastName,
+      objectName: document.objectName,
+      workDescription: document.workDescription,
+      date: document.date,
+      time: document.time,
+      hazardsCount: document.hazards?.length || 0,
+      photosCount: document.photos?.length || 0
+    };
+
+    // Add document info as JSON file
+    archive.append(JSON.stringify(documentInfo, null, 2), { name: 'document-info.json' });
+
+    // Add document photos
+    if (document.photos && document.photos.length > 0) {
+      document.photos.forEach((base64Photo: string, index: number) => {
+        try {
+          // Extract base64 data and mime type
+          const matches = base64Photo.match(/^data:([^;]+);base64,(.+)$/);
+          if (matches) {
+            const mimeType = matches[1];
+            const base64Data = matches[2];
+            const buffer = Buffer.from(base64Data, 'base64');
+            
+            // Determine file extension
+            const extension = mimeType.split('/')[1] || 'jpg';
+            const fileName = `document-photo-${index + 1}.${extension}`;
+            
+            archive.append(buffer, { name: fileName });
+          }
+        } catch (error) {
+          console.error('Error processing document photo:', error);
+        }
+      });
+    }
+
+    // Add hazard photos
+    if (document.hazards && document.hazards.length > 0) {
+      document.hazards.forEach((hazard: any, hazardIndex: number) => {
+        if (hazard.photos && hazard.photos.length > 0) {
+          hazard.photos.forEach((base64Photo: string, photoIndex: number) => {
+            try {
+              const matches = base64Photo.match(/^data:([^;]+);base64,(.+)$/);
+              if (matches) {
+                const mimeType = matches[1];
+                const base64Data = matches[2];
+                const buffer = Buffer.from(base64Data, 'base64');
+                
+                const extension = mimeType.split('/')[1] || 'jpg';
+                const fileName = `hazard-${hazardIndex + 1}-photo-${photoIndex + 1}.${extension}`;
+                
+                archive.append(buffer, { name: fileName });
+              }
+            } catch (error) {
+              console.error('Error processing hazard photo:', error);
+            }
+          });
+        }
+      });
+    }
+
+    archive.finalize();
+
+    return new Promise((resolve, reject) => {
+      const chunks: Buffer[] = [];
+      archive.on('data', (chunk: Buffer) => chunks.push(chunk));
+      archive.on('end', () => resolve(Buffer.concat(chunks)));
+      archive.on('error', (err: Error) => reject(err));
+    });
+  }
+}
