@@ -2,12 +2,16 @@ import { Controller, Get, Post, Body, Param, Delete, UseInterceptors, UploadedFi
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 import { DocumentsService } from './documents.service';
+import { ReportService } from './report.service';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
 
 @Controller('documents')
 export class DocumentsController {
-  constructor(private readonly documentsService: DocumentsService) {}
+  constructor(
+    private readonly documentsService: DocumentsService,
+    private readonly reportService: ReportService
+  ) {}
 
   @Post()
   @UseInterceptors(FileFieldsInterceptor([
@@ -244,23 +248,94 @@ export class DocumentsController {
   }
 
   @Get(':id/download')
-  async downloadDocument(@Param('id') id: string, @Res() res: Response) {
-    const buffer = await this.documentsService.getDocumentFile(id);
-    res.set({
-      'Content-Type': 'application/octet-stream',
-      'Content-Disposition': `attachment; filename="document-${id}.zip"`,
-    });
-    res.send(buffer);
+  async downloadDocument(@Param('id') id: string, @Res() res: Response): Promise<void> {
+    console.log(`📥 Starting download for document: ${id}`);
+    
+    try {
+      // Get document info for filename
+      const document = await this.documentsService.findOne(id);
+      if (!document) {
+        res.status(404).json({ message: 'Document not found' });
+        return;
+      }
+
+      const buffer = await this.documentsService.getDocumentFile(id);
+      
+      // Create descriptive filename
+      const sanitizedName = document.objectName 
+        ? document.objectName.replace(/[^a-zA-Z0-9\u10A0-\u10FF\s-]/g, '') // Allow Georgian characters
+        : 'document';
+      
+      const filename = `${sanitizedName}_${document.evaluatorName || 'unknown'}_${new Date().toISOString().split('T')[0]}.zip`;
+      
+      console.log(`📦 Download filename: ${filename}`);
+      console.log(`📊 File size: ${buffer.length} bytes`);
+      
+      res.set({
+        'Content-Type': 'application/zip',
+        'Content-Disposition': `attachment; filename="${filename}"`,
+        'Content-Length': buffer.length.toString(),
+      });
+      
+      res.send(buffer);
+    } catch (error) {
+      console.error('❌ Download error:', error);
+      res.status(500).json({ message: 'Download failed', error: error.message });
+    }
   }
 
   @Post('download')
   async downloadMultipleDocuments(@Body() body: { ids: string[] }, @Res() res: Response) {
     const buffer = await this.documentsService.getMultipleDocumentFiles(body.ids);
     res.set({
-      'Content-Type': 'application/octet-stream',
+      'Content-Type': 'application/zip',
       'Content-Disposition': 'attachment; filename="documents.zip"',
     });
     res.send(buffer);
+  }
+
+  // Excel რეპორტის ჩამოტვირთვა
+  @Get(':id/download/excel')
+  async downloadExcelReport(@Param('id') id: string, @Res() res: Response) {
+    try {
+      const document = await this.documentsService.findOne(id);
+      const excelBuffer = await this.reportService.generateExcelReport(document);
+      
+      const fileName = `უსაფრთხოების-შეფასება-${document.objectName}-${new Date().toISOString().split('T')[0]}.xlsx`;
+      
+      res.set({
+        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'Content-Disposition': `attachment; filename="${encodeURIComponent(fileName)}"`,
+      });
+      res.send(excelBuffer);
+      
+      console.log(`📊 Excel რეპორტი გენერირდა დოკუმენტისთვის: ${id}`);
+    } catch (error) {
+      console.error('❌ Excel რეპორტის შეცდომა:', error);
+      res.status(500).json({ message: 'Excel რეპორტის გენერაცია ვერ მოხერხდა', error: error.message });
+    }
+  }
+
+  // PDF რეპორტის ჩამოტვირთვა
+  @Get(':id/download/pdf')
+  async downloadPDFReport(@Param('id') id: string, @Res() res: Response) {
+    try {
+      const document = await this.documentsService.findOne(id);
+      const pdfBuffer = await this.reportService.generatePDFReport(document);
+      
+      const fileName = `უსაფრთხოების-შეფასება-${document.objectName}-${new Date().toISOString().split('T')[0]}.pdf`;
+      
+      res.set({
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="${encodeURIComponent(fileName)}"`,
+      });
+      res.send(pdfBuffer);
+      
+      console.log(`📄 PDF რეპორტი გენერირდა დოკუმენტისთვის: ${id}`);
+    } catch (error) {
+      console.error('❌ PDF რეპორტის შეცდომა:', error);
+      res.status(500).json({ message: 'PDF რეპორტის გენერაცია ვერ მოხერხდა', error: error.message });
+    }
   }
 
   // File serving endpoint removed - photos are now stored as base64 in database
