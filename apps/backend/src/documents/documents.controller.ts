@@ -273,7 +273,7 @@ export class DocumentsController {
       
       res.set({
         'Content-Type': 'application/zip',
-        'Content-Disposition': `attachment; filename="${filename}"`,
+        'Content-Disposition': `attachment; filename="${encodeURIComponent(filename)}"`,
         'Content-Length': buffer.length.toString(),
       });
       
