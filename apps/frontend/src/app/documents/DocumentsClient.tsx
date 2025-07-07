@@ -34,6 +34,7 @@ export default function DocumentsClient() {
 
   const handleDelete = async () => {
     if (documentToDelete) {
+      console.log('🗑️ About to delete document:', { id: documentToDelete.id, objectName: documentToDelete.objectName });
       await deleteDocument(documentToDelete.id);
       setDocumentToDelete(null);
       setIsDeleteDialogOpen(false);
@@ -46,6 +47,7 @@ export default function DocumentsClient() {
   };
 
   const handleDeleteClick = (document: Document) => {
+    console.log('🗑️ Delete clicked for document:', { id: document.id, objectName: document.objectName });
     setDocumentToDelete(document);
     setIsDeleteDialogOpen(true);
   };

@@ -89,6 +89,7 @@ export const useDocumentStore = create<DocumentStore>((set) => ({
   },
 
   deleteDocument: async (id: string) => {
+    console.log('🗑️ Document store delete called with ID:', id);
     set({ isLoading: true, error: null });
     try {
       await documentApi.delete(id);
@@ -98,6 +99,7 @@ export const useDocumentStore = create<DocumentStore>((set) => ({
         isLoading: false
       }));
     } catch (error) {
+      console.error('❌ Delete error:', error);
       set({ error: 'დოკუმენტის წაშლა ვერ მოხერხდა', isLoading: false });
     }
   },

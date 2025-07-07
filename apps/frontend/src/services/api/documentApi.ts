@@ -4,6 +4,7 @@ import { Document, CreateDocumentDto, UpdateDocumentDto } from '../../types/docu
 export const documentApi = {
   getAll: async (): Promise<Document[]> => {
     const response = await api.get('/documents');
+    console.log('📋 Fetched documents:', response.data.map((doc: Document) => ({ id: doc.id, objectName: doc.objectName })));
     return response.data;
   },
 
@@ -118,6 +119,7 @@ export const documentApi = {
   },
 
   delete: async (id: string): Promise<void> => {
+    console.log('🗑️ API delete called with ID:', id);
     await api.delete(`/documents/${id}`);
   },
 
