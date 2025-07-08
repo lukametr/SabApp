@@ -15,22 +15,26 @@ export class DocumentsService {
     @InjectModel(Document.name) private documentModel: Model<Document>
   ) {}
 
-  async create(createDocumentDto: CreateDocumentDto, userId?: string): Promise<Document> {
+  async create(createDocumentDto: CreateDocumentDto, userId: string): Promise<Document> {
     try {
       console.log('💾 Creating document with data:', {
         hazardsCount: Array.isArray(createDocumentDto.hazards) ? createDocumentDto.hazards.length : 0,
         photosCount: createDocumentDto.photos?.length || 0,
-        userId: userId || 'anonymous',
+        userId: userId,
         hazardPhotos: Array.isArray(createDocumentDto.hazards) ? createDocumentDto.hazards.map((h: any) => ({
           id: h.id,
           photosCount: h.photos?.length || 0
         })) : []
       });
       
+      if (!userId) {
+        throw new Error('User ID is required to create document');
+      }
+      
       const createdDocument = new this.documentModel({
         ...createDocumentDto,
-        authorId: userId || 'anonymous-user', // Use provided userId or default
-        photos: createDocumentDto.photos || [], // დავამატოთ ფოტოების სახელები
+        authorId: userId, // Always require valid userId
+        photos: createDocumentDto.photos || [],
         isFavorite: false,
         assessmentA: 0,
         assessmentSh: 0,
