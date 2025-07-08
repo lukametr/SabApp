@@ -8,11 +8,6 @@ import {
   DialogTitle, 
   DialogContent, 
   Typography,
-  AppBar,
-  Toolbar,
-  IconButton,
-  Menu,
-  MenuItem,
   Container,
   Paper,
   Grid,
@@ -21,9 +16,6 @@ import {
   Chip
 } from '@mui/material';
 import { 
-  Shield, 
-  AccountCircle, 
-  Logout, 
   Add,
   Assignment,
   GetApp,
@@ -50,7 +42,6 @@ export default function Dashboard({ user }: DashboardProps) {
   const [editDoc, setEditDoc] = useState<Document | null>(null);
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
   const [openForm, setOpenForm] = useState(false);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   React.useEffect(() => { 
     fetchDocuments(); 
@@ -90,19 +81,6 @@ export default function Dashboard({ user }: DashboardProps) {
     setOpenForm(false);
     setSelectedDocument(null);
   }, []);
-
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
-
-  const handleLogout = () => {
-    // TODO: Implement logout logic
-    router.push('/');
-  };
 
   const convertDocumentToCreateDto = useCallback((doc: Document): Partial<CreateDocumentDto> => {
     return {
@@ -152,100 +130,56 @@ export default function Dashboard({ user }: DashboardProps) {
 
   return (
     <Box sx={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
-      {/* Header */}
-      <AppBar position="static" elevation={0}>
-        <Toolbar>
-          <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
-            <Shield sx={{ mr: 1 }} />
-            <Typography variant="h6" component="div" sx={{ fontWeight: 'bold' }}>
-              SabApp
-            </Typography>
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Typography variant="body1" sx={{ mr: 2 }}>
-              {user?.name || 'მომხმარებელი'}
-            </Typography>
-            <IconButton
-              size="large"
-              color="inherit"
-              onClick={handleMenuOpen}
-            >
-              <AccountCircle />
-            </IconButton>
-            <Menu
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl)}
-              onClose={handleMenuClose}
-            >
-              <MenuItem onClick={handleLogout}>
-                <Logout sx={{ mr: 1 }} />
-                გამოსვლა
-              </MenuItem>
-            </Menu>
-          </Box>
-        </Toolbar>
-      </AppBar>
-
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        {/* Welcome Section */}
-        <Paper elevation={0} sx={{ p: 3, mb: 4, backgroundColor: 'primary.main', color: 'white' }}>
-          <Typography variant="h4" gutterBottom>
-            მოგესალმებით, {user?.name || 'მომხმარებელი'}!
-          </Typography>
-          <Typography variant="h6" sx={{ opacity: 0.9 }}>
-            მართეთ თქვენი უსაფრთხოების შეფასების დოკუმენტები
-          </Typography>
-        </Paper>
-
         {/* Stats Cards */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card elevation={2}>
-              <CardContent sx={{ textAlign: 'center' }}>
-                <Assignment sx={{ fontSize: 40, color: 'primary.main', mb: 1 }} />
-                <Typography variant="h4" color="primary">
+        <Grid container spacing={2} sx={{ mb: 3 }}>
+          <Grid item xs={6} sm={3}>
+            <Card elevation={2} sx={{ height: '100px' }}>
+              <CardContent sx={{ textAlign: 'center', p: 1.5, '&:last-child': { pb: 1.5 } }}>
+                <Assignment sx={{ fontSize: 24, color: 'primary.main', mb: 0.5 }} />
+                <Typography variant="h6" color="primary" sx={{ fontSize: '1.1rem', fontWeight: 'bold' }}>
                   {totalDocuments}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
                   სულ დოკუმენტი
                 </Typography>
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card elevation={2}>
-              <CardContent sx={{ textAlign: 'center' }}>
-                <Security sx={{ fontSize: 40, color: 'warning.main', mb: 1 }} />
-                <Typography variant="h4" color="warning.main">
+          <Grid item xs={6} sm={3}>
+            <Card elevation={2} sx={{ height: '100px' }}>
+              <CardContent sx={{ textAlign: 'center', p: 1.5, '&:last-child': { pb: 1.5 } }}>
+                <Security sx={{ fontSize: 24, color: 'warning.main', mb: 0.5 }} />
+                <Typography variant="h6" color="warning.main" sx={{ fontSize: '1.1rem', fontWeight: 'bold' }}>
                   {totalHazards}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
                   გამოვლენილი საფრთხე
                 </Typography>
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card elevation={2}>
-              <CardContent sx={{ textAlign: 'center' }}>
-                <GetApp sx={{ fontSize: 40, color: 'success.main', mb: 1 }} />
-                <Typography variant="h4" color="success.main">
+          <Grid item xs={6} sm={3}>
+            <Card elevation={2} sx={{ height: '100px' }}>
+              <CardContent sx={{ textAlign: 'center', p: 1.5, '&:last-child': { pb: 1.5 } }}>
+                <GetApp sx={{ fontSize: 24, color: 'success.main', mb: 0.5 }} />
+                <Typography variant="h6" color="success.main" sx={{ fontSize: '1.1rem', fontWeight: 'bold' }}>
                   {totalDocuments * 3}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
                   ჩამოტვირთვა
                 </Typography>
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card elevation={2}>
-              <CardContent sx={{ textAlign: 'center' }}>
-                <Add sx={{ fontSize: 40, color: 'info.main', mb: 1 }} />
-                <Typography variant="h4" color="info.main">
+          <Grid item xs={6} sm={3}>
+            <Card elevation={2} sx={{ height: '100px' }}>
+              <CardContent sx={{ textAlign: 'center', p: 1.5, '&:last-child': { pb: 1.5 } }}>
+                <Add sx={{ fontSize: 24, color: 'info.main', mb: 0.5 }} />
+                <Typography variant="h6" color="info.main" sx={{ fontSize: '1.1rem', fontWeight: 'bold' }}>
                   {recentDocuments}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
                   ბოლო კვირაში
                 </Typography>
               </CardContent>
