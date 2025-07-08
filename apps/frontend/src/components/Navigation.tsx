@@ -119,45 +119,12 @@ export default function Navigation() {
         return;
       }
 
-      // Check if we're in production (same logic as in useEffect)
-      const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      
-      console.log('🌐 Environment detection:', {
-        isProduction,
-        hostname: window.location.hostname,
-        isMobile,
-        hasGoogleAPI: !!window.google?.accounts?.id
-      });
-      
-      // Try different approach for production vs development
-      if (isProduction) {
-        console.log('🌐 Production mode - using OAuth2 redirect flow');
-        // Use OAuth2 redirect flow for production
-        const redirectUri = `${window.location.origin}/auth/google/callback`;
-        const state = Math.random().toString(36).substring(7);
-        const googleAuthUrl = `https://accounts.google.com/oauth/authorize?` +
-          `client_id=${clientId}&` +
-          `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-          `response_type=code&` +
-          `scope=openid email profile&` +
-          `state=${state}`;
-        
-        console.log('🔗 Redirect URL:', googleAuthUrl);
-        console.log('🎲 State:', state);
-        
-        // Store state for validation
-        localStorage.setItem('google_oauth_state', state);
-        window.location.href = googleAuthUrl;
+      if (window.google && window.google.accounts) {
+        console.log('✅ Using Google API prompt (popup flow)');
+        window.google.accounts.id.prompt();
       } else {
-        console.log('🏠 Development mode - using popup flow');
-        // Use popup flow for development
-        if (window.google && window.google.accounts) {
-          window.google.accounts.id.prompt();
-        } else {
-          console.log('❌ Google API not loaded in development');
-          setAuthError('Google API არ არის ჩატვირთული. გთხოვთ განაახლოთ გვერდი.');
-        }
+        console.log('❌ Google API not loaded');
+        setAuthError('Google API არ არის ჩატვირთული. გთხოვთ განაახლოთ გვერდი.');
       }
     } catch (error) {
       console.error('❌ Google Sign-In failed:', error);
@@ -169,12 +136,10 @@ export default function Navigation() {
     // Initialize Google Sign-In
     console.log('🔧 Initializing Google Sign-In...');
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-    const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
     
     console.log('🔑 Google Client ID:', {
       clientId,
       isConfigured: clientId && clientId !== 'YOUR_GOOGLE_CLIENT_ID_HERE',
-      isProduction,
       hostname: window.location.hostname,
       envVars: {
         NODE_ENV: process.env.NODE_ENV,
@@ -188,15 +153,8 @@ export default function Navigation() {
       return;
     }
     
-    // In production, we don't initialize the popup-based Google Sign-In
-    // Instead, we use redirect-based OAuth2 flow
-    if (isProduction) {
-      console.log('🌐 Production mode - skipping popup initialization, will use redirect flow');
-      return;
-    }
-    
     if (window.google && window.google.accounts) {
-      console.log('✅ Google API loaded, initializing for development...');
+      console.log('✅ Google API loaded, initializing...');
       try {
         // Check if we're on mobile
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -216,7 +174,7 @@ export default function Navigation() {
           }),
         });
         
-        console.log('✅ Google Sign-In initialized successfully for development');
+        console.log('✅ Google Sign-In initialized successfully');
       } catch (error) {
         console.error('❌ Google Sign-In initialization failed:', error);
       }

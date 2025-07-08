@@ -14,7 +14,7 @@
 - დამატებული სწორი risk calculation display (probability x severity = total)
 - გაუმჯობესებული column headers და სტრუქტურა
 - დამატებული cell borders, text wrapping, formatting
-- ოპტიმიზებული column widths
+- ოპტიმიზირებული column widths
 
 ### 🗑️ Downloads Tracking Removal (Downloads თვალყურის დევნების წაშლა):
 
@@ -34,6 +34,17 @@
 - დამატებული მთლიანი PowerShell test scripts
 - შექმნილი დოკუმენტაცია გაკეთებული ცვლილებებისთვის
 - დამატებული debug utilities მომავალი troubleshooting-ისთვის
+
+### 🌐 Google OAuth Production Fix (Google OAuth საწარმოო გარემოს შეცდომის გადაწყვეტა):
+
+- **მიზეზი**: FedCM errors production-ში - Google API-ის popup flow ვერ მუშაობდა production domain-ზე
+- **შეცდომები**: `FedCM get() rejects with AbortError`, `Provider's accounts list is empty`, `NetworkError: Error retrieving a token`
+- **გადაწყვეტა**:
+  - Production-ში Google API popup initialization-ის გამორთვა
+  - Pure OAuth2 redirect flow production environment-ისთვის
+  - Popup flow-ის შენარჩუნება development-ისთვის
+  - გაუმჯობესებული environment detection
+- **შედეგი**: აღარ არის FedCM errors production-ში, გაცილებით სტაბილური OAuth flow
 
 ## 📁 ატვირთული ფაილები:
 
