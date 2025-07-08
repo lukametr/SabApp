@@ -1,1 +1,2 @@
-export { documentApi } from './documentApi'; 
+export { documentApi } from './documentApi';
+export { authApi } from './authApi'; 

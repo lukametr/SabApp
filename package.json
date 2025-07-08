@@ -33,5 +33,9 @@
   "engines": {
     "node": ">=20.11.1",
     "pnpm": ">=8.0.0"
+  },
+  "dependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "bcrypt": "^6.0.0"
   }
 }

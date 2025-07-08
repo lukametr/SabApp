@@ -16,6 +16,8 @@ import {
 import { Google, Shield } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { useGoogleLogin } from '@react-oauth/google';
+import { authApi } from '../services/api';
+import { useAuthStore } from '../store/authStore';
 
 interface LoginPageProps {
   onLogin?: (user: any) => void;
@@ -23,6 +25,7 @@ interface LoginPageProps {
 
 export default function LoginPage({ onLogin }: LoginPageProps) {
   const router = useRouter();
+  const { login } = useAuthStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -34,23 +37,22 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
     setError('');
 
     try {
-      // TODO: Implement email/password login
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Mock delay
-      
-      // Mock user data
-      const user = {
-        name: 'გიორგი ბერიძე',
+      // Call the real backend API
+      const response = await authApi.login({
         email: email,
-        id: '1'
-      };
+        password: password,
+      });
+      
+      // Store in auth store
+      login(response);
       
       if (onLogin) {
-        onLogin(user);
+        onLogin(response.user);
       }
       
       router.push('/dashboard');
-    } catch (err) {
-      setError('შესვლისას დაფიქსირდა შეცდომა');
+    } catch (err: any) {
+      setError(err.message || 'შესვლისას დაფიქსირდა შეცდომა');
     } finally {
       setLoading(false);
     }
