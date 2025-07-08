@@ -52,7 +52,7 @@ export class ReportService {
       row++;
 
       // ცხრილის თავსართი
-      const headers = ['#', 'საფრთხე', 'ალბათობა', 'მნიშვნელობა', 'რისკი (საწყისი)', 'რისკი (ნარჩენი)', 'ღონისძიება'];
+      const headers = ['#', 'საფრთხის იდენტიფიკაცია', 'დაზარალებული პირები', 'ზიანის აღწერა', 'არსებული კონტროლი', 'საწყისი რისკი', 'დამატებითი ღონისძიება', 'ნარჩენი რისკი', 'საჭირო ღონისძიება', 'პასუხისმგებელი პირი'];
       headers.forEach((header, index) => {
         const cell = worksheet.getCell(row, index + 1);
         cell.value = header;
@@ -62,6 +62,12 @@ export class ReportService {
           pattern: 'solid',
           fgColor: { argb: 'E7E6E6' }
         };
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
+        };
       });
       row++;
 
@@ -69,27 +75,39 @@ export class ReportService {
       document.hazards.forEach((hazard: any, index: number) => {
         const hazardRow = [
           index + 1,
-          hazard.hazard || 'N/A',
-          hazard.probability || 'N/A',
-          hazard.severity || 'N/A',
-          hazard.initialRisk || 'N/A',
-          hazard.residualRisk || 'N/A',
-          hazard.preventiveMeasure || 'N/A'
+          hazard.hazardIdentification || 'N/A',
+          Array.isArray(hazard.affectedPersons) ? hazard.affectedPersons.join(', ') : (hazard.affectedPersons || 'N/A'),
+          hazard.injuryDescription || 'N/A',
+          hazard.existingControlMeasures || 'N/A',
+          `${hazard.initialRisk?.probability || 0} x ${hazard.initialRisk?.severity || 0} = ${hazard.initialRisk?.total || 0}`,
+          hazard.additionalControlMeasures || 'N/A',
+          `${hazard.residualRisk?.probability || 0} x ${hazard.residualRisk?.severity || 0} = ${hazard.residualRisk?.total || 0}`,
+          hazard.requiredMeasures || 'N/A',
+          hazard.responsiblePerson || 'N/A'
         ];
 
         hazardRow.forEach((value, colIndex) => {
-          worksheet.getCell(row, colIndex + 1).value = value;
+          const cell = worksheet.getCell(row, colIndex + 1);
+          cell.value = value;
+          cell.border = {
+            top: { style: 'thin' },
+            left: { style: 'thin' },
+            bottom: { style: 'thin' },
+            right: { style: 'thin' }
+          };
+          // დავაწყოთ ტექსტი უჯრაში თუ ძალიან გრძელია
+          cell.alignment = { wrapText: true, vertical: 'top' };
         });
+        worksheet.getRow(row).height = 40; // მივცეთ მეტი სივრცე
         row++;
       });
     }
 
     // სვეტების ზომის რეგულირება
-    worksheet.columns.forEach(column => {
-      column.width = 15;
+    const columnWidths = [5, 25, 20, 25, 20, 15, 25, 15, 25, 20]; // თითოეული სვეტისთვის
+    columnWidths.forEach((width, index) => {
+      worksheet.getColumn(index + 1).width = width;
     });
-    worksheet.getColumn(2).width = 25; // საფრთხის აღწერა უფრო ფართო
-    worksheet.getColumn(7).width = 30; // ღონისძიება უფრო ფართო
 
     // ფაილის გენერაცია
     const buffer = await workbook.xlsx.writeBuffer();

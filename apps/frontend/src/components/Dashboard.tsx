@@ -18,7 +18,6 @@ import {
 import { 
   Add,
   Assignment,
-  GetApp,
   Security
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
@@ -155,19 +154,6 @@ export default function Dashboard({ user }: DashboardProps) {
                 </Typography>
                 <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
                   გამოვლენილი საფრთხე
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={6} sm={3}>
-            <Card elevation={2} sx={{ height: '100px' }}>
-              <CardContent sx={{ textAlign: 'center', p: 1.5, '&:last-child': { pb: 1.5 } }}>
-                <GetApp sx={{ fontSize: 24, color: 'success.main', mb: 0.5 }} />
-                <Typography variant="h6" color="success.main" sx={{ fontSize: '1.1rem', fontWeight: 'bold' }}>
-                  {totalDocuments * 3}
-                </Typography>
-                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
-                  ჩამოტვირთვა
                 </Typography>
               </CardContent>
             </Card>
