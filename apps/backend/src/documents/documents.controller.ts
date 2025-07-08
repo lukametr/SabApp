@@ -8,7 +8,7 @@ import { UpdateDocumentDto } from './dto/update-document.dto';
 import { existsSync } from 'fs';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { OptionalAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { OptionalAuthGuard, JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('documents')
 export class DocumentsController {
@@ -125,23 +125,29 @@ export class DocumentsController {
   }
 
   @Get()
-  @UseGuards(OptionalAuthGuard)
+  @UseGuards(JwtAuthGuard)
   findAll(@Request() req: any) {
     const userId = req.user?.id || req.user?.sub; // Get user ID from JWT token
-    console.log('📋 Fetching documents for user:', userId || 'all users');
+    if (!userId) {
+      throw new Error('User authentication required');
+    }
+    console.log('📋 Fetching documents for user:', userId);
     return this.documentsService.findAll(userId);
   }
 
   @Get(':id')
-  @UseGuards(OptionalAuthGuard)
+  @UseGuards(JwtAuthGuard)
   findOne(@Param('id') id: string, @Request() req: any) {
     const userId = req.user?.id || req.user?.sub; // Get user ID from JWT token
-    console.log('📋 Fetching document:', id, 'for user:', userId || 'anonymous');
+    if (!userId) {
+      throw new Error('User authentication required');
+    }
+    console.log('📋 Fetching document:', id, 'for user:', userId);
     return this.documentsService.findOne(id, userId);
   }
 
   @Patch(':id')
-  @UseGuards(OptionalAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileFieldsInterceptor([
     { name: 'photos', maxCount: 10 },
     { name: 'hazardPhotos', maxCount: 50 }
@@ -149,7 +155,10 @@ export class DocumentsController {
   async update(@Param('id') id: string, @Body() updateDocumentDto: UpdateDocumentDto, @UploadedFiles() files: any, @Request() req: any) {
     try {
       const userId = req.user?.id || req.user?.sub; // Get user ID from JWT token
-      console.log('📋 Updating document:', id, 'for user:', userId || 'anonymous');
+      if (!userId) {
+        throw new Error('User authentication required');
+      }
+      console.log('📋 Updating document:', id, 'for user:', userId);
       console.log('📋 Update data:', updateDocumentDto);
       console.log('📸 Received files for update:', files);
       
@@ -241,38 +250,60 @@ export class DocumentsController {
   }
 
   @Delete(':id')
-  @UseGuards(OptionalAuthGuard)
+  @UseGuards(JwtAuthGuard)
   remove(@Param('id') id: string, @Request() req: any) {
     const userId = req.user?.id || req.user?.sub; // Get user ID from JWT token
-    console.log('🗑️ Deleting document:', id, 'for user:', userId || 'anonymous');
+    if (!userId) {
+      throw new Error('User authentication required');
+    }
+    console.log('🗑️ Deleting document:', id, 'for user:', userId);
     return this.documentsService.remove(id, userId);
   }
 
   @Post(':id/favorite')
-  toggleFavorite(@Param('id') id: string) {
-    return this.documentsService.toggleFavorite(id);
+  @UseGuards(JwtAuthGuard)
+  toggleFavorite(@Param('id') id: string, @Request() req: any) {
+    const userId = req.user?.id || req.user?.sub;
+    if (!userId) {
+      throw new Error('User authentication required');
+    }
+    return this.documentsService.toggleFavorite(id, userId);
   }
 
   @Patch(':id/assessment')
+  @UseGuards(JwtAuthGuard)
   updateAssessment(
     @Param('id') id: string,
-    @Body() body: { assessmentA: number; assessmentSh: number; assessmentR: number }
+    @Body() body: { assessmentA: number; assessmentSh: number; assessmentR: number },
+    @Request() req: any
   ) {
+    const userId = req.user?.id || req.user?.sub;
+    if (!userId) {
+      throw new Error('User authentication required');
+    }
     return this.documentsService.updateAssessment(
       id,
       body.assessmentA,
       body.assessmentSh,
-      body.assessmentR
+      body.assessmentR,
+      userId
     );
   }
 
   @Get(':id/download')
-  async downloadDocument(@Param('id') id: string, @Res() res: Response): Promise<void> {
+  @UseGuards(JwtAuthGuard)
+  async downloadDocument(@Param('id') id: string, @Res() res: Response, @Request() req: any): Promise<void> {
     console.log(`📥 Starting download for document: ${id}`);
     
     try {
+      const userId = req.user?.id || req.user?.sub;
+      if (!userId) {
+        res.status(401).json({ message: 'User authentication required' });
+        return;
+      }
+      
       // Get document info for filename
-      const document = await this.documentsService.findOne(id);
+      const document = await this.documentsService.findOne(id, userId);
       if (!document) {
         res.status(404).json({ message: 'Document not found' });
         return;
@@ -315,9 +346,16 @@ export class DocumentsController {
 
   // Excel რეპორტის ჩამოტვირთვა
   @Get(':id/download/excel')
-  async downloadExcelReport(@Param('id') id: string, @Res() res: Response) {
+  @UseGuards(JwtAuthGuard)
+  async downloadExcelReport(@Param('id') id: string, @Res() res: Response, @Request() req: any) {
     try {
-      const document = await this.documentsService.findOne(id);
+      const userId = req.user?.id || req.user?.sub;
+      if (!userId) {
+        res.status(401).json({ message: 'User authentication required' });
+        return;
+      }
+      
+      const document = await this.documentsService.findOne(id, userId);
       const excelBuffer = await this.reportService.generateExcelReport(document);
       
       const fileName = `უსაფრთხოების-შეფასება-${document.objectName}-${new Date().toISOString().split('T')[0]}.xlsx`;
@@ -337,9 +375,16 @@ export class DocumentsController {
 
   // PDF რეპორტის ჩამოტვირთვა
   @Get(':id/download/pdf')
-  async downloadPDFReport(@Param('id') id: string, @Res() res: Response) {
+  @UseGuards(JwtAuthGuard)
+  async downloadPDFReport(@Param('id') id: string, @Res() res: Response, @Request() req: any) {
     try {
-      const document = await this.documentsService.findOne(id);
+      const userId = req.user?.id || req.user?.sub;
+      if (!userId) {
+        res.status(401).json({ message: 'User authentication required' });
+        return;
+      }
+      
+      const document = await this.documentsService.findOne(id, userId);
       const pdfBuffer = await this.reportService.generatePDFReport(document);
       
       const fileName = `უსაფრთხოების-შეფასება-${document.objectName}-${new Date().toISOString().split('T')[0]}.pdf`;
