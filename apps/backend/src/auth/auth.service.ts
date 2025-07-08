@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { OAuth2Client } from 'google-auth-library';
+import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
 import { GoogleAuthDto, GoogleUserInfo, AuthResponseDto } from '../users/dto/google-auth.dto';
 
@@ -218,5 +219,132 @@ export class AuthService {
       throw new UnauthorizedException('User not found');
     }
     return user;
+  }
+
+  async registerWithEmail(registerDto: any): Promise<AuthResponseDto> {
+    try {
+      console.log('🔧 Email Registration - Starting:', registerDto.email);
+      
+      // Validate required fields
+      if (!registerDto.email || !registerDto.password) {
+        throw new BadRequestException('Email and password are required');
+      }
+
+      if (!registerDto.firstName || !registerDto.lastName) {
+        throw new BadRequestException('First name and last name are required');
+      }
+
+      if (!registerDto.personalNumber || !registerDto.phoneNumber) {
+        throw new BadRequestException('Personal number and phone number are required');
+      }
+
+      // Hash password
+      const saltRounds = 10;
+      const hashedPassword = await bcrypt.hash(registerDto.password, saltRounds);
+
+      // Create user with email/password
+      const user = await this.usersService.createEmailUser({
+        email: registerDto.email,
+        name: `${registerDto.firstName} ${registerDto.lastName}`,
+        personalNumber: registerDto.personalNumber,
+        phoneNumber: registerDto.phoneNumber,
+        password: hashedPassword,
+        organization: registerDto.organization,
+        position: registerDto.position,
+      });
+
+      // Generate JWT token
+      const payload = {
+        sub: String(user._id),
+        email: user.email,
+        role: user.role,
+        status: user.status,
+      };
+
+      const accessToken = this.jwtService.sign(payload, {
+        secret: this.configService.get<string>('JWT_SECRET'),
+        expiresIn: this.configService.get<string>('JWT_EXPIRES_IN', '7d'),
+      });
+
+      console.log('🔧 Email Registration - Success:', user.email);
+
+      return {
+        accessToken,
+        user: {
+          id: String(user._id),
+          name: user.name,
+          email: user.email,
+          picture: user.picture,
+          role: user.role,
+          status: user.status,
+          personalNumber: user.personalNumber,
+          phoneNumber: user.phoneNumber,
+        },
+      };
+    } catch (error) {
+      console.error('🔧 Email Registration - Error:', error);
+      throw error;
+    }
+  }
+
+  async loginWithEmail(loginDto: any): Promise<AuthResponseDto> {
+    try {
+      console.log('🔧 Email Login - Starting:', loginDto.email);
+
+      if (!loginDto.email || !loginDto.password) {
+        throw new BadRequestException('Email and password are required');
+      }
+
+      // Find user by email
+      const user = await this.usersService.findByEmail(loginDto.email);
+      if (!user) {
+        throw new UnauthorizedException('Invalid email or password');
+      }
+
+      // Verify password using bcrypt
+      if (!user.password) {
+        throw new UnauthorizedException('Invalid email or password');
+      }
+
+      const isPasswordValid = await bcrypt.compare(loginDto.password, user.password);
+      if (!isPasswordValid) {
+        throw new UnauthorizedException('Invalid email or password');
+      }
+
+      // Update last login
+      await this.usersService.updateLastLogin(String(user._id));
+
+      // Generate JWT token
+      const payload = {
+        sub: String(user._id),
+        email: user.email,
+        role: user.role,
+        status: user.status,
+      };
+
+      const accessToken = this.jwtService.sign(payload, {
+        secret: this.configService.get<string>('JWT_SECRET'),
+        expiresIn: this.configService.get<string>('JWT_EXPIRES_IN', '7d'),
+      });
+
+      console.log('🔧 Email Login - Success:', user.email);
+
+      return {
+        accessToken,
+        user: {
+          id: String(user._id),
+          name: user.name,
+          email: user.email,
+          picture: user.picture,
+          role: user.role,
+          status: user.status,
+          personalNumber: user.personalNumber,
+          phoneNumber: user.phoneNumber,
+        },
+      };
+    } catch (error) {
+      console.error('🔧 Email Login - Error:', error);
+      throw error;
+    }
   }
 }

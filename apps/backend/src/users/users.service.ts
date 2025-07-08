@@ -67,6 +67,53 @@ export class UsersService {
     return user.save();
   }
 
+  async createEmailUser(userData: {
+    email: string;
+    name: string;
+    personalNumber: string;
+    phoneNumber: string;
+    password: string;
+    organization?: string;
+    position?: string;
+  }): Promise<UserDocument> {
+    // Check if email is already taken
+    const existingEmail = await this.findByEmail(userData.email);
+    if (existingEmail) {
+      throw new ConflictException('Email already registered');
+    }
+
+    // Check if personal number is already taken
+    const existingPersonalNumber = await this.userModel.findOne({ personalNumber: userData.personalNumber }).exec();
+    if (existingPersonalNumber) {
+      throw new ConflictException('Personal number already registered');
+    }
+
+    // Check if phone number is already taken
+    const existingPhoneNumber = await this.userModel.findOne({ phoneNumber: userData.phoneNumber }).exec();
+    if (existingPhoneNumber) {
+      throw new ConflictException('Phone number already registered');
+    }
+
+    const user = new this.userModel({
+      name: userData.name,
+      email: userData.email,
+      googleId: null, // Email/password user, no Google ID
+      picture: null,
+      personalNumber: userData.personalNumber,
+      phoneNumber: userData.phoneNumber,
+      password: userData.password, // Already hashed
+      organization: userData.organization,
+      position: userData.position,
+      role: UserRole.USER,
+      status: UserStatus.ACTIVE,
+      isEmailVerified: false, // TODO: implement email verification
+      lastLoginAt: new Date(),
+      authProvider: 'email',
+    });
+
+    return user.save();
+  }
+
   async updateLastLogin(userId: string): Promise<void> {
     await this.userModel.findByIdAndUpdate(userId, {
       lastLoginAt: new Date(),
@@ -104,4 +151,4 @@ export class UsersService {
 
     return user;
   }
-} 
+}

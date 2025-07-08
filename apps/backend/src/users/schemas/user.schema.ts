@@ -21,8 +21,11 @@ export class User {
   @Prop({ required: true, unique: true })
   email: string;
 
-  @Prop({ required: true, unique: true })
-  googleId: string;
+  @Prop({ required: false, unique: true, sparse: true })
+  googleId?: string;
+
+  @Prop({ required: false })
+  password?: string;
 
   @Prop()
   picture?: string;
@@ -32,6 +35,15 @@ export class User {
 
   @Prop({ required: true })
   phoneNumber: string;
+
+  @Prop()
+  organization?: string;
+
+  @Prop()
+  position?: string;
+
+  @Prop({ default: 'email' })
+  authProvider?: string;
 
   @Prop({ type: String, enum: UserRole, default: UserRole.USER })
   role: UserRole;

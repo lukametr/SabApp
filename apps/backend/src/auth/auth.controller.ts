@@ -85,6 +85,23 @@ export class AuthController {
     }
   }
 
+  @Post('register')
+  @ApiOperation({ summary: 'Register new user with email and password' })
+  @ApiResponse({ status: 201, description: 'User registered successfully', type: AuthResponseDto })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
+  @ApiResponse({ status: 409, description: 'User already exists' })
+  async register(@Body() registerDto: any): Promise<AuthResponseDto> {
+    return this.authService.registerWithEmail(registerDto);
+  }
+
+  @Post('login')
+  @ApiOperation({ summary: 'Login with email and password' })
+  @ApiResponse({ status: 200, description: 'Successfully authenticated', type: AuthResponseDto })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async login(@Body() loginDto: any): Promise<AuthResponseDto> {
+    return this.authService.loginWithEmail(loginDto);
+  }
+
   @Get('profile')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
@@ -138,4 +155,4 @@ export class AuthController {
       updatedAt: user.updatedAt,
     }));
   }
-} 
+}

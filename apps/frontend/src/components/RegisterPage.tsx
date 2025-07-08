@@ -18,6 +18,8 @@ import {
 import { Google, Shield } from '@mui/icons-material';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useGoogleLogin } from '@react-oauth/google';
+import { authApi } from '../services/api';
+import { useAuthStore } from '../store/authStore';
 
 interface RegisterPageProps {
   onRegister?: (user: any) => void;
@@ -26,6 +28,7 @@ interface RegisterPageProps {
 export default function RegisterPage({ onRegister }: RegisterPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { login } = useAuthStore();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -125,28 +128,28 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
     }
 
     try {
-      // TODO: Implement email/password registration
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Mock delay
-      
-      // Mock user data
-      const user = {
-        name: `${formData.firstName} ${formData.lastName}`,
+      // Call the real backend API
+      const response = await authApi.register({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
         email: formData.email,
-        id: isGoogleRegistration ? (googleUserInfo as any)?.id : '1',
-        organization: formData.organization,
-        position: formData.position,
+        password: formData.password,
         personalNumber: formData.personalNumber,
         phoneNumber: formData.phoneNumber,
-        picture: isGoogleRegistration ? (googleUserInfo as any)?.picture : undefined
-      };
+        organization: formData.organization,
+        position: formData.position,
+      });
+      
+      // Store in auth store
+      login(response);
       
       if (onRegister) {
-        onRegister(user);
+        onRegister(response.user);
       }
       
       router.push('/dashboard');
-    } catch (err) {
-      setError('რეგისტრაციისას დაფიქსირდა შეცდომა');
+    } catch (err: any) {
+      setError(err.message || 'რეგისტრაციისას დაფიქსირდა შეცდომა');
     } finally {
       setLoading(false);
     }

@@ -34,6 +34,7 @@ import DocumentList from './DocumentList';
 import DocumentForm from './DocumentForm';
 import DocumentView from './DocumentView';
 import { useDocumentStore } from '../store/documentStore';
+import { useAuthStore } from '../store/authStore';
 import { CreateDocumentDto, Document } from '../types/document';
 
 interface DashboardProps {
@@ -43,14 +44,24 @@ interface DashboardProps {
   };
 }
 
-export default function Dashboard({ user }: DashboardProps) {
+export default function Dashboard({ user: propUser }: DashboardProps) {
   const router = useRouter();
   const { documents, createDocument, fetchDocuments, updateDocument, deleteDocument } = useDocumentStore();
+  const { user, logout, loadFromStorage } = useAuthStore();
+  
+  // Use auth store user if available, otherwise use prop user
+  const currentUser = user || propUser;
   const [open, setOpen] = useState(false);
   const [editDoc, setEditDoc] = useState<Document | null>(null);
+  const [viewDoc, setViewDoc] = useState<Document | null>(null);
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
   const [openForm, setOpenForm] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+  // Load user from storage on mount
+  React.useEffect(() => {
+    loadFromStorage();
+  }, [loadFromStorage]);
 
   React.useEffect(() => { 
     fetchDocuments(); 
@@ -100,7 +111,7 @@ export default function Dashboard({ user }: DashboardProps) {
   };
 
   const handleLogout = () => {
-    // TODO: Implement logout logic
+    logout();
     router.push('/');
   };
 
@@ -163,7 +174,7 @@ export default function Dashboard({ user }: DashboardProps) {
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Typography variant="body1" sx={{ mr: 2 }}>
-              {user?.name || 'მომხმარებელი'}
+              {currentUser?.name || 'მომხმარებელი'}
             </Typography>
             <IconButton
               size="large"
