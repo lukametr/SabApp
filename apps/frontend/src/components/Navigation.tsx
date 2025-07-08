@@ -110,36 +110,47 @@ export default function Navigation() {
 
   const handleCustomGoogleSignIn = async () => {
     try {
-      // Check if we're on mobile
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      setAuthError('');
+      console.log('🔧 Starting Google Sign-In...');
       
+      const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+      if (!clientId) {
+        setAuthError('Google Client ID არ არის კონფიგურირებული');
+        return;
+      }
+
       if (window.google && window.google.accounts) {
-        if (isMobile) {
-          // For mobile devices, use popup but with better mobile configuration
-          window.google.accounts.id.initialize({
-            client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
-            callback: handleGoogleSuccess,
-            auto_select: false,
-            cancel_on_tap_outside: true,
-            ux_mode: 'popup',
-            scope: 'openid email profile',
-            locale: 'ka',
-          });
-          window.google.accounts.id.prompt();
+        // Check if we're in production
+        const isProduction = window.location.hostname !== 'localhost';
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        // Try different approach for production vs development
+        if (isProduction) {
+          console.log('🌐 Production mode - using OAuth2 redirect flow');
+          // Use OAuth2 redirect flow for production
+          const redirectUri = `${window.location.origin}/auth/google/callback`;
+          const state = Math.random().toString(36).substring(7);
+          const googleAuthUrl = `https://accounts.google.com/oauth/authorize?` +
+            `client_id=${clientId}&` +
+            `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+            `response_type=code&` +
+            `scope=openid email profile&` +
+            `state=${state}`;
+          
+          // Store state for validation
+          localStorage.setItem('google_oauth_state', state);
+          window.location.href = googleAuthUrl;
         } else {
-          // For desktop, use popup flow
+          console.log('🏠 Development mode - using popup flow');
+          // Use popup flow for development
           window.google.accounts.id.prompt();
         }
-        
-        setTimeout(() => {
-          console.log('💡 If you see "Error retrieving a token", the Google Sign-In popup may have been blocked');
-        }, 2000);
       } else {
-        console.log('Google API not loaded');
+        console.log('❌ Google API not loaded');
         setAuthError('Google API არ არის ჩატვირთული. გთხოვთ განაახლოთ გვერდი.');
       }
     } catch (error) {
-      console.error('Google Sign-In failed:', error);
+      console.error('❌ Google Sign-In failed:', error);
       setAuthError('Google ავტორიზაცია ვერ მოხერხდა. გთხოვთ სცადოთ მოგვიანებით.');
     }
   }
@@ -174,7 +185,6 @@ export default function Navigation() {
           callback: handleGoogleSuccess,
           auto_select: false,
           cancel_on_tap_outside: true,
-          prompt_parent_id: 'google-signin-container',
           ux_mode: 'popup',
           scope: 'openid email profile',
           locale: 'ka', // Georgian locale
