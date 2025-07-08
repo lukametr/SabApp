@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useAuthStore } from '../store/authStore'
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { CredentialResponse } from '@react-oauth/google'
+import { CredentialResponse, useGoogleLogin } from '@react-oauth/google'
 import Image from 'next/image'
 import api from '../lib/api'
 import RegistrationModal from './RegistrationModal'
@@ -108,61 +108,80 @@ export default function Navigation() {
     }
   }, [login, router])
 
-  const handleCustomGoogleSignIn = async () => {
-    try {
-      setAuthError('');
-      console.log('🔧 Starting Google Sign-In...');
-      
-      const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-      if (!clientId) {
-        setAuthError('Google Client ID არ არის კონფიგურირებული');
-        return;
-      }
+  // Use the same working Google login logic as LoginPage
+  const handleWorkingGoogleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        setLoading(true);
+        setAuthError('');
+        
+        console.log('🔧 Google login success, getting user info...');
+        
+        // Get user info from Google
+        const userInfoResponse = await fetch(
+          `https://www.googleapis.com/oauth2/v2/userinfo?access_token=${tokenResponse.access_token}`,
+          {
+            headers: {
+              Authorization: `Bearer ${tokenResponse.access_token}`,
+              Accept: 'application/json'
+            }
+          }
+        );
 
-      // Check if we're in production 
-      const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
-      
-      console.log('🌐 Environment:', {
-        hostname: window.location.hostname,
-        isProduction,
-        hasGoogleAPI: !!window.google?.accounts?.id
-      });
-      
-      if (isProduction) {
-        console.log('🌐 Production mode - using redirect flow to avoid FedCM issues');
-        // Use direct window redirect for production to avoid FedCM blocking
-        const redirectUri = `${window.location.origin}/auth/google/callback`;
-        const state = Math.random().toString(36).substring(7);
-        const googleAuthUrl = `https://accounts.google.com/oauth/authorize?` +
-          `client_id=${encodeURIComponent(clientId)}&` +
-          `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-          `response_type=code&` +
-          `scope=${encodeURIComponent('openid email profile')}&` +
-          `state=${state}&` +
-          `access_type=offline&` +
-          `prompt=select_account`;
-        
-        console.log('🔗 Redirecting to:', googleAuthUrl);
-        
-        // Store state for validation
-        localStorage.setItem('google_oauth_state', state);
-        
-        // Direct redirect - no popup, no FedCM
-        window.location.href = googleAuthUrl;
-      } else {
-        console.log('🏠 Development mode - using popup flow');
-        if (window.google && window.google.accounts) {
-          window.google.accounts.id.prompt();
+        if (userInfoResponse.ok) {
+          const userInfo = await userInfoResponse.json();
+          console.log('🔧 User info received:', userInfo);
+          
+          // Try to authenticate with backend using Google user info
+          try {
+            const res = await api.post('/auth/google', {
+              // Send user info to backend for authentication
+              googleId: userInfo.id,
+              email: userInfo.email,
+              name: userInfo.name,
+              picture: userInfo.picture
+            });
+            
+            console.log('🔧 Backend auth response:', res.data);
+            login(res.data);
+            router.push('/dashboard');
+            router.refresh();
+          } catch (err: unknown) {
+            const error = err as ApiError;
+            console.error('� Backend auth error:', error);
+            
+            // Check if this is a registration required error
+            if (error?.response?.status === 400 && 
+                error?.response?.data?.code === 'REGISTRATION_REQUIRED') {
+              // Show registration form with Google user info
+              setPendingUserInfo(userInfo);
+              setShowRegistration(true);
+              setAuthError('');
+            } else {
+              setAuthError('ავტორიზაციის შეცდომა: ' + (error?.response?.data?.message || error?.message || 'უცნობი შეცდომა'));
+            }
+          }
         } else {
-          console.log('❌ Google API not loaded in development');
-          setAuthError('Google API არ არის ჩატვირთული. გთხოვთ განაახლოთ გვერდი.');
+          console.error('🔧 Failed to get user info from Google');
+          setAuthError('Google-დან მომხმარებლის ინფორმაციის მიღება ვერ მოხერხდა');
         }
+      } catch (error) {
+        console.error('🔧 Google login error:', error);
+        setAuthError('Google-ით შესვლისას დაფიქსირდა შეცდომა');
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('❌ Google Sign-In failed:', error);
-      setAuthError('Google ავტორიზაცია ვერ მოხერხდა. გთხოვთ სცადოთ მოგვიანებით.');
+    },
+    onError: (error) => {
+      console.error('🔧 Google login error:', error);
+      setAuthError('Google-ით შესვლისას დაფიქსირდა შეცდომა');
     }
-  }
+  });
+
+  const handleCustomGoogleSignIn = () => {
+    // Use the working Google login implementation
+    handleWorkingGoogleLogin();
+  };
 
   useEffect(() => {
     // Initialize Google Sign-In
@@ -333,7 +352,7 @@ export default function Navigation() {
                       </div>
                     )}
                     <button
-                      onClick={handleCustomGoogleSignIn}
+                      onClick={() => router.push('/auth/login')}
                       className="px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 flex items-center"
                     >
                       <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
@@ -468,7 +487,7 @@ export default function Navigation() {
                   
                   <button
                     onClick={() => {
-                      handleCustomGoogleSignIn()
+                      router.push('/auth/login')
                       setMobileMenuOpen(false)
                     }}
                     className="w-full flex items-center justify-center px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50"
