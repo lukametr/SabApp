@@ -359,6 +359,7 @@ export class DocumentsController {
       }
       
       const document = await this.documentsService.findOne(id, userId);
+      
       const excelBuffer = await this.reportService.generateExcelReport(document);
       
       const fileName = `უსაფრთხოების-შეფასება-${document.objectName}-${new Date().toISOString().split('T')[0]}.xlsx`;
@@ -388,6 +389,7 @@ export class DocumentsController {
       }
       
       const document = await this.documentsService.findOne(id, userId);
+      
       const pdfBuffer = await this.reportService.generatePDFReport(document);
       
       const fileName = `უსაფრთხოების-შეფასება-${document.objectName}-${new Date().toISOString().split('T')[0]}.pdf`;
