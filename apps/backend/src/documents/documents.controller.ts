@@ -8,7 +8,7 @@ import { UpdateDocumentDto } from './dto/update-document.dto';
 import { existsSync } from 'fs';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { OptionalAuthGuard, JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('documents')
 export class DocumentsController {
@@ -18,7 +18,7 @@ export class DocumentsController {
   ) {}
 
   @Post()
-  @UseGuards(OptionalAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileFieldsInterceptor([
     { name: 'photos', maxCount: 10 },
     { name: 'hazardPhotos', maxCount: 50 }
@@ -26,7 +26,10 @@ export class DocumentsController {
   async create(@Body() createDocumentDto: CreateDocumentDto, @UploadedFiles() files: any, @Request() req: any) {
     try {
       const userId = req.user?.id || req.user?.sub; // Get user ID from JWT token
-      console.log('📋 Creating document for user:', userId || 'anonymous');
+      if (!userId) {
+        throw new Error('User authentication required');
+      }
+      console.log('📋 Creating document for user:', userId);
       console.log('📋 Received document data:', createDocumentDto);
       console.log('📸 Received files:', files);
       

@@ -3,6 +3,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User, UserDocument, UserRole, UserStatus } from './schemas/user.schema';
 import { GoogleUserInfo } from './dto/google-auth.dto';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Injectable()
 export class UsersService {
@@ -64,7 +66,18 @@ export class UsersService {
       lastLoginAt: new Date(),
     });
 
-    return user.save();
+    const savedUser = await user.save();
+    
+    // Create user-specific directory structure
+    await this.createUserDirectories(String(savedUser._id));
+    
+    console.log('✅ User created with directory structure:', {
+      userId: savedUser._id,
+      email: savedUser.email,
+      name: savedUser.name
+    });
+    
+    return savedUser;
   }
 
   async updateLastLogin(userId: string): Promise<void> {
@@ -103,5 +116,45 @@ export class UsersService {
     }
 
     return user;
+  }
+
+  private async createUserDirectories(userId: string): Promise<void> {
+    try {
+      const uploadsDir = path.join(process.cwd(), 'uploads');
+      const userDir = path.join(uploadsDir, `user_${userId}`);
+      const documentsDir = path.join(userDir, 'documents');
+      const photosDir = path.join(documentsDir, 'photos');
+      const reportsDir = path.join(documentsDir, 'reports');
+
+      // Create directories if they don't exist
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
+      
+      if (!fs.existsSync(userDir)) {
+        fs.mkdirSync(userDir, { recursive: true });
+        console.log('📁 Created user directory:', userDir);
+      }
+      
+      if (!fs.existsSync(documentsDir)) {
+        fs.mkdirSync(documentsDir, { recursive: true });
+        console.log('📁 Created documents directory:', documentsDir);
+      }
+      
+      if (!fs.existsSync(photosDir)) {
+        fs.mkdirSync(photosDir, { recursive: true });
+        console.log('📁 Created photos directory:', photosDir);
+      }
+      
+      if (!fs.existsSync(reportsDir)) {
+        fs.mkdirSync(reportsDir, { recursive: true });
+        console.log('📁 Created reports directory:', reportsDir);
+      }
+
+      console.log('✅ User directory structure created successfully for user:', userId);
+    } catch (error) {
+      console.error('❌ Error creating user directories:', error);
+      // Don't throw error - user can still be created even if directories fail
+    }
   }
 } 
