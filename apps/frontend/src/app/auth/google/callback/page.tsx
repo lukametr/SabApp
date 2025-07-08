@@ -25,25 +25,14 @@ export default function GoogleCallbackPage() {
           return;
         }
 
-        if (!state) {
-          // If no state in URL, check if this is a signin attempt
-          const storedState = localStorage.getItem('google_oauth_state');
-          if (storedState === 'signin_attempt') {
-            console.log('✅ Valid signin attempt without state parameter');
-            localStorage.removeItem('google_oauth_state');
-          } else {
-            setError('Invalid state parameter');
-            setStatus('error');
-            return;
-          }
-        } else if (state !== storedState) {
+        if (!state || state !== storedState) {
           setError('Invalid state parameter');
           setStatus('error');
           return;
-        } else {
-          // Clean up stored state for normal flow
-          localStorage.removeItem('google_oauth_state');
         }
+
+        // Clean up stored state
+        localStorage.removeItem('google_oauth_state');
 
         // Send authorization code to backend
         const response = await api.post('/auth/google/callback', {

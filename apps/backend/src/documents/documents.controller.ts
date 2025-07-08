@@ -8,7 +8,7 @@ import { UpdateDocumentDto } from './dto/update-document.dto';
 import { existsSync } from 'fs';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { OptionalAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('documents')
 export class DocumentsController {
@@ -18,7 +18,7 @@ export class DocumentsController {
   ) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(OptionalAuthGuard)
   @UseInterceptors(FileFieldsInterceptor([
     { name: 'photos', maxCount: 10 },
     { name: 'hazardPhotos', maxCount: 50 }
@@ -26,10 +26,7 @@ export class DocumentsController {
   async create(@Body() createDocumentDto: CreateDocumentDto, @UploadedFiles() files: any, @Request() req: any) {
     try {
       const userId = req.user?.id || req.user?.sub; // Get user ID from JWT token
-      if (!userId) {
-        throw new Error('User authentication required');
-      }
-      console.log('📋 Creating document for user:', userId);
+      console.log('📋 Creating document for user:', userId || 'anonymous');
       console.log('📋 Received document data:', createDocumentDto);
       console.log('📸 Received files:', files);
       
@@ -128,29 +125,23 @@ export class DocumentsController {
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(OptionalAuthGuard)
   findAll(@Request() req: any) {
     const userId = req.user?.id || req.user?.sub; // Get user ID from JWT token
-    if (!userId) {
-      throw new Error('User authentication required');
-    }
-    console.log('📋 Fetching documents for user:', userId);
+    console.log('📋 Fetching documents for user:', userId || 'all users');
     return this.documentsService.findAll(userId);
   }
 
   @Get(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(OptionalAuthGuard)
   findOne(@Param('id') id: string, @Request() req: any) {
     const userId = req.user?.id || req.user?.sub; // Get user ID from JWT token
-    if (!userId) {
-      throw new Error('User authentication required');
-    }
-    console.log('📋 Fetching document:', id, 'for user:', userId);
+    console.log('📋 Fetching document:', id, 'for user:', userId || 'anonymous');
     return this.documentsService.findOne(id, userId);
   }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(OptionalAuthGuard)
   @UseInterceptors(FileFieldsInterceptor([
     { name: 'photos', maxCount: 10 },
     { name: 'hazardPhotos', maxCount: 50 }
@@ -158,10 +149,7 @@ export class DocumentsController {
   async update(@Param('id') id: string, @Body() updateDocumentDto: UpdateDocumentDto, @UploadedFiles() files: any, @Request() req: any) {
     try {
       const userId = req.user?.id || req.user?.sub; // Get user ID from JWT token
-      if (!userId) {
-        throw new Error('User authentication required');
-      }
-      console.log('📋 Updating document:', id, 'for user:', userId);
+      console.log('📋 Updating document:', id, 'for user:', userId || 'anonymous');
       console.log('📋 Update data:', updateDocumentDto);
       console.log('📸 Received files for update:', files);
       
@@ -253,60 +241,38 @@ export class DocumentsController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(OptionalAuthGuard)
   remove(@Param('id') id: string, @Request() req: any) {
     const userId = req.user?.id || req.user?.sub; // Get user ID from JWT token
-    if (!userId) {
-      throw new Error('User authentication required');
-    }
-    console.log('🗑️ Deleting document:', id, 'for user:', userId);
+    console.log('🗑️ Deleting document:', id, 'for user:', userId || 'anonymous');
     return this.documentsService.remove(id, userId);
   }
 
   @Post(':id/favorite')
-  @UseGuards(JwtAuthGuard)
-  toggleFavorite(@Param('id') id: string, @Request() req: any) {
-    const userId = req.user?.id || req.user?.sub;
-    if (!userId) {
-      throw new Error('User authentication required');
-    }
-    return this.documentsService.toggleFavorite(id, userId);
+  toggleFavorite(@Param('id') id: string) {
+    return this.documentsService.toggleFavorite(id);
   }
 
   @Patch(':id/assessment')
-  @UseGuards(JwtAuthGuard)
   updateAssessment(
     @Param('id') id: string,
-    @Body() body: { assessmentA: number; assessmentSh: number; assessmentR: number },
-    @Request() req: any
+    @Body() body: { assessmentA: number; assessmentSh: number; assessmentR: number }
   ) {
-    const userId = req.user?.id || req.user?.sub;
-    if (!userId) {
-      throw new Error('User authentication required');
-    }
     return this.documentsService.updateAssessment(
       id,
       body.assessmentA,
       body.assessmentSh,
-      body.assessmentR,
-      userId
+      body.assessmentR
     );
   }
 
   @Get(':id/download')
-  @UseGuards(JwtAuthGuard)
-  async downloadDocument(@Param('id') id: string, @Res() res: Response, @Request() req: any): Promise<void> {
+  async downloadDocument(@Param('id') id: string, @Res() res: Response): Promise<void> {
     console.log(`📥 Starting download for document: ${id}`);
     
     try {
-      const userId = req.user?.id || req.user?.sub;
-      if (!userId) {
-        res.status(401).json({ message: 'User authentication required' });
-        return;
-      }
-      
       // Get document info for filename
-      const document = await this.documentsService.findOne(id, userId);
+      const document = await this.documentsService.findOne(id);
       if (!document) {
         res.status(404).json({ message: 'Document not found' });
         return;
@@ -349,17 +315,9 @@ export class DocumentsController {
 
   // Excel რეპორტის ჩამოტვირთვა
   @Get(':id/download/excel')
-  @UseGuards(JwtAuthGuard)
-  async downloadExcelReport(@Param('id') id: string, @Res() res: Response, @Request() req: any) {
+  async downloadExcelReport(@Param('id') id: string, @Res() res: Response) {
     try {
-      const userId = req.user?.id || req.user?.sub;
-      if (!userId) {
-        res.status(401).json({ message: 'User authentication required' });
-        return;
-      }
-      
-      const document = await this.documentsService.findOne(id, userId);
-      
+      const document = await this.documentsService.findOne(id);
       const excelBuffer = await this.reportService.generateExcelReport(document);
       
       const fileName = `უსაფრთხოების-შეფასება-${document.objectName}-${new Date().toISOString().split('T')[0]}.xlsx`;
@@ -379,17 +337,9 @@ export class DocumentsController {
 
   // PDF რეპორტის ჩამოტვირთვა
   @Get(':id/download/pdf')
-  @UseGuards(JwtAuthGuard)
-  async downloadPDFReport(@Param('id') id: string, @Res() res: Response, @Request() req: any) {
+  async downloadPDFReport(@Param('id') id: string, @Res() res: Response) {
     try {
-      const userId = req.user?.id || req.user?.sub;
-      if (!userId) {
-        res.status(401).json({ message: 'User authentication required' });
-        return;
-      }
-      
-      const document = await this.documentsService.findOne(id, userId);
-      
+      const document = await this.documentsService.findOne(id);
       const pdfBuffer = await this.reportService.generatePDFReport(document);
       
       const fileName = `უსაფრთხოების-შეფასება-${document.objectName}-${new Date().toISOString().split('T')[0]}.pdf`;
