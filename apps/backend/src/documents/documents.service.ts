@@ -15,26 +15,22 @@ export class DocumentsService {
     @InjectModel(Document.name) private documentModel: Model<Document>
   ) {}
 
-  async create(createDocumentDto: CreateDocumentDto, userId: string): Promise<Document> {
+  async create(createDocumentDto: CreateDocumentDto, userId?: string): Promise<Document> {
     try {
       console.log('💾 Creating document with data:', {
         hazardsCount: Array.isArray(createDocumentDto.hazards) ? createDocumentDto.hazards.length : 0,
         photosCount: createDocumentDto.photos?.length || 0,
-        userId: userId,
+        userId: userId || 'anonymous',
         hazardPhotos: Array.isArray(createDocumentDto.hazards) ? createDocumentDto.hazards.map((h: any) => ({
           id: h.id,
           photosCount: h.photos?.length || 0
         })) : []
       });
       
-      if (!userId) {
-        throw new Error('User ID is required to create document');
-      }
-      
       const createdDocument = new this.documentModel({
         ...createDocumentDto,
-        authorId: userId, // Always require valid userId
-        photos: createDocumentDto.photos || [],
+        authorId: userId || 'anonymous-user', // Use provided userId or default
+        photos: createDocumentDto.photos || [], // დავამატოთ ფოტოების სახელები
         isFavorite: false,
         assessmentA: 0,
         assessmentSh: 0,
@@ -56,15 +52,11 @@ export class DocumentsService {
     }
   }
 
-  async findAll(userId: string): Promise<Document[]> {
-    if (!userId) {
-      throw new Error('User ID is required to fetch documents');
-    }
-    
-    // Always filter by authorId - users can only see their own documents
-    const filter = { authorId: userId };
+  async findAll(userId?: string): Promise<Document[]> {
+    // If userId is provided, filter by authorId, otherwise return all (for backward compatibility)
+    const filter = userId ? { authorId: userId } : {};
     const documents = await this.documentModel.find(filter).exec();
-    console.log('📋 Found', documents.length, 'documents for user:', userId);
+    console.log('📋 Found', documents.length, 'documents for user:', userId || 'all users');
     documents.forEach((doc, index) => {
       console.log(`📋 Document ${index + 1}:`, {
         id: doc._id,
@@ -82,13 +74,12 @@ export class DocumentsService {
     return documents.map(doc => doc.toJSON()) as Document[];
   }
 
-  async findOne(id: string, userId: string): Promise<Document> {
-    if (!userId) {
-      throw new Error('User ID is required to fetch document');
+  async findOne(id: string, userId?: string): Promise<Document> {
+    // Build filter - if userId provided, ensure document belongs to user
+    const filter: any = { _id: id };
+    if (userId) {
+      filter.authorId = userId;
     }
-    
-    // Always filter by both id and authorId - users can only see their own documents
-    const filter = { _id: id, authorId: userId };
     
     const document = await this.documentModel.findOne(filter).exec();
     if (!document) {
@@ -97,20 +88,19 @@ export class DocumentsService {
     return document.toJSON() as Document;
   }
 
-  async remove(id: string, userId: string): Promise<Document> {
+  async remove(id: string, userId?: string): Promise<Document> {
     console.log('🗑️ Removing document with ID:', id, 'for user:', userId);
-    
-    if (!userId) {
-      throw new Error('User ID is required to delete document');
-    }
     
     if (!id || id === 'undefined') {
       console.error('❌ Invalid ID provided for deletion:', id);
       throw new NotFoundException('არასწორი დოკუმენტის ID');
     }
     
-    // Always filter by both id and authorId - users can only delete their own documents
-    const filter = { _id: id, authorId: userId };
+    // Build filter - if userId provided, ensure document belongs to user
+    const filter: any = { _id: id };
+    if (userId) {
+      filter.authorId = userId;
+    }
     
     const deletedDocument = await this.documentModel.findOneAndDelete(filter).exec();
     if (!deletedDocument) {
@@ -120,24 +110,23 @@ export class DocumentsService {
     return deletedDocument.toJSON() as Document;
   }
 
-  async update(id: string, updateDocumentDto: UpdateDocumentDto, userId: string): Promise<Document> {
+  async update(id: string, updateDocumentDto: UpdateDocumentDto, userId?: string): Promise<Document> {
     try {
       console.log('📋 Updating document in service:', id, {
-        userId: userId,
+        userId: userId || 'anonymous',
         hazardsCount: updateDocumentDto.hazards?.length || 0,
         photosCount: updateDocumentDto.photos?.length || 0
       });
-      
-      if (!userId) {
-        throw new Error('User ID is required to update document');
-      }
       
       if (!mongoose.Types.ObjectId.isValid(id)) {
         throw new NotFoundException(`Invalid document ID: ${id}`);
       }
       
-      // Always filter by both id and authorId - users can only update their own documents
-      const filter = { _id: id, authorId: userId };
+      // Build filter - if userId provided, ensure document belongs to user
+      const filter: any = { _id: id };
+      if (userId) {
+        filter.authorId = userId;
+      }
       
       const document = await this.documentModel
         .findOneAndUpdate(filter, updateDocumentDto, { new: true })
@@ -154,14 +143,10 @@ export class DocumentsService {
     }
   }
 
-  async toggleFavorite(id: string, userId: string): Promise<Document> {
-    if (!userId) {
-      throw new Error('User ID is required to toggle favorite');
-    }
-    
-    const document = await this.documentModel.findOne({ _id: id, authorId: userId }).exec();
+  async toggleFavorite(id: string): Promise<Document> {
+    const document = await this.documentModel.findById(id).exec();
     if (!document) {
-      throw new NotFoundException('დოკუმენტი ვერ მოიძებნა ან წვდომა არ გაქვთ');
+      throw new NotFoundException(`Document with ID ${id} not found`);
     }
 
     document.isFavorite = !document.isFavorite;
@@ -173,15 +158,10 @@ export class DocumentsService {
     assessmentA: number,
     assessmentSh: number,
     assessmentR: number,
-    userId: string
   ): Promise<Document> {
-    if (!userId) {
-      throw new Error('User ID is required to update assessment');
-    }
-    
-    const document = await this.documentModel.findOne({ _id: id, authorId: userId }).exec();
+    const document = await this.documentModel.findById(id).exec();
     if (!document) {
-      throw new NotFoundException('დოკუმენტი ვერ მოიძებნა ან წვდომა არ გაქვთ');
+      throw new NotFoundException(`Document with ID ${id} not found`);
     }
 
     document.assessmentA = assessmentA;

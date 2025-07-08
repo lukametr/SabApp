@@ -119,12 +119,44 @@ export default function Navigation() {
         return;
       }
 
-      if (window.google && window.google.accounts) {
-        console.log('✅ Using Google API prompt (popup flow)');
-        window.google.accounts.id.prompt();
+      // Check if we're in production 
+      const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+      
+      console.log('🌐 Environment:', {
+        hostname: window.location.hostname,
+        isProduction,
+        hasGoogleAPI: !!window.google?.accounts?.id
+      });
+      
+      if (isProduction) {
+        console.log('🌐 Production mode - using redirect flow to avoid FedCM issues');
+        // Use direct window redirect for production to avoid FedCM blocking
+        const redirectUri = `${window.location.origin}/auth/google/callback`;
+        const state = Math.random().toString(36).substring(7);
+        const googleAuthUrl = `https://accounts.google.com/oauth/authorize?` +
+          `client_id=${encodeURIComponent(clientId)}&` +
+          `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+          `response_type=code&` +
+          `scope=${encodeURIComponent('openid email profile')}&` +
+          `state=${state}&` +
+          `access_type=offline&` +
+          `prompt=select_account`;
+        
+        console.log('🔗 Redirecting to:', googleAuthUrl);
+        
+        // Store state for validation
+        localStorage.setItem('google_oauth_state', state);
+        
+        // Direct redirect - no popup, no FedCM
+        window.location.href = googleAuthUrl;
       } else {
-        console.log('❌ Google API not loaded');
-        setAuthError('Google API არ არის ჩატვირთული. გთხოვთ განაახლოთ გვერდი.');
+        console.log('🏠 Development mode - using popup flow');
+        if (window.google && window.google.accounts) {
+          window.google.accounts.id.prompt();
+        } else {
+          console.log('❌ Google API not loaded in development');
+          setAuthError('Google API არ არის ჩატვირთული. გთხოვთ განაახლოთ გვერდი.');
+        }
       }
     } catch (error) {
       console.error('❌ Google Sign-In failed:', error);
@@ -136,11 +168,9 @@ export default function Navigation() {
     // Initialize Google Sign-In
     console.log('🔧 Initializing Google Sign-In...');
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-    
     console.log('🔑 Google Client ID:', {
       clientId,
       isConfigured: clientId && clientId !== 'YOUR_GOOGLE_CLIENT_ID_HERE',
-      hostname: window.location.hostname,
       envVars: {
         NODE_ENV: process.env.NODE_ENV,
         NEXT_PUBLIC_GOOGLE_CLIENT_ID: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
@@ -153,8 +183,17 @@ export default function Navigation() {
       return;
     }
     
+    // Check if we're in production to avoid FedCM issues
+    const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+    
+    if (isProduction) {
+      console.log('🌐 Production mode - skipping Google API initialization to avoid FedCM');
+      return;
+    }
+    
+    // Only initialize Google API in development
     if (window.google && window.google.accounts) {
-      console.log('✅ Google API loaded, initializing...');
+      console.log('✅ Google API loaded, initializing for development...');
       try {
         // Check if we're on mobile
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -164,6 +203,7 @@ export default function Navigation() {
           callback: handleGoogleSuccess,
           auto_select: false,
           cancel_on_tap_outside: true,
+          prompt_parent_id: 'google-signin-container',
           ux_mode: 'popup',
           scope: 'openid email profile',
           locale: 'ka', // Georgian locale
@@ -174,7 +214,7 @@ export default function Navigation() {
           }),
         });
         
-        console.log('✅ Google Sign-In initialized successfully');
+        console.log('✅ Google Sign-In initialized successfully for development');
       } catch (error) {
         console.error('❌ Google Sign-In initialization failed:', error);
       }
@@ -501,4 +541,4 @@ export default function Navigation() {
       />
     </>
   )
-} 
+}
