@@ -223,7 +223,15 @@ export class AuthService {
 
   async registerWithEmail(registerDto: any): Promise<AuthResponseDto> {
     try {
-      console.log('🔧 Email Registration - Starting:', JSON.stringify(registerDto, null, 2));
+      console.log('🔧 Email Registration - Starting:', JSON.stringify({
+        email: registerDto.email,
+        firstName: registerDto.firstName,
+        lastName: registerDto.lastName,
+        personalNumber: registerDto.personalNumber,
+        phoneNumber: registerDto.phoneNumber,
+        organization: registerDto.organization,
+        position: registerDto.position
+      }, null, 2));
       
       // Validate required fields
       if (!registerDto.email || !registerDto.password) {

@@ -15,7 +15,21 @@ import { DebugModule } from './debug/debug.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    MongooseModule.forRoot(process.env.MONGODB_URI || 'mongodb://localhost:27017/sabap'),
+    MongooseModule.forRootAsync({
+      useFactory: () => {
+        const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/sabap';
+        console.log('🔧 MongoDB - Connecting to:', mongoUri.replace(/\/\/([^:]+):([^@]+)@/, '//<credentials>@'));
+        
+        return {
+          uri: mongoUri,
+          retryWrites: true,
+          w: 'majority',
+          maxPoolSize: 10,
+          serverSelectionTimeoutMS: 5000,
+          socketTimeoutMS: 45000,
+        };
+      },
+    }),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'),
       exclude: ['/api/(.*)', '/health', '/docs'],

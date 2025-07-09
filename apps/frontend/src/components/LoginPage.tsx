@@ -59,35 +59,34 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
   };
 
   const handleGoogleLogin = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
+    flow: 'auth-code',
+    onSuccess: async (codeResponse) => {
       try {
         setLoading(true);
+        console.log('🔧 Google Login - Auth code received:', !!codeResponse.code);
         
-        // Get user info from Google
-        const userInfoResponse = await fetch(
-          `https://www.googleapis.com/oauth2/v2/userinfo?access_token=${tokenResponse.access_token}`,
-          {
-            headers: {
-              Authorization: `Bearer ${tokenResponse.access_token}`,
-              Accept: 'application/json'
-            }
-          }
-        );
-
-        if (userInfoResponse.ok) {
-          const userInfo = await userInfoResponse.json();
-          const user = {
-            name: userInfo.name,
-            email: userInfo.email,
-            id: userInfo.id,
-            picture: userInfo.picture
-          };
+        // Send the authorization code to our backend
+        try {
+          const response = await authApi.googleCallback({
+            code: codeResponse.code,
+            state: 'login'
+          });
+          
+          console.log('🔧 Google Login - Backend auth successful');
           
           if (onLogin) {
-            onLogin(user);
+            onLogin(response.user);
           }
           
           router.push('/dashboard');
+        } catch (backendError: any) {
+          console.error('🔧 Google Login - Backend error:', backendError);
+          if (backendError.response?.data?.code === 'REGISTRATION_REQUIRED') {
+            // User needs to complete registration
+            setError('Google ანგარიშით რეგისტრაცია საჭიროებს დამატებით ინფორმაციას. გთხოვთ, გადახვიდეთ რეგისტრაციის გვერდზე.');
+          } else {
+            setError('Google-ით შესვლისას დაფიქსირდა შეცდომა');
+          }
         }
       } catch (error) {
         console.error('Google login error:', error);

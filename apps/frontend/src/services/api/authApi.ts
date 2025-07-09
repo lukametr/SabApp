@@ -16,6 +16,17 @@ export interface LoginData {
   password: string;
 }
 
+export interface GoogleAuthData {
+  idToken: string;
+  personalNumber?: string;
+  phoneNumber?: string;
+}
+
+export interface GoogleCallbackData {
+  code: string;
+  state: string;
+}
+
 export interface AuthResponse {
   accessToken: string;
   user: {
@@ -60,6 +71,40 @@ export const authApi = {
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.message || 'Login failed');
+    }
+
+    return response.json();
+  },
+
+  async googleAuth(data: GoogleAuthData): Promise<AuthResponse> {
+    const response = await fetch(`${API_BASE_URL}/auth/google`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Google authentication failed');
+    }
+
+    return response.json();
+  },
+
+  async googleCallback(data: GoogleCallbackData): Promise<AuthResponse> {
+    const response = await fetch(`${API_BASE_URL}/auth/google/callback`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Google callback failed');
     }
 
     return response.json();
