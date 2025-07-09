@@ -202,17 +202,9 @@ export default function Navigation() {
       return;
     }
     
-    // Check if we're in production to avoid FedCM issues
-    const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
-    
-    if (isProduction) {
-      console.log('🌐 Production mode - skipping Google API initialization to avoid FedCM');
-      return;
-    }
-    
-    // Only initialize Google API in development
+    // Initialize Google API for both development and production
     if (window.google && window.google.accounts) {
-      console.log('✅ Google API loaded, initializing for development...');
+      console.log('✅ Google API loaded, initializing...');
       try {
         // Check if we're on mobile
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -223,7 +215,7 @@ export default function Navigation() {
           auto_select: false,
           cancel_on_tap_outside: true,
           prompt_parent_id: 'google-signin-container',
-          ux_mode: 'popup',
+          ux_mode: 'popup', // Use popup mode for better compatibility
           scope: 'openid email profile',
           locale: 'ka', // Georgian locale
           // Mobile-specific optimizations
@@ -233,7 +225,7 @@ export default function Navigation() {
           }),
         });
         
-        console.log('✅ Google Sign-In initialized successfully for development');
+        console.log('✅ Google Sign-In initialized successfully');
       } catch (error) {
         console.error('❌ Google Sign-In initialization failed:', error);
       }
