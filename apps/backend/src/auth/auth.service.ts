@@ -223,25 +223,32 @@ export class AuthService {
 
   async registerWithEmail(registerDto: any): Promise<AuthResponseDto> {
     try {
-      console.log('🔧 Email Registration - Starting:', registerDto.email);
+      console.log('🔧 Email Registration - Starting:', JSON.stringify(registerDto, null, 2));
       
       // Validate required fields
       if (!registerDto.email || !registerDto.password) {
+        console.log('❌ Missing email or password');
         throw new BadRequestException('Email and password are required');
       }
 
       if (!registerDto.firstName || !registerDto.lastName) {
+        console.log('❌ Missing firstName or lastName');
         throw new BadRequestException('First name and last name are required');
       }
 
       if (!registerDto.personalNumber || !registerDto.phoneNumber) {
+        console.log('❌ Missing personalNumber or phoneNumber');
         throw new BadRequestException('Personal number and phone number are required');
       }
 
+      console.log('✅ Validation passed, starting password hashing...');
+      
       // Hash password
       const saltRounds = 10;
       const hashedPassword = await bcrypt.hash(registerDto.password, saltRounds);
+      console.log('✅ Password hashed successfully');
 
+      console.log('🔄 Creating user in database...');
       // Create user with email/password
       const user = await this.usersService.createEmailUser({
         email: registerDto.email,
@@ -252,7 +259,9 @@ export class AuthService {
         organization: registerDto.organization,
         position: registerDto.position,
       });
+      console.log('✅ User created successfully:', user.email);
 
+      console.log('🔄 Generating JWT token...');
       // Generate JWT token
       const payload = {
         sub: String(user._id),
@@ -265,6 +274,7 @@ export class AuthService {
         secret: this.configService.get<string>('JWT_SECRET'),
         expiresIn: this.configService.get<string>('JWT_EXPIRES_IN', '7d'),
       });
+      console.log('✅ JWT token generated successfully');
 
       console.log('🔧 Email Registration - Success:', user.email);
 
@@ -282,7 +292,12 @@ export class AuthService {
         },
       };
     } catch (error) {
-      console.error('🔧 Email Registration - Error:', error);
+      console.error('🔧 Email Registration - Error Details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+        registerDto: registerDto
+      });
       throw error;
     }
   }
