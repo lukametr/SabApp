@@ -77,7 +77,7 @@ export class UsersService {
     position?: string;
   }): Promise<UserDocument> {
     try {
-      console.log('🔧 Creating email user - Starting validation...');
+      console.log('≡ƒöº Creating email user - Starting validation...');
       
       // Check if email is already taken
       const existingEmail = await this.findByEmail(userData.email);
@@ -107,7 +107,7 @@ export class UsersService {
       const user = new this.userModel({
         name: userData.name,
         email: userData.email,
-        googleId: null, // Email/password user, no Google ID
+        // googleId is omitted for email users to avoid unique constraint issues
         picture: null,
         personalNumber: userData.personalNumber,
         phoneNumber: userData.phoneNumber,
@@ -121,13 +121,13 @@ export class UsersService {
         authProvider: 'email',
       });
 
-      console.log('🔧 Saving user to database...');
+      console.log('≡ƒöº Saving user to database...');
       const savedUser = await user.save();
-      console.log('✅ User saved successfully with ID:', savedUser._id);
+      console.log('≡ƒöº User saved successfully with ID:', savedUser._id);
       
       return savedUser;
     } catch (error) {
-      console.error('❌ Error creating email user:', {
+      console.error('≡ƒöº Error creating email user:', {
         message: error.message,
         name: error.name,
         stack: error.stack,

@@ -87,6 +87,54 @@ exports.authApi = {
             });
         });
     },
+    googleAuth: function (data) {
+        return __awaiter(this, void 0, void 0, function () {
+            var response, error;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, fetch("".concat(API_BASE_URL, "/auth/google"), {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(data),
+                        })];
+                    case 1:
+                        response = _a.sent();
+                        if (!!response.ok) return [3 /*break*/, 3];
+                        return [4 /*yield*/, response.json()];
+                    case 2:
+                        error = _a.sent();
+                        throw new Error(error.message || 'Google authentication failed');
+                    case 3: return [2 /*return*/, response.json()];
+                }
+            });
+        });
+    },
+    googleCallback: function (data) {
+        return __awaiter(this, void 0, void 0, function () {
+            var response, error;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, fetch("".concat(API_BASE_URL, "/auth/google/callback"), {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(data),
+                        })];
+                    case 1:
+                        response = _a.sent();
+                        if (!!response.ok) return [3 /*break*/, 3];
+                        return [4 /*yield*/, response.json()];
+                    case 2:
+                        error = _a.sent();
+                        throw new Error(error.message || 'Google callback failed');
+                    case 3: return [2 /*return*/, response.json()];
+                }
+            });
+        });
+    },
     getProfile: function (token) {
         return __awaiter(this, void 0, void 0, function () {
             var response, error;

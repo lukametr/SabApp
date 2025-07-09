@@ -123,46 +123,52 @@ function LoginPage(_a) {
         });
     }); };
     var handleGoogleLogin = (0, google_1.useGoogleLogin)({
-        onSuccess: function (tokenResponse) { return __awaiter(_this, void 0, void 0, function () {
-            var userInfoResponse, userInfo, user, error_1;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
+        flow: 'auth-code',
+        onSuccess: function (codeResponse) { return __awaiter(_this, void 0, void 0, function () {
+            var response, backendError_1, error_1;
+            var _a, _b;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
                     case 0:
-                        _a.trys.push([0, 4, 5, 6]);
+                        _c.trys.push([0, 5, 6, 7]);
                         setLoading(true);
-                        return [4 /*yield*/, fetch("https://www.googleapis.com/oauth2/v2/userinfo?access_token=".concat(tokenResponse.access_token), {
-                                headers: {
-                                    Authorization: "Bearer ".concat(tokenResponse.access_token),
-                                    Accept: 'application/json'
-                                }
-                            })];
+                        console.log('🔧 Google Login - Auth code received:', !!codeResponse.code);
+                        _c.label = 1;
                     case 1:
-                        userInfoResponse = _a.sent();
-                        if (!userInfoResponse.ok) return [3 /*break*/, 3];
-                        return [4 /*yield*/, userInfoResponse.json()];
+                        _c.trys.push([1, 3, , 4]);
+                        return [4 /*yield*/, api_1.authApi.googleCallback({
+                                code: codeResponse.code,
+                                state: 'login'
+                            })];
                     case 2:
-                        userInfo = _a.sent();
-                        user = {
-                            name: userInfo.name,
-                            email: userInfo.email,
-                            id: userInfo.id,
-                            picture: userInfo.picture
-                        };
+                        response = _c.sent();
+                        console.log('🔧 Google Login - Backend auth successful');
                         if (onLogin) {
-                            onLogin(user);
+                            onLogin(response.user);
                         }
                         router.push('/dashboard');
-                        _a.label = 3;
-                    case 3: return [3 /*break*/, 6];
-                    case 4:
-                        error_1 = _a.sent();
+                        return [3 /*break*/, 4];
+                    case 3:
+                        backendError_1 = _c.sent();
+                        console.error('🔧 Google Login - Backend error:', backendError_1);
+                        if (((_b = (_a = backendError_1.response) === null || _a === void 0 ? void 0 : _a.data) === null || _b === void 0 ? void 0 : _b.code) === 'REGISTRATION_REQUIRED') {
+                            // User needs to complete registration
+                            setError('Google ანგარიშით რეგისტრაცია საჭიროებს დამატებით ინფორმაციას. გთხოვთ, გადახვიდეთ რეგისტრაციის გვერდზე.');
+                        }
+                        else {
+                            setError('Google-ით შესვლისას დაფიქსირდა შეცდომა');
+                        }
+                        return [3 /*break*/, 4];
+                    case 4: return [3 /*break*/, 7];
+                    case 5:
+                        error_1 = _c.sent();
                         console.error('Google login error:', error_1);
                         setError('Google-ით შესვლისას დაფიქსირდა შეცდომა');
-                        return [3 /*break*/, 6];
-                    case 5:
+                        return [3 /*break*/, 7];
+                    case 6:
                         setLoading(false);
                         return [7 /*endfinally*/];
-                    case 6: return [2 /*return*/];
+                    case 7: return [2 /*return*/];
                 }
             });
         }); },
