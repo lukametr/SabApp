@@ -2,7 +2,7 @@ import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { OAuth2Client } from 'google-auth-library';
-import * as bcrypt from 'bcryptjs';
+import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
 import { GoogleAuthDto, GoogleUserInfo, AuthResponseDto } from '../users/dto/google-auth.dto';
 
@@ -16,17 +16,17 @@ export class AuthService {
     private configService: ConfigService,
   ) {
     const googleClientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
-    console.log('🔧 Auth Service - Google Client ID configured:', !!googleClientId);
-    console.log('🔧 Auth Service - Google Client ID length:', googleClientId?.length || 0);
+    console.log('≡ƒöº Auth Service - Google Client ID configured:', !!googleClientId);
+    console.log('≡ƒöº Auth Service - Google Client ID length:', googleClientId?.length || 0);
     
     this.googleClient = new OAuth2Client(googleClientId);
   }
 
   async validateGoogleToken(idToken: string): Promise<GoogleUserInfo> {
     try {
-      console.log('🔧 Validating Google token...');
+      console.log('≡ƒöº Validating Google token...');
       const audience = this.configService.get<string>('GOOGLE_CLIENT_ID');
-      console.log('🔧 Google Client ID for verification:', !!audience);
+      console.log('≡ƒöº Google Client ID for verification:', !!audience);
       
       const ticket = await this.googleClient.verifyIdToken({
         idToken,
@@ -35,12 +35,12 @@ export class AuthService {
 
       const payload = ticket.getPayload();
       if (!payload) {
-        console.error('🔧 Google token validation failed: No payload');
+        console.error('≡ƒöº Google token validation failed: No payload');
         throw new UnauthorizedException('Invalid Google token');
       }
 
       if (!payload.sub || !payload.email || !payload.name) {
-        console.error('🔧 Google token validation failed: Missing required fields', {
+        console.error('≡ƒöº Google token validation failed: Missing required fields', {
           hasSub: !!payload.sub,
           hasEmail: !!payload.email,
           hasName: !!payload.name
@@ -48,7 +48,7 @@ export class AuthService {
         throw new UnauthorizedException('Invalid Google token payload');
       }
 
-      console.log('🔧 Google token validated successfully for user:', payload.email);
+      console.log('≡ƒöº Google token validated successfully for user:', payload.email);
 
       return {
         sub: payload.sub,
@@ -58,27 +58,27 @@ export class AuthService {
         email_verified: payload.email_verified || false,
       };
     } catch (error) {
-      console.error('🔧 Google token validation error:', error.message);
+      console.error('≡ƒöº Google token validation error:', error.message);
       throw new UnauthorizedException('Invalid Google token');
     }
   }
 
   async googleAuth(authDto: GoogleAuthDto): Promise<AuthResponseDto> {
-    console.log('🔧 Google Auth - Starting authentication process');
-    console.log('🔧 Google Auth - ID Token present:', !!authDto.idToken);
-    console.log('🔧 Google Auth - Personal Number:', authDto.personalNumber);
-    console.log('🔧 Google Auth - Phone Number:', authDto.phoneNumber);
+    console.log('≡ƒöº Google Auth - Starting authentication process');
+    console.log('≡ƒöº Google Auth - ID Token present:', !!authDto.idToken);
+    console.log('≡ƒöº Google Auth - Personal Number:', authDto.personalNumber);
+    console.log('≡ƒöº Google Auth - Phone Number:', authDto.phoneNumber);
 
     try {
       // Validate Google token
       const googleUserInfo = await this.validateGoogleToken(authDto.idToken);
-      console.log('🔧 Google Auth - Token validated successfully for:', googleUserInfo.email);
+      console.log('≡ƒöº Google Auth - Token validated successfully for:', googleUserInfo.email);
 
       // Check if user exists
       let user = await this.usersService.findByGoogleId(googleUserInfo.sub);
 
       if (!user) {
-        console.log('🔧 Google Auth - New user registration');
+        console.log('≡ƒöº Google Auth - New user registration');
         // New user registration - check if additional info is provided
         if (!authDto.personalNumber || !authDto.phoneNumber) {
           // Return special response indicating registration is needed
@@ -95,9 +95,9 @@ export class AuthService {
           authDto.personalNumber,
           authDto.phoneNumber,
         );
-        console.log('🔧 Google Auth - New user created successfully');
+        console.log('≡ƒöº Google Auth - New user created successfully');
       } else {
-        console.log('🔧 Google Auth - Existing user login');
+        console.log('≡ƒöº Google Auth - Existing user login');
         // Existing user login - update last login
         await this.usersService.updateLastLogin(String(user._id));
       }
@@ -115,7 +115,7 @@ export class AuthService {
         expiresIn: this.configService.get<string>('JWT_EXPIRES_IN', '7d'),
       });
 
-      console.log('🔧 Google Auth - JWT token generated successfully');
+      console.log('≡ƒöº Google Auth - JWT token generated successfully');
 
       return {
         accessToken,
@@ -131,14 +131,14 @@ export class AuthService {
         },
       };
     } catch (error) {
-      console.error('🔧 Google Auth - Error:', error);
+      console.error('≡ƒöº Google Auth - Error:', error);
       throw error;
     }
   }
 
   async handleGoogleCallback(code: string, _state: string): Promise<AuthResponseDto> {
     try {
-      console.log('🔧 Handling Google OAuth callback with code:', !!code);
+      console.log('≡ƒöº Handling Google OAuth callback with code:', !!code);
       
       // Exchange authorization code for tokens
       const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
@@ -192,7 +192,7 @@ export class AuthService {
         expiresIn: this.configService.get<string>('JWT_EXPIRES_IN', '7d'),
       });
 
-      console.log('🔧 Google OAuth callback - JWT token generated successfully');
+      console.log('≡ƒöº Google OAuth callback - JWT token generated successfully');
 
       return {
         accessToken,
@@ -208,7 +208,7 @@ export class AuthService {
         },
       };
     } catch (error) {
-      console.error('🔧 Google OAuth callback - Error:', error);
+      console.error('≡ƒöº Google OAuth callback - Error:', error);
       throw error;
     }
   }
@@ -223,40 +223,25 @@ export class AuthService {
 
   async registerWithEmail(registerDto: any): Promise<AuthResponseDto> {
     try {
-      console.log('🔧 Email Registration - Starting:', JSON.stringify({
-        email: registerDto.email,
-        firstName: registerDto.firstName,
-        lastName: registerDto.lastName,
-        personalNumber: registerDto.personalNumber,
-        phoneNumber: registerDto.phoneNumber,
-        organization: registerDto.organization,
-        position: registerDto.position
-      }, null, 2));
+      console.log('≡ƒöº Email Registration - Starting:', registerDto.email);
       
       // Validate required fields
       if (!registerDto.email || !registerDto.password) {
-        console.log('❌ Missing email or password');
         throw new BadRequestException('Email and password are required');
       }
 
       if (!registerDto.firstName || !registerDto.lastName) {
-        console.log('❌ Missing firstName or lastName');
         throw new BadRequestException('First name and last name are required');
       }
 
       if (!registerDto.personalNumber || !registerDto.phoneNumber) {
-        console.log('❌ Missing personalNumber or phoneNumber');
         throw new BadRequestException('Personal number and phone number are required');
       }
 
-      console.log('✅ Validation passed, starting password hashing...');
-      
       // Hash password
       const saltRounds = 10;
       const hashedPassword = await bcrypt.hash(registerDto.password, saltRounds);
-      console.log('✅ Password hashed successfully');
 
-      console.log('🔄 Creating user in database...');
       // Create user with email/password
       const user = await this.usersService.createEmailUser({
         email: registerDto.email,
@@ -267,9 +252,7 @@ export class AuthService {
         organization: registerDto.organization,
         position: registerDto.position,
       });
-      console.log('✅ User created successfully:', user.email);
 
-      console.log('🔄 Generating JWT token...');
       // Generate JWT token
       const payload = {
         sub: String(user._id),
@@ -282,9 +265,8 @@ export class AuthService {
         secret: this.configService.get<string>('JWT_SECRET'),
         expiresIn: this.configService.get<string>('JWT_EXPIRES_IN', '7d'),
       });
-      console.log('✅ JWT token generated successfully');
 
-      console.log('🔧 Email Registration - Success:', user.email);
+      console.log('≡ƒöº Email Registration - Success:', user.email);
 
       return {
         accessToken,
@@ -300,19 +282,14 @@ export class AuthService {
         },
       };
     } catch (error) {
-      console.error('🔧 Email Registration - Error Details:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name,
-        registerDto: registerDto
-      });
+      console.error('≡ƒöº Email Registration - Error:', error);
       throw error;
     }
   }
 
   async loginWithEmail(loginDto: any): Promise<AuthResponseDto> {
     try {
-      console.log('🔧 Email Login - Starting:', loginDto.email);
+      console.log('≡ƒöº Email Login - Starting:', loginDto.email);
 
       if (!loginDto.email || !loginDto.password) {
         throw new BadRequestException('Email and password are required');
@@ -350,7 +327,7 @@ export class AuthService {
         expiresIn: this.configService.get<string>('JWT_EXPIRES_IN', '7d'),
       });
 
-      console.log('🔧 Email Login - Success:', user.email);
+      console.log('≡ƒöº Email Login - Success:', user.email);
 
       return {
         accessToken,
@@ -366,7 +343,7 @@ export class AuthService {
         },
       };
     } catch (error) {
-      console.error('🔧 Email Login - Error:', error);
+      console.error('≡ƒöº Email Login - Error:', error);
       throw error;
     }
   }

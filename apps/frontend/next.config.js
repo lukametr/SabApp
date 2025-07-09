@@ -24,9 +24,11 @@ const nextConfig = {
     esmExternals: false,
   },
 
-  // Export static files for production deployment
-  output: 'export',
-  distDir: 'out',
+  // Only use export mode in production
+  ...(process.env.NODE_ENV === 'production' && {
+    output: 'export',
+    distDir: 'out',
+  }),
 
   // Environment variables configuration
   env: {
