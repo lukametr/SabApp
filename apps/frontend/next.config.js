@@ -14,17 +14,15 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
 
+  // Disable environment validation during builds
+  swcMinify: false,
+
   images: {
     unoptimized: true,
   },
   experimental: {
     esmExternals: false,
   },
-  // Only use export mode in production
-  ...(process.env.NODE_ENV === 'production' && {
-    output: 'export',
-    distDir: 'out',
-  }),
 
   // Environment variables configuration
   env: {

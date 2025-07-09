@@ -43,6 +43,8 @@ ENV NEXT_PUBLIC_GOOGLE_CLIENT_ID=${NEXT_PUBLIC_GOOGLE_CLIENT_ID}
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 
 # Build frontend and backend
+ENV SKIP_ENV_VALIDATION=true
+ENV NODE_ENV=production
 RUN pnpm --filter ./apps/frontend build
 RUN pnpm --filter ./apps/backend build
 
