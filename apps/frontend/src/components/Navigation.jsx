@@ -234,15 +234,9 @@ function Navigation() {
             console.error('💡 Please set NEXT_PUBLIC_GOOGLE_CLIENT_ID in your environment variables');
             return;
         }
-        // Check if we're in production to avoid FedCM issues
-        var isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
-        if (isProduction) {
-            console.log('🌐 Production mode - skipping Google API initialization to avoid FedCM');
-            return;
-        }
-        // Only initialize Google API in development
+        // Initialize Google API for both development and production
         if (window.google && window.google.accounts) {
-            console.log('✅ Google API loaded, initializing for development...');
+            console.log('✅ Google API loaded, initializing...');
             try {
                 // Check if we're on mobile
                 var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -250,7 +244,7 @@ function Navigation() {
                     context: 'signin',
                     itp_support: true,
                 })));
-                console.log('✅ Google Sign-In initialized successfully for development');
+                console.log('✅ Google Sign-In initialized successfully');
             }
             catch (error) {
                 console.error('❌ Google Sign-In initialization failed:', error);
