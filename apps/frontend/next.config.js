@@ -24,6 +24,10 @@ const nextConfig = {
     esmExternals: false,
   },
 
+  // Export static files for production deployment
+  output: 'export',
+  distDir: 'out',
+
   // Environment variables configuration
   env: {
     NEXT_PUBLIC_GOOGLE_CLIENT_ID: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '',
