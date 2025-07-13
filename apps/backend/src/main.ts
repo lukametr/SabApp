@@ -6,7 +6,6 @@ import helmet from 'helmet';
 import compression from 'compression';
 import { UsersService } from './users/users.service';
 import { UserRole } from './users/schemas/user.schema';
-import * as bcrypt from 'bcryptjs';
 
 async function createDefaultAdmin(app: any) {
   try {
