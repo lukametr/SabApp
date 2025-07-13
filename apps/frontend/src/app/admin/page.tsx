@@ -14,7 +14,7 @@ interface UserWithSubscription extends User {
 }
 
 export default function AdminPanel() {
-  const { user, token } = useAuthStore();
+  const { user, token, loading: authLoading, loadFromStorage } = useAuthStore();
   const router = useRouter();
   const [users, setUsers] = useState<UserWithSubscription[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,19 +26,27 @@ export default function AdminPanel() {
     paymentNote: ''
   });
 
-  // Check if user is authenticated
+  // Load user from storage on mount
   useEffect(() => {
-    console.log('🔍 Admin page - user check:', { user, role: user?.role, isAdmin: user?.role === 'admin' });
+    loadFromStorage();
+  }, [loadFromStorage]);
+
+  // Check if user is authenticated (only after auth loading is complete)
+  useEffect(() => {
+    // Don't check until auth loading is complete
+    if (authLoading) return;
+    
+    console.log('🔍 Admin page - user check:', { user, role: user?.role, isAdmin: user?.role === 'admin', authLoading });
     
     if (!user || !token) {
-      console.log('⚠️ No user or token found, redirecting to dashboard');
-      router.push('/dashboard');
+      console.log('⚠️ No user or token found after auth loading, redirecting to login');
+      router.push('/auth/login');
       return;
     }
     
     // For now, allow any authenticated user to access admin panel for debugging
     console.log('✅ User is authenticated, allowing access');
-  }, [user, token, router]);
+  }, [user, token, authLoading, router]);
 
   // Load users with subscription info
   useEffect(() => {
@@ -134,6 +142,18 @@ export default function AdminPanel() {
       alert('Error revoking subscription');
     }
   };
+
+  // Don't render anything while auth is loading
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading authentication...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
