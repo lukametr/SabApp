@@ -23,13 +23,19 @@ import {
   ArrowForward
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
+import { useAuthStore } from '../store/authStore';
 
 export default function LandingPage() {
   const theme = useTheme();
   const router = useRouter();
+  const { user } = useAuthStore();
 
   const handleGetStarted = () => {
-    router.push('/auth/login');
+    if (user) {
+      router.push('/dashboard');
+    } else {
+      router.push('/auth/login');
+    }
   };
 
   const steps = [
@@ -104,7 +110,7 @@ export default function LandingPage() {
                 }}
                 endIcon={<ArrowForward />}
               >
-                დაიწყე ახლავე
+                {user ? 'სამუშო კაბინეტი' : 'დაიწყე ახლავე'}
               </Button>
             </Grid>
             <Grid item xs={12} md={6}>
@@ -249,36 +255,38 @@ export default function LandingPage() {
         </Container>
       </Box>
 
-      {/* CTA Section */}
-      <Box sx={{ 
-        py: 8, 
-        backgroundColor: theme.palette.primary.main,
-        color: 'white',
-        textAlign: 'center'
-      }}>
-        <Container maxWidth="md">
-          <Typography variant="h3" gutterBottom>
-            დარეგისტრირდი ახლავე
-          </Typography>
-          <Typography variant="h6" sx={{ mb: 4, opacity: 0.9 }}>
-             შეავსე ფორმები სწრაფად და მარტივად
-          </Typography>
-          <Button 
-            variant="contained"
-            size="large"
-            onClick={handleGetStarted}
-            sx={{ 
-              bgcolor: 'white', 
-              color: 'primary.main',
-              '&:hover': { bgcolor: 'grey.100' },
-              py: 2,
-              px: 6
-            }}
-          >
-            რეგისტრაცია
-          </Button>
-        </Container>
-      </Box>
+      {/* CTA Section - Only show for non-logged in users */}
+      {!user && (
+        <Box sx={{ 
+          py: 8, 
+          backgroundColor: theme.palette.primary.main,
+          color: 'white',
+          textAlign: 'center'
+        }}>
+          <Container maxWidth="md">
+            <Typography variant="h3" gutterBottom>
+              დარეგისტრირდი ახლავე
+            </Typography>
+            <Typography variant="h6" sx={{ mb: 4, opacity: 0.9 }}>
+               შეავსე ფორმები სწრაფად და მარტივად
+            </Typography>
+            <Button 
+              variant="contained"
+              size="large"
+              onClick={handleGetStarted}
+              sx={{ 
+                bgcolor: 'white', 
+                color: 'primary.main',
+                '&:hover': { bgcolor: 'grey.100' },
+                py: 2,
+                px: 6
+              }}
+            >
+              რეგისტრაცია
+            </Button>
+          </Container>
+        </Box>
+      )}
 
       {/* Footer */}
       <Box sx={{ backgroundColor: '#333', color: 'white', py: 4 }}>
