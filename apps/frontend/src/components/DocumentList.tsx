@@ -51,7 +51,12 @@ const DocumentList: React.FC<DocumentListProps> = React.memo(({
   }, []);
 
   const formatDate = useCallback((date: Date | string): string => {
-    return new Date(date).toLocaleDateString('ka-GE');
+    if (!date) return 'არ არის მითითებული';
+    const dateObj = new Date(date);
+    if (isNaN(dateObj.getTime())) {
+      return 'არავალიდური თარიღი';
+    }
+    return dateObj.toLocaleDateString('ka-GE');
   }, []);
 
   const getMaxRisk = useCallback((hazards: Hazard[]): number => {

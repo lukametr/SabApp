@@ -320,7 +320,7 @@ export default function AdminPanel() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {user.lastPaymentDate ? 
-                        new Date(user.lastPaymentDate).toLocaleDateString() : '-'}
+                        (new Date(user.lastPaymentDate).getTime() ? new Date(user.lastPaymentDate).toLocaleDateString() : 'არავალიდური თარიღი') : '-'}
                       {user.paymentAmount ? (
                         <div className="text-xs text-gray-500">₾{user.paymentAmount}</div>
                       ) : null}

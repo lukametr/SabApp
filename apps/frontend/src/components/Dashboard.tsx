@@ -140,6 +140,7 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
       time: doc.time,
       hazards: doc.hazards.map(hazard => ({
         ...hazard,
+        reviewDate: hazard.reviewDate ? new Date(hazard.reviewDate) : new Date(),
         photos: []
       })),
       photos: []
@@ -170,7 +171,10 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
   const totalDocuments = documents.length;
   const totalHazards = documents.reduce((sum, doc) => sum + (doc.hazards?.length || 0), 0);
   const recentDocuments = documents.filter(doc => {
-    const docDate = new Date(doc.createdAt || doc.date);
+    const dateValue = doc.createdAt || doc.date;
+    if (!dateValue) return false;
+    const docDate = new Date(dateValue);
+    if (isNaN(docDate.getTime())) return false;
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
     return docDate > weekAgo;

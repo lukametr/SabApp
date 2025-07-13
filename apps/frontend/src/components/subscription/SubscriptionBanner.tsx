@@ -41,7 +41,7 @@ export default function SubscriptionBanner() {
                 </p>
                 {subscriptionInfo && subscriptionInfo.endDate && (
                   <p className="mt-1">
-                    Expired on: {new Date(subscriptionInfo.endDate).toLocaleDateString()}
+                    Expired on: {new Date(subscriptionInfo.endDate).getTime() ? new Date(subscriptionInfo.endDate).toLocaleDateString() : 'არავალიდური თარიღი'}
                   </p>
                 )}
               </div>
@@ -89,7 +89,7 @@ export default function SubscriptionBanner() {
                 </p>
                 {subscriptionInfo.endDate && (
                   <p className="mt-1">
-                    Valid until: {new Date(subscriptionInfo.endDate).toLocaleDateString()}
+                    Valid until: {new Date(subscriptionInfo.endDate).getTime() ? new Date(subscriptionInfo.endDate).toLocaleDateString() : 'არავალიდური თარიღი'}
                   </p>
                 )}
               </div>

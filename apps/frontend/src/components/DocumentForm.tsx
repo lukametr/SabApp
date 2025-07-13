@@ -42,7 +42,7 @@ interface HazardData {
   residualRisk: { probability: number; severity: number; total: number };
   requiredMeasures: string;
   responsiblePerson: string;
-  reviewDate: Date | null; // Allow null for new hazards
+  reviewDate: Date; // Make Date required again
   photos: string[]; // Base64 data URLs
 }
 
@@ -70,7 +70,7 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
       residualRisk: { probability: 0, severity: 0, total: 0 },
       requiredMeasures: '',
       responsiblePerson: '',
-      reviewDate: null, // Fix invalid date issue
+      reviewDate: new Date(), // Use current date instead of null
       photos: []
     };
     console.log('✅ Added new hazard:', newHazard.id);
@@ -511,7 +511,7 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
                     slotProps={{
                       textField: {
                         fullWidth: true,
-                        required: false // Allow empty date initially
+                        required: true // Make required again
                       }
                     }}
                   />
@@ -562,7 +562,7 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
           residualRisk: hazard.residualRisk || { probability: 0, severity: 0, total: 0 },
           requiredMeasures: hazard.requiredMeasures || '',
           responsiblePerson: hazard.responsiblePerson || '',
-          reviewDate: hazard.reviewDate ? new Date(hazard.reviewDate) : null, // Better date handling
+          reviewDate: hazard.reviewDate ? new Date(hazard.reviewDate) : new Date(), // Use current date if no date provided
           photos: hazard.photos || []
         }));
         

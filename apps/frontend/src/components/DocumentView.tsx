@@ -194,7 +194,7 @@ export const DocumentView: React.FC<DocumentViewProps> = ({ document, onEdit, on
               თარიღი და დრო
             </Typography>
             <Typography variant="body1">
-              {format(new Date(document.date), 'dd MMMM yyyy', { locale: ka })} {format(new Date(document.time), 'HH:mm')}
+              {document.date && new Date(document.date).getTime() ? format(new Date(document.date), 'dd MMMM yyyy', { locale: ka }) : 'არავალიდური თარიღი'} {document.time && new Date(document.time).getTime() ? format(new Date(document.time), 'HH:mm') : 'არავალიდური დრო'}
             </Typography>
           </Grid>
 
@@ -360,7 +360,7 @@ export const DocumentView: React.FC<DocumentViewProps> = ({ document, onEdit, on
                         განხილვის თარიღი
                       </Typography>
                       <Typography variant="body1">
-                        {format(new Date(hazard.reviewDate), 'dd MMMM yyyy', { locale: ka })}
+                        {hazard.reviewDate && new Date(hazard.reviewDate).getTime() ? format(new Date(hazard.reviewDate), 'dd MMMM yyyy', { locale: ka }) : 'არ არის მითითებული'}
                       </Typography>
                     </Grid>
 
