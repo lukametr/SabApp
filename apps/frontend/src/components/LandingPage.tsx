@@ -110,7 +110,7 @@ export default function LandingPage() {
                 }}
                 endIcon={<ArrowForward />}
               >
-                {user ? 'სამუშო კაბინეტი' : 'დაიწყე ახლავე'}
+                {user ? 'სამუშაო სივრცე' : 'დაიწყე ახლავე'}
               </Button>
             </Grid>
             <Grid item xs={12} md={6}>
