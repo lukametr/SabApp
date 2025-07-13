@@ -36,16 +36,16 @@ export default function AdminPanel() {
     // Don't check until auth loading is complete
     if (authLoading) return;
     
-    console.log('🔍 Admin page - user check:', { user, role: user?.role, isAdmin: user?.role === 'admin', authLoading });
-    
     if (!user || !token) {
-      console.log('⚠️ No user or token found after auth loading, redirecting to login');
       router.push('/auth/login');
       return;
     }
     
-    // For now, allow any authenticated user to access admin panel for debugging
-    console.log('✅ User is authenticated, allowing access');
+    // Check if user is admin
+    if (user.role !== 'admin') {
+      router.push('/dashboard');
+      return;
+    }
   }, [user, token, authLoading, router]);
 
   // Load users with subscription info
@@ -66,16 +66,6 @@ export default function AdminPanel() {
 
         if (response.ok) {
           const data = await response.json();
-          console.log('👥 Loaded users data:', data.data);
-          // Log the first user to see its structure
-          if (data.data && data.data.length > 0) {
-            console.log('🔍 First user structure:', data.data[0]);
-            console.log('🆔 First user id fields:', {
-              id: data.data[0].id,
-              _id: data.data[0]._id,
-              objectId: data.data[0]._id?.toString()
-            });
-          }
           setUsers(data.data || []);
         } else {
           console.error('Failed to load users');
@@ -106,15 +96,6 @@ export default function AdminPanel() {
         paymentNote: grantForm.paymentNote || undefined,
       };
 
-      console.log('🚀 Sending grant request:', payload);
-      console.log('📋 Selected user:', selectedUser);
-      console.log('🆔 Using userId:', userId);
-      console.log('🔧 Available IDs:', {
-        id: selectedUser.id,
-        _id: selectedUser._id,
-        originalUser: selectedUser
-      });
-
       const response = await fetch('/api/subscription/grant', {
         method: 'POST',
         headers: {
@@ -125,13 +106,12 @@ export default function AdminPanel() {
       });
 
       const responseData = await response.json();
-      console.log('📥 Response:', responseData);
 
       if (response.ok) {
         // Reload users list
         window.location.reload();
       } else {
-        console.error('❌ Grant failed:', responseData);
+        console.error('Grant failed:', responseData);
         alert(`Error: ${responseData.message || responseData.error || 'Failed to grant subscription'}`);
       }
     } catch (error) {
@@ -165,7 +145,7 @@ export default function AdminPanel() {
         window.location.reload();
       } else {
         const error = await response.json();
-        console.error('❌ Revoke failed:', error);
+        console.error('Revoke failed:', error);
         alert(`Error: ${error.message || 'Failed to revoke subscription'}`);
       }
     } catch (error) {
@@ -197,18 +177,18 @@ export default function AdminPanel() {
     );
   }
 
-  // Allow access for any authenticated user (debug mode)
-  if (!user || !token) {
+  // Allow access for admin users only
+  if (!user || !token || user.role !== 'admin') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-red-600">Access Denied</h1>
-          <p className="text-gray-600">You need to be logged in to access this page.</p>
+          <p className="text-gray-600">Admin access required.</p>
           <button 
-            onClick={() => router.push('/auth/login')}
+            onClick={() => router.push('/dashboard')}
             className="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
           >
-            Go to Login
+            Go to Dashboard
           </button>
         </div>
       </div>

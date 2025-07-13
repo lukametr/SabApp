@@ -22,25 +22,15 @@ export class SubscriptionService {
   async grantSubscription(dto: GrantSubscriptionDto): Promise<UserDocument> {
     const { userId, days, paymentAmount, paymentNote } = dto;
     
-    this.logger.log(`🎯 Granting ${days} days subscription to user ${userId}`);
-    console.log(`🔍 Searching for user with ID: ${userId} (type: ${typeof userId})`);
+    this.logger.log(`Granting ${days} days subscription to user ${userId}`);
     
     let user = await this.userModel.findById(userId);
     if (!user) {
-      console.log(`❌ User not found with ID: ${userId}`);
       // Try to find by string conversion
       user = await this.userModel.findById(userId.toString());
       if (!user) {
-        console.log(`❌ User also not found with string ID: ${userId.toString()}`);
-        // Debug: show all user IDs in the system
-        const allUsers = await this.userModel.find({}, { _id: 1, email: 1 }).limit(5);
-        console.log('📋 Available user IDs:', allUsers.map(u => ({ id: (u._id as any).toString(), email: u.email })));
         throw new Error('User not found');
-      } else {
-        console.log(`✅ Found user by string conversion: ${user.email}`);
       }
-    } else {
-      console.log(`✅ Found user: ${user.email}`);
     }
 
     const now = new Date();
@@ -75,13 +65,12 @@ export class SubscriptionService {
       throw new Error('Failed to update user subscription');
     }
 
-    this.logger.log(`✅ Subscription granted to ${user.email} until ${endDate.toISOString()}`);
+    this.logger.log(`Subscription granted to ${user.email} until ${endDate.toISOString()}`);
     return updatedUser;
   }
 
   async revokeSubscription(userId: string, reason?: string): Promise<UserDocument> {
-    this.logger.log(`🚫 Revoking subscription for user ${userId}`);
-    console.log(`🔍 Searching for user to revoke: ${userId} (type: ${typeof userId})`);
+    this.logger.log(`Revoking subscription for user ${userId}`);
     
     const updatedUser = await this.userModel.findByIdAndUpdate(
       userId,
@@ -94,11 +83,10 @@ export class SubscriptionService {
     );
 
     if (!updatedUser) {
-      console.log(`❌ User not found for revocation with ID: ${userId}`);
       throw new Error('Failed to revoke user subscription');
     }
 
-    this.logger.log(`❌ Subscription revoked for user ${userId}`);
+    this.logger.log(`Subscription revoked for user ${userId}`);
     return updatedUser;
   }
 
@@ -123,7 +111,7 @@ export class SubscriptionService {
         subscriptionStatus: SubscriptionStatus.EXPIRED,
         status: UserStatus.SUSPENDED,
       });
-      this.logger.log(`⏰ Subscription expired for user ${user.email}`);
+      this.logger.log(`Subscription expired for user ${user.email}`);
     }
 
     return false;
@@ -160,7 +148,7 @@ export class SubscriptionService {
   // Daily cron job to check expired subscriptions
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async checkExpiredSubscriptions() {
-    this.logger.log('🔍 Running daily subscription check...');
+    this.logger.log('Running daily subscription check...');
     
     const now = new Date();
     
@@ -170,7 +158,7 @@ export class SubscriptionService {
       subscriptionEndDate: { $lte: now },
     });
 
-    this.logger.log(`📊 Found ${expiredUsers.length} expired subscriptions`);
+    this.logger.log(`Found ${expiredUsers.length} expired subscriptions`);
 
     for (const user of expiredUsers) {
       await this.userModel.findByIdAndUpdate(user._id, {
@@ -178,10 +166,10 @@ export class SubscriptionService {
         status: UserStatus.SUSPENDED,
       });
       
-      this.logger.log(`⏰ Expired subscription for user: ${user.email}`);
+      this.logger.log(`Expired subscription for user: ${user.email}`);
     }
 
-    this.logger.log('✅ Daily subscription check completed');
+    this.logger.log('Daily subscription check completed');
   }
 
   // Get all users with subscription info for admin panel
@@ -214,7 +202,6 @@ export class SubscriptionService {
         }
       };
 
-      console.log(`🔧 Mapped user: ${user.email} with ID: ${result.id} (_id: ${result._id})`);
       return result;
     });
   }
