@@ -51,7 +51,7 @@ declare global {
 export default function Navigation() {
   const pathname = usePathname()
   const router = useRouter()
-  const { user, logout, login, loadFromStorage } = useAuthStore()
+  const { user, logout, login } = useAuthStore()
   const [showRegistration, setShowRegistration] = useState(false)
   const [pendingIdToken, setPendingIdToken] = useState<string | null>(null)
   const [pendingUserInfo, setPendingUserInfo] = useState<any>(null)
@@ -69,9 +69,7 @@ export default function Navigation() {
     }
   };
 
-  useEffect(() => {
-    loadFromStorage()
-  }, []) // Only on mount
+  // No need to call loadFromStorage here - handled by AuthProvider
 
   const handleGoogleSuccess = useCallback(async (credentialResponse: CredentialResponse) => {
     try {

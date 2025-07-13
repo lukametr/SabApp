@@ -40,21 +40,38 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
     setError('');
 
     try {
+      console.log('🔐 Login attempt:', { email, passwordLength: password.length });
+      console.log('🔐 API URL:', process.env.NEXT_PUBLIC_API_URL);
+      
       // Call the real backend API
       const response = await authApi.login({
         email: email,
         password: password,
       });
       
+      console.log('🔐 Login response received:', { 
+        hasUser: !!response?.user, 
+        hasToken: !!response?.accessToken,
+        userEmail: response?.user?.email 
+      });
+      
       // Store in auth store
       login(response);
+      console.log('🔐 Auth store updated');
       
       if (onLogin) {
         onLogin(response.user);
       }
       
+      console.log('🔐 Navigating to dashboard...');
       router.push('/dashboard');
     } catch (err: any) {
+      console.error('🔐 Login error:', err);
+      console.error('🔐 Error details:', { 
+        message: err.message,
+        stack: err.stack,
+        response: err.response 
+      });
       setError(err.message || 'შესვლისას დაფიქსირდა შეცდომა');
     } finally {
       setLoading(false);

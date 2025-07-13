@@ -9,11 +9,18 @@ var react_1 = __importDefault(require("react"));
 var material_1 = require("@mui/material");
 var icons_material_1 = require("@mui/icons-material");
 var navigation_1 = require("next/navigation");
+var authStore_1 = require("../store/authStore");
 function LandingPage() {
     var theme = (0, material_1.useTheme)();
     var router = (0, navigation_1.useRouter)();
+    var user = (0, authStore_1.useAuthStore)().user;
     var handleGetStarted = function () {
-        router.push('/auth/login');
+        if (user) {
+            router.push('/dashboard');
+        }
+        else {
+            router.push('/auth/login');
+        }
     };
     var steps = [
         {
@@ -78,7 +85,7 @@ function LandingPage() {
             py: 2,
             px: 4
         }} endIcon={<icons_material_1.ArrowForward />}>
-                დაიწყე ახლავე
+                {user ? 'სამუშაო სივრცე' : 'დაიწყე ახლავე'}
               </material_1.Button>
             </material_1.Grid>
             <material_1.Grid item xs={12} md={6}>
@@ -126,7 +133,7 @@ function LandingPage() {
       </material_1.Box>
 
       {/* Features Section */}
-      <material_1.Box sx={{ py: 8, backgroundColor: 'white' }}>
+      <material_1.Box id="about" sx={{ py: 8, backgroundColor: 'white' }}>
         <material_1.Container maxWidth="lg">
           <material_1.Typography variant="h3" align="center" gutterBottom sx={{ mb: 6 }}>
             რატომ ჩვენ?
@@ -152,7 +159,7 @@ function LandingPage() {
       </material_1.Box>
 
       {/* Demo Section */}
-      <material_1.Box sx={{ py: 8, backgroundColor: '#f9f9f9' }}>
+      <material_1.Box id="demo" sx={{ py: 8, backgroundColor: '#f9f9f9' }}>
         <material_1.Container maxWidth="lg">
           <material_1.Typography variant="h3" align="center" gutterBottom sx={{ mb: 6 }}>
             ნიმუშის ხილვა
@@ -215,31 +222,31 @@ function LandingPage() {
         </material_1.Container>
       </material_1.Box>
 
-      {/* CTA Section */}
-      <material_1.Box sx={{
-            py: 8,
-            backgroundColor: theme.palette.primary.main,
-            color: 'white',
-            textAlign: 'center'
-        }}>
-        <material_1.Container maxWidth="md">
-          <material_1.Typography variant="h3" gutterBottom>
-            დარეგისტრირდი ახლავე
-          </material_1.Typography>
-          <material_1.Typography variant="h6" sx={{ mb: 4, opacity: 0.9 }}>
-             შეავსე ფორმები სწრაფად და მარტივად
-          </material_1.Typography>
-          <material_1.Button variant="contained" size="large" onClick={handleGetStarted} sx={{
-            bgcolor: 'white',
-            color: 'primary.main',
-            '&:hover': { bgcolor: 'grey.100' },
-            py: 2,
-            px: 6
-        }}>
-            რეგისტრაცია
-          </material_1.Button>
-        </material_1.Container>
-      </material_1.Box>
+      {/* CTA Section - Only show for non-logged in users */}
+      {!user && (<material_1.Box sx={{
+                py: 8,
+                backgroundColor: theme.palette.primary.main,
+                color: 'white',
+                textAlign: 'center'
+            }}>
+          <material_1.Container maxWidth="md">
+            <material_1.Typography variant="h3" gutterBottom>
+              დარეგისტრირდი ახლავე
+            </material_1.Typography>
+            <material_1.Typography variant="h6" sx={{ mb: 4, opacity: 0.9 }}>
+               შეავსე ფორმები სწრაფად და მარტივად
+            </material_1.Typography>
+            <material_1.Button variant="contained" size="large" onClick={handleGetStarted} sx={{
+                bgcolor: 'white',
+                color: 'primary.main',
+                '&:hover': { bgcolor: 'grey.100' },
+                py: 2,
+                px: 6
+            }}>
+              რეგისტრაცია
+            </material_1.Button>
+          </material_1.Container>
+        </material_1.Box>)}
 
       {/* Footer */}
       <material_1.Box sx={{ backgroundColor: '#333', color: 'white', py: 4 }}>
@@ -268,7 +275,7 @@ function LandingPage() {
               <material_1.Typography variant="h6" gutterBottom>
                 კავშირი
               </material_1.Typography>
-              <material_1.Stack spacing={1}>
+              <material_1.Stack spacing={1} id="contact">
                 <material_1.Typography variant="body2" color="grey.400">მხარდაჭერა</material_1.Typography>
                 <material_1.Typography variant="body2" color="grey.400">წესები და პირობები</material_1.Typography>
                 <material_1.Typography variant="body2" color="grey.400">კონფიდენციალურობა</material_1.Typography>

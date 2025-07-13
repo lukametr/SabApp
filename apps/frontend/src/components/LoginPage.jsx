@@ -85,34 +85,51 @@ function LoginPage(_a) {
     var login = (0, authStore_1.useAuthStore)().login;
     var _b = (0, react_1.useState)(''), email = _b[0], setEmail = _b[1];
     var _c = (0, react_1.useState)(''), password = _c[0], setPassword = _c[1];
-    var _d = (0, react_1.useState)(false), loading = _d[0], setLoading = _d[1];
-    var _e = (0, react_1.useState)(''), error = _e[0], setError = _e[1];
+    var _d = (0, react_1.useState)(false), showPassword = _d[0], setShowPassword = _d[1];
+    var _e = (0, react_1.useState)(false), loading = _e[0], setLoading = _e[1];
+    var _f = (0, react_1.useState)(''), error = _f[0], setError = _f[1];
     var handleEmailLogin = function (e) { return __awaiter(_this, void 0, void 0, function () {
         var response, err_1;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
+        var _a;
+        return __generator(this, function (_b) {
+            switch (_b.label) {
                 case 0:
                     e.preventDefault();
                     setLoading(true);
                     setError('');
-                    _a.label = 1;
+                    _b.label = 1;
                 case 1:
-                    _a.trys.push([1, 3, 4, 5]);
+                    _b.trys.push([1, 3, 4, 5]);
+                    console.log('🔐 Login attempt:', { email: email, passwordLength: password.length });
+                    console.log('🔐 API URL:', process.env.NEXT_PUBLIC_API_URL);
                     return [4 /*yield*/, api_1.authApi.login({
                             email: email,
                             password: password,
                         })];
                 case 2:
-                    response = _a.sent();
+                    response = _b.sent();
+                    console.log('🔐 Login response received:', {
+                        hasUser: !!(response === null || response === void 0 ? void 0 : response.user),
+                        hasToken: !!(response === null || response === void 0 ? void 0 : response.accessToken),
+                        userEmail: (_a = response === null || response === void 0 ? void 0 : response.user) === null || _a === void 0 ? void 0 : _a.email
+                    });
                     // Store in auth store
                     login(response);
+                    console.log('🔐 Auth store updated');
                     if (onLogin) {
                         onLogin(response.user);
                     }
+                    console.log('🔐 Navigating to dashboard...');
                     router.push('/dashboard');
                     return [3 /*break*/, 5];
                 case 3:
-                    err_1 = _a.sent();
+                    err_1 = _b.sent();
+                    console.error('🔐 Login error:', err_1);
+                    console.error('🔐 Error details:', {
+                        message: err_1.message,
+                        stack: err_1.stack,
+                        response: err_1.response
+                    });
                     setError(err_1.message || 'შესვლისას დაფიქსირდა შეცდომა');
                     return [3 /*break*/, 5];
                 case 4:
@@ -201,7 +218,13 @@ function LoginPage(_a) {
 
           <material_1.Box component="form" onSubmit={handleEmailLogin} sx={{ mb: 3 }}>
             <material_1.TextField fullWidth label="ელ. ფოსტა" type="email" value={email} onChange={function (e) { return setEmail(e.target.value); }} required sx={{ mb: 2 }}/>
-            <material_1.TextField fullWidth label="პაროლი" type="password" value={password} onChange={function (e) { return setPassword(e.target.value); }} required sx={{ mb: 3 }}/>
+            <material_1.TextField fullWidth label="პაროლი" type={showPassword ? 'text' : 'password'} value={password} onChange={function (e) { return setPassword(e.target.value); }} required sx={{ mb: 3 }} InputProps={{
+            endAdornment: (<material_1.InputAdornment position="end">
+                    <material_1.IconButton aria-label="toggle password visibility" onClick={function () { return setShowPassword(!showPassword); }} onMouseDown={function (e) { return e.preventDefault(); }} edge="end">
+                      {showPassword ? <icons_material_1.VisibilityOff /> : <icons_material_1.Visibility />}
+                    </material_1.IconButton>
+                  </material_1.InputAdornment>),
+        }}/>
             <material_1.Button type="submit" fullWidth variant="contained" size="large" disabled={loading} sx={{ mb: 2 }}>
               {loading ? <material_1.CircularProgress size={24}/> : 'შესვლა'}
             </material_1.Button>

@@ -10,11 +10,9 @@ var react_1 = require("react");
 var navigation_1 = require("next/navigation");
 var image_1 = __importDefault(require("next/image"));
 function ProfileClient() {
-    var _a = (0, authStore_1.useAuthStore)(), user = _a.user, loading = _a.loading, loadFromStorage = _a.loadFromStorage;
+    var _a = (0, authStore_1.useAuthStore)(), user = _a.user, loading = _a.loading;
     var router = (0, navigation_1.useRouter)();
-    (0, react_1.useEffect)(function () {
-        loadFromStorage();
-    }, []); // Load only on mount
+    // No need to call loadFromStorage here - handled by AuthProvider
     (0, react_1.useEffect)(function () {
         // Only redirect if not loading and no user
         if (!loading && !user) {

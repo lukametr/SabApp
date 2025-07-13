@@ -289,29 +289,48 @@ export class AuthService {
 
   async loginWithEmail(loginDto: any): Promise<AuthResponseDto> {
     try {
-      console.log('≡ƒöº Email Login - Starting:', loginDto.email);
+      console.log('🔐 Email Login - Starting:', loginDto.email);
 
       if (!loginDto.email || !loginDto.password) {
+        console.error('🔐 Email Login - Missing credentials');
         throw new BadRequestException('Email and password are required');
       }
 
       // Find user by email
+      console.log('🔐 Email Login - Looking up user by email:', loginDto.email);
       const user = await this.usersService.findByEmail(loginDto.email);
       if (!user) {
+        console.error('🔐 Email Login - User not found:', loginDto.email);
         throw new UnauthorizedException('Invalid email or password');
       }
+
+      console.log('🔐 Email Login - User found:', { 
+        id: user._id, 
+        email: user.email, 
+        hasPassword: !!user.password,
+        status: user.status,
+        lastLoginAt: user.lastLoginAt
+      });
 
       // Verify password using bcrypt
       if (!user.password) {
+        console.error('🔐 Email Login - User has no password hash');
         throw new UnauthorizedException('Invalid email or password');
       }
 
+      console.log('🔐 Email Login - Comparing passwords...');
       const isPasswordValid = await bcrypt.compare(loginDto.password, user.password);
+      console.log('🔐 Email Login - Password comparison result:', isPasswordValid);
+      
       if (!isPasswordValid) {
+        console.error('🔐 Email Login - Password mismatch for user:', user.email);
         throw new UnauthorizedException('Invalid email or password');
       }
+
+      console.log('🔐 Email Login - Password verified successfully');
 
       // Update last login
+      console.log('🔐 Email Login - Updating last login time...');
       await this.usersService.updateLastLogin(String(user._id));
 
       // Generate JWT token
@@ -322,12 +341,13 @@ export class AuthService {
         status: user.status,
       };
 
+      console.log('🔐 Email Login - Generating JWT token...');
       const accessToken = this.jwtService.sign(payload, {
         secret: this.configService.get<string>('JWT_SECRET'),
         expiresIn: this.configService.get<string>('JWT_EXPIRES_IN', '7d'),
       });
 
-      console.log('≡ƒöº Email Login - Success:', user.email);
+      console.log('🔐 Email Login - Success for user:', user.email);
 
       return {
         accessToken,
@@ -343,7 +363,7 @@ export class AuthService {
         },
       };
     } catch (error) {
-      console.error('≡ƒöº Email Login - Error:', error);
+      console.error('🔐 Email Login - Error:', error);
       throw error;
     }
   }

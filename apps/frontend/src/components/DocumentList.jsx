@@ -57,7 +57,13 @@ var DocumentList = react_1.default.memo(function (_a) {
         return 'error';
     }, []);
     var formatDate = (0, react_1.useCallback)(function (date) {
-        return new Date(date).toLocaleDateString('ka-GE');
+        if (!date)
+            return 'არ არის მითითებული';
+        var dateObj = new Date(date);
+        if (isNaN(dateObj.getTime())) {
+            return 'არავალიდური თარიღი';
+        }
+        return dateObj.toLocaleDateString('ka-GE');
     }, []);
     var getMaxRisk = (0, react_1.useCallback)(function (hazards) {
         if (!hazards || hazards.length === 0)

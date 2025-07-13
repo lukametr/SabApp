@@ -100,7 +100,7 @@ function Dashboard(_a) {
     var propUser = _a.user;
     var router = (0, navigation_1.useRouter)();
     var _b = (0, documentStore_1.useDocumentStore)(), documents = _b.documents, createDocument = _b.createDocument, fetchDocuments = _b.fetchDocuments, updateDocument = _b.updateDocument, deleteDocument = _b.deleteDocument;
-    var _c = (0, authStore_1.useAuthStore)(), user = _c.user, logout = _c.logout, loadFromStorage = _c.loadFromStorage;
+    var _c = (0, authStore_1.useAuthStore)(), user = _c.user, logout = _c.logout;
     // Use auth store user if available, otherwise use prop user
     var currentUser = user || propUser;
     var _d = (0, react_1.useState)(false), open = _d[0], setOpen = _d[1];
@@ -109,10 +109,7 @@ function Dashboard(_a) {
     var _g = (0, react_1.useState)(null), selectedDocument = _g[0], setSelectedDocument = _g[1];
     var _h = (0, react_1.useState)(false), openForm = _h[0], setOpenForm = _h[1];
     var _j = (0, react_1.useState)(null), anchorEl = _j[0], setAnchorEl = _j[1];
-    // Load user from storage on mount
-    react_1.default.useEffect(function () {
-        loadFromStorage();
-    }, []); // Only on mount
+    // No need to call loadFromStorage here - handled by AuthProvider
     // Debug: Log user data when it changes
     react_1.default.useEffect(function () {
         console.log('🔍 Dashboard - Current User:', currentUser);
@@ -185,6 +182,8 @@ function Dashboard(_a) {
         window.location.reload();
     };
     var convertDocumentToCreateDto = (0, react_1.useCallback)(function (doc) {
+        var _a;
+        console.log('🔄 Converting document to DTO:', { id: doc.id, hazardsCount: ((_a = doc.hazards) === null || _a === void 0 ? void 0 : _a.length) || 0 });
         return {
             evaluatorName: doc.evaluatorName,
             evaluatorLastName: doc.evaluatorLastName,
@@ -192,8 +191,9 @@ function Dashboard(_a) {
             workDescription: doc.workDescription,
             date: doc.date,
             time: doc.time,
-            hazards: doc.hazards.map(function (hazard) { return (__assign(__assign({}, hazard), { photos: [] })); }),
-            photos: []
+            hazards: (doc.hazards || []).map(function (hazard) { return (__assign(__assign({}, hazard), { id: hazard.id || "hazard_".concat(Date.now(), "_").concat(Math.random()), reviewDate: hazard.reviewDate ? new Date(hazard.reviewDate) : new Date(), photos: hazard.photos || [] // Keep existing photos
+             })); }),
+            // photos: doc.photos || [] // TODO: Fix type mismatch between string[] and File[]
         };
     }, []);
     var handleSubmit = (0, react_1.useCallback)(function (data) { return __awaiter(_this, void 0, void 0, function () {
@@ -211,7 +211,7 @@ function Dashboard(_a) {
                         date: data.date,
                         time: data.time,
                         hazards: data.hazards,
-                        photos: []
+                        photos: [] // Base64 data URLs - empty for now
                     };
                     return [4 /*yield*/, updateDocument(updateData)];
                 case 1:
@@ -231,7 +231,12 @@ function Dashboard(_a) {
     var totalDocuments = documents.length;
     var totalHazards = documents.reduce(function (sum, doc) { var _a; return sum + (((_a = doc.hazards) === null || _a === void 0 ? void 0 : _a.length) || 0); }, 0);
     var recentDocuments = documents.filter(function (doc) {
-        var docDate = new Date(doc.createdAt || doc.date);
+        var dateValue = doc.createdAt || doc.date;
+        if (!dateValue)
+            return false;
+        var docDate = new Date(dateValue);
+        if (isNaN(docDate.getTime()))
+            return false;
         var weekAgo = new Date();
         weekAgo.setDate(weekAgo.getDate() - 7);
         return docDate > weekAgo;

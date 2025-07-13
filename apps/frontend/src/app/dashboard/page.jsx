@@ -11,10 +11,8 @@ var authStore_1 = require("../../store/authStore");
 var Dashboard_1 = __importDefault(require("../../components/Dashboard"));
 function DashboardPage() {
     var router = (0, navigation_1.useRouter)();
-    var _a = (0, authStore_1.useAuthStore)(), user = _a.user, loading = _a.loading, loadFromStorage = _a.loadFromStorage;
-    (0, react_1.useEffect)(function () {
-        loadFromStorage();
-    }, []); // Only on mount
+    var _a = (0, authStore_1.useAuthStore)(), user = _a.user, loading = _a.loading;
+    // No need to call loadFromStorage here - handled by AuthProvider
     (0, react_1.useEffect)(function () {
         // Only redirect if not loading and no user
         if (!loading && !user) {

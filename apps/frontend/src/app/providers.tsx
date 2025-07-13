@@ -3,6 +3,7 @@
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import AuthProvider from '../components/AuthProvider';
 
 const theme = createTheme({
   palette: {
@@ -23,8 +24,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </ThemeProvider>
     </GoogleOAuthProvider>
   );
-} 
+}

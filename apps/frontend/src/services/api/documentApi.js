@@ -103,7 +103,7 @@ exports.documentApi = {
                     formData.append('time', data.time.toISOString());
                     hazardPhotos = [];
                     processedHazards = data.hazards.map(function (hazard) {
-                        var processedHazard = __assign(__assign({}, hazard), { photos: [] // Remove File objects, will be added by backend
+                        var processedHazard = __assign(__assign({}, hazard), { reviewDate: hazard.reviewDate ? hazard.reviewDate.toISOString() : null, photos: [] // Remove File objects, will be added by backend
                          });
                         // Extract photos from hazard
                         if (hazard.mediaFile) {
@@ -168,7 +168,7 @@ exports.documentApi = {
                     hazardPhotos = [];
                     if (data.hazards && data.hazards.length > 0) {
                         processedHazards = data.hazards.map(function (hazard) {
-                            var processedHazard = __assign(__assign({}, hazard), { photos: hazard.photos || [] // Keep existing photos
+                            var processedHazard = __assign(__assign({}, hazard), { reviewDate: hazard.reviewDate ? hazard.reviewDate.toISOString() : null, photos: hazard.photos || [] // Keep existing photos
                              });
                             // Extract new photos from hazard
                             if (hazard.mediaFile) {

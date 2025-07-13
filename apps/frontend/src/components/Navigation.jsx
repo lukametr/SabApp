@@ -65,16 +65,23 @@ function Navigation() {
     var _this = this;
     var pathname = (0, navigation_1.usePathname)();
     var router = (0, navigation_2.useRouter)();
-    var _a = (0, authStore_1.useAuthStore)(), user = _a.user, logout = _a.logout, login = _a.login, loadFromStorage = _a.loadFromStorage;
+    var _a = (0, authStore_1.useAuthStore)(), user = _a.user, logout = _a.logout, login = _a.login;
     var _b = (0, react_1.useState)(false), showRegistration = _b[0], setShowRegistration = _b[1];
     var _c = (0, react_1.useState)(null), pendingIdToken = _c[0], setPendingIdToken = _c[1];
     var _d = (0, react_1.useState)(null), pendingUserInfo = _d[0], setPendingUserInfo = _d[1];
     var _e = (0, react_1.useState)(false), loading = _e[0], setLoading = _e[1];
     var _f = (0, react_1.useState)(''), authError = _f[0], setAuthError = _f[1];
     var _g = (0, react_1.useState)(false), mobileMenuOpen = _g[0], setMobileMenuOpen = _g[1];
-    (0, react_1.useEffect)(function () {
-        loadFromStorage();
-    }, []); // Only on mount
+    var handleSmoothScroll = function (elementId) {
+        var element = document.getElementById(elementId);
+        if (element) {
+            element.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    };
+    // No need to call loadFromStorage here - handled by AuthProvider
     var handleGoogleSuccess = (0, react_1.useCallback)(function (credentialResponse) { return __awaiter(_this, void 0, void 0, function () {
         var idToken, res, err_1, error, err_2, error;
         var _a, _b, _c, _d, _e, _f, _g;
@@ -317,15 +324,15 @@ function Navigation() {
                 : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700')}>
                       მთავარი
                     </link_1.default>
-                    <link_1.default href="/#about" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                    <button onClick={function () { return handleSmoothScroll('about'); }} className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                       ჩვენი მიზანი
-                    </link_1.default>
-                    <link_1.default href="/#demo" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                    </button>
+                    <button onClick={function () { return handleSmoothScroll('demo'); }} className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                       ფორმების ნიმუშები
-                    </link_1.default>
-                    <link_1.default href="/#contact" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                    </button>
+                    <button onClick={function () { return handleSmoothScroll('contact'); }} className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                       კავშირი
-                    </link_1.default>
+                    </button>
                   </>)}
                 {user && (<link_1.default href="/dashboard" className={"inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ".concat(isActive('/dashboard')
                 ? 'border-primary-500 text-gray-900'
@@ -384,21 +391,29 @@ function Navigation() {
         {/* Mobile menu */}
         {mobileMenuOpen && (<div className="sm:hidden">
             <div className="pt-2 pb-3 space-y-1">
-              {!user && (<>
-                  <link_1.default href="/" className={"block pl-3 pr-4 py-2 border-l-4 text-base font-medium ".concat(isActive('/')
+              {!user && (<>                  <link_1.default href="/" className={"block pl-3 pr-4 py-2 border-l-4 text-base font-medium ".concat(isActive('/')
                     ? 'bg-primary-50 border-primary-500 text-primary-700'
                     : 'border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300')} onClick={function () { return setMobileMenuOpen(false); }}>
                     მთავარი
                   </link_1.default>
-                  <link_1.default href="/#about" className="border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300 block pl-3 pr-4 py-2 border-l-4 text-base font-medium" onClick={function () { return setMobileMenuOpen(false); }}>
+                  <button onClick={function () {
+                    handleSmoothScroll('about');
+                    setMobileMenuOpen(false);
+                }} className="border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300 block pl-3 pr-4 py-2 border-l-4 text-base font-medium w-full text-left">
                     ჩვენი მიზანი
-                  </link_1.default>
-                  <link_1.default href="/#demo" className="border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300 block pl-3 pr-4 py-2 border-l-4 text-base font-medium" onClick={function () { return setMobileMenuOpen(false); }}>
+                  </button>
+                  <button onClick={function () {
+                    handleSmoothScroll('demo');
+                    setMobileMenuOpen(false);
+                }} className="border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300 block pl-3 pr-4 py-2 border-l-4 text-base font-medium w-full text-left">
                     ფორმების ნიმუშები
-                  </link_1.default>
-                  <link_1.default href="/#contact" className="border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300 block pl-3 pr-4 py-2 border-l-4 text-base font-medium" onClick={function () { return setMobileMenuOpen(false); }}>
+                  </button>
+                  <button onClick={function () {
+                    handleSmoothScroll('contact');
+                    setMobileMenuOpen(false);
+                }} className="border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300 block pl-3 pr-4 py-2 border-l-4 text-base font-medium w-full text-left">
                     კავშირი
-                  </link_1.default>
+                  </button>
                 </>)}
               {user && (<link_1.default href="/dashboard" className={"block pl-3 pr-4 py-2 border-l-4 text-base font-medium ".concat(isActive('/dashboard')
                     ? 'bg-primary-50 border-primary-500 text-primary-700'

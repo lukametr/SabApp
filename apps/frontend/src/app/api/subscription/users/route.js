@@ -50,7 +50,7 @@ function GET(request) {
                     if (!authHeader) {
                         return [2 /*return*/, server_1.NextResponse.json({ error: 'No authorization header' }, { status: 401 })];
                     }
-                    return [4 /*yield*/, fetch("".concat(BACKEND_URL, "/subscription/users"), {
+                    return [4 /*yield*/, fetch("".concat(BACKEND_URL, "/api/subscription/users"), {
                             headers: {
                                 'Authorization': authHeader,
                                 'Content-Type': 'application/json',

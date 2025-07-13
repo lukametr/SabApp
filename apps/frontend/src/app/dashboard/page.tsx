@@ -7,11 +7,9 @@ import Dashboard from '../../components/Dashboard';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { user, loading, loadFromStorage } = useAuthStore();
+  const { user, loading } = useAuthStore();
 
-  useEffect(() => {
-    loadFromStorage();
-  }, []); // Only on mount
+  // No need to call loadFromStorage here - handled by AuthProvider
 
   useEffect(() => {
     // Only redirect if not loading and no user

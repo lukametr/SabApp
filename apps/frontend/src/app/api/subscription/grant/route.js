@@ -53,7 +53,7 @@ function POST(request) {
                     return [4 /*yield*/, request.json()];
                 case 1:
                     body = _a.sent();
-                    return [4 /*yield*/, fetch("".concat(BACKEND_URL, "/subscription/grant"), {
+                    return [4 /*yield*/, fetch("".concat(BACKEND_URL, "/api/subscription/grant"), {
                             method: 'POST',
                             headers: {
                                 'Authorization': authHeader,

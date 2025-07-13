@@ -65,24 +65,42 @@ exports.authApi = {
     },
     login: function (data) {
         return __awaiter(this, void 0, void 0, function () {
-            var response, error;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, fetch("".concat(API_BASE_URL, "/auth/login"), {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify(data),
-                        })];
+            var response, error, result;
+            var _a, _b;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
+                    case 0:
+                        console.log('🌐 API Login request:', {
+                            email: data.email,
+                            passwordLength: (_a = data.password) === null || _a === void 0 ? void 0 : _a.length,
+                            apiUrl: "".concat(API_BASE_URL, "/auth/login")
+                        });
+                        return [4 /*yield*/, fetch("".concat(API_BASE_URL, "/auth/login"), {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify(data),
+                            })];
                     case 1:
-                        response = _a.sent();
+                        response = _c.sent();
+                        console.log('🌐 API Login response status:', response.status);
+                        console.log('🌐 API Login response headers:', response.headers);
                         if (!!response.ok) return [3 /*break*/, 3];
                         return [4 /*yield*/, response.json()];
                     case 2:
-                        error = _a.sent();
+                        error = _c.sent();
+                        console.error('🌐 API Login error response:', error);
                         throw new Error(error.message || 'Login failed');
-                    case 3: return [2 /*return*/, response.json()];
+                    case 3: return [4 /*yield*/, response.json()];
+                    case 4:
+                        result = _c.sent();
+                        console.log('🌐 API Login success:', {
+                            hasUser: !!(result === null || result === void 0 ? void 0 : result.user),
+                            hasToken: !!(result === null || result === void 0 ? void 0 : result.accessToken),
+                            userEmail: (_b = result === null || result === void 0 ? void 0 : result.user) === null || _b === void 0 ? void 0 : _b.email
+                        });
+                        return [2 /*return*/, result];
                 }
             });
         });

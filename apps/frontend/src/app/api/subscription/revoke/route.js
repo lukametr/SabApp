@@ -53,7 +53,7 @@ function PUT(request) {
                     return [4 /*yield*/, request.json()];
                 case 1:
                     body = _a.sent();
-                    return [4 /*yield*/, fetch("".concat(BACKEND_URL, "/subscription/revoke"), {
+                    return [4 /*yield*/, fetch("".concat(BACKEND_URL, "/api/subscription/revoke"), {
                             method: 'PUT',
                             headers: {
                                 'Authorization': authHeader,

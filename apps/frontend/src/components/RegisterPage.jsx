@@ -111,6 +111,8 @@ function RegisterPage(_a) {
     var _e = (0, react_1.useState)(false), acceptTerms = _e[0], setAcceptTerms = _e[1];
     var _f = (0, react_1.useState)(false), isGoogleRegistration = _f[0], setIsGoogleRegistration = _f[1];
     var _g = (0, react_1.useState)(null), googleUserInfo = _g[0], setGoogleUserInfo = _g[1];
+    var _h = (0, react_1.useState)(false), showPassword = _h[0], setShowPassword = _h[1];
+    var _j = (0, react_1.useState)(false), showConfirmPassword = _j[0], setShowConfirmPassword = _j[1];
     // Check if this is a Google registration completion
     (0, react_1.useEffect)(function () {
         var fromGoogle = searchParams.get('from') === 'google';
@@ -296,9 +298,21 @@ function RegisterPage(_a) {
             <material_1.TextField fullWidth label="ტელეფონის ნომერი" name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} required sx={{ mb: 2 }} helperText="მაგ: 555123456" inputProps={{ maxLength: 15 }}/>
             
             {!isGoogleRegistration && (<>
-                <material_1.TextField fullWidth label="პაროლი" type="password" name="password" value={formData.password} onChange={handleChange} required sx={{ mb: 2 }}/>
+                <material_1.TextField fullWidth label="პაროლი" type={showPassword ? 'text' : 'password'} name="password" value={formData.password} onChange={handleChange} required sx={{ mb: 2 }} InputProps={{
+                endAdornment: (<material_1.InputAdornment position="end">
+                        <material_1.IconButton aria-label="toggle password visibility" onClick={function () { return setShowPassword(!showPassword); }} edge="end">
+                          {showPassword ? <icons_material_1.VisibilityOff /> : <icons_material_1.Visibility />}
+                        </material_1.IconButton>
+                      </material_1.InputAdornment>),
+            }}/>
                 
-                <material_1.TextField fullWidth label="პაროლის დადასტურება" type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required sx={{ mb: 2 }}/>
+                <material_1.TextField fullWidth label="პაროლის დადასტურება" type={showConfirmPassword ? 'text' : 'password'} name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required sx={{ mb: 2 }} InputProps={{
+                endAdornment: (<material_1.InputAdornment position="end">
+                        <material_1.IconButton aria-label="toggle confirm password visibility" onClick={function () { return setShowConfirmPassword(!showConfirmPassword); }} edge="end">
+                          {showConfirmPassword ? <icons_material_1.VisibilityOff /> : <icons_material_1.Visibility />}
+                        </material_1.IconButton>
+                      </material_1.InputAdornment>),
+            }}/>
               </>)}
             
             <material_1.FormControlLabel control={<material_1.Checkbox checked={acceptTerms} onChange={function (e) { return setAcceptTerms(e.target.checked); }} color="primary"/>} label={<material_1.Typography variant="body2">

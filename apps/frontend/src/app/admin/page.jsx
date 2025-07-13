@@ -54,7 +54,7 @@ var authStore_1 = require("../../store/authStore");
 var navigation_1 = require("next/navigation");
 function AdminPanel() {
     var _this = this;
-    var _a = (0, authStore_1.useAuthStore)(), user = _a.user, token = _a.token;
+    var _a = (0, authStore_1.useAuthStore)(), user = _a.user, token = _a.token, authLoading = _a.loading;
     var router = (0, navigation_1.useRouter)();
     var _b = (0, react_1.useState)([]), users = _b[0], setUsers = _b[1];
     var _c = (0, react_1.useState)(true), loading = _c[0], setLoading = _c[1];
@@ -65,26 +65,34 @@ function AdminPanel() {
         paymentAmount: 0,
         paymentNote: ''
     }), grantForm = _f[0], setGrantForm = _f[1];
-    // Check if user is authenticated
+    // No need to call loadFromStorage here - handled by AuthProvider
+    // Check if user is authenticated (only after auth loading is complete)
     (0, react_1.useEffect)(function () {
-        console.log('🔍 Admin page - user check:', { user: user, role: user === null || user === void 0 ? void 0 : user.role, isAdmin: (user === null || user === void 0 ? void 0 : user.role) === 'admin' });
+        // Don't check until auth loading is complete
+        if (authLoading)
+            return;
         if (!user || !token) {
-            console.log('⚠️ No user or token found, redirecting to dashboard');
+            router.push('/auth/login');
+            return;
+        }
+        // Check if user is admin
+        if (user.role !== 'admin') {
             router.push('/dashboard');
             return;
         }
-        // For now, allow any authenticated user to access admin panel for debugging
-        console.log('✅ User is authenticated, allowing access');
-    }, [user, token, router]);
+    }, [user, token, authLoading, router]);
     // Load users with subscription info
     (0, react_1.useEffect)(function () {
         var loadUsers = function () { return __awaiter(_this, void 0, void 0, function () {
-            var response, data, error_1;
+            var apiUrl, response, data, error_1;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         _a.trys.push([0, 5, 6, 7]);
-                        return [4 /*yield*/, fetch('/api/subscription/users', {
+                        apiUrl = process.env.NODE_ENV === 'production'
+                            ? '/api/subscription/users' // Backend API endpoint (will be served by the backend)
+                            : '/api/subscription/users';
+                        return [4 /*yield*/, fetch(apiUrl, {
                                 headers: {
                                     'Authorization': "Bearer ".concat(token),
                                     'Content-Type': 'application/json',
@@ -113,12 +121,12 @@ function AdminPanel() {
                 }
             });
         }); };
-        if (token && (user === null || user === void 0 ? void 0 : user.role) === 'admin') {
+        if (token) {
             loadUsers();
         }
     }, [token, user]);
     var handleGrantSubscription = function () { return __awaiter(_this, void 0, void 0, function () {
-        var payload, response, error, error_2;
+        var userId, payload, response, responseData, error_2;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -126,9 +134,10 @@ function AdminPanel() {
                         return [2 /*return*/];
                     _a.label = 1;
                 case 1:
-                    _a.trys.push([1, 6, 7, 8]);
+                    _a.trys.push([1, 4, 5, 6]);
+                    userId = selectedUser._id || selectedUser.id;
                     payload = {
-                        userId: selectedUser.id,
+                        userId: userId,
                         days: grantForm.days,
                         paymentAmount: grantForm.paymentAmount || undefined,
                         paymentNote: grantForm.paymentNote || undefined,
@@ -143,27 +152,29 @@ function AdminPanel() {
                         })];
                 case 2:
                     response = _a.sent();
-                    if (!response.ok) return [3 /*break*/, 3];
-                    // Reload users list
-                    window.location.reload();
-                    return [3 /*break*/, 5];
-                case 3: return [4 /*yield*/, response.json()];
+                    return [4 /*yield*/, response.json()];
+                case 3:
+                    responseData = _a.sent();
+                    if (response.ok) {
+                        // Reload users list
+                        window.location.reload();
+                    }
+                    else {
+                        console.error('Grant failed:', responseData);
+                        alert("Error: ".concat(responseData.message || responseData.error || 'Failed to grant subscription'));
+                    }
+                    return [3 /*break*/, 6];
                 case 4:
-                    error = _a.sent();
-                    alert("Error: ".concat(error.message || 'Failed to grant subscription'));
-                    _a.label = 5;
-                case 5: return [3 /*break*/, 8];
-                case 6:
                     error_2 = _a.sent();
                     console.error('Error granting subscription:', error_2);
                     alert('Error granting subscription');
-                    return [3 /*break*/, 8];
-                case 7:
+                    return [3 /*break*/, 6];
+                case 5:
                     setShowGrantModal(false);
                     setSelectedUser(null);
                     setGrantForm({ days: 30, paymentAmount: 0, paymentNote: '' });
                     return [7 /*endfinally*/];
-                case 8: return [2 /*return*/];
+                case 6: return [2 /*return*/];
             }
         });
     }); };
@@ -197,6 +208,7 @@ function AdminPanel() {
                 case 3: return [4 /*yield*/, response.json()];
                 case 4:
                     error = _a.sent();
+                    console.error('Revoke failed:', error);
                     alert("Error: ".concat(error.message || 'Failed to revoke subscription'));
                     _a.label = 5;
                 case 5: return [3 /*break*/, 7];
@@ -209,6 +221,15 @@ function AdminPanel() {
             }
         });
     }); };
+    // Don't render anything while auth is loading
+    if (authLoading) {
+        return (<div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading authentication...</p>
+        </div>
+      </div>);
+    }
     if (loading) {
         return (<div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -217,11 +238,15 @@ function AdminPanel() {
         </div>
       </div>);
     }
-    if (!user || user.role !== 'admin') {
+    // Allow access for admin users only
+    if (!user || !token || user.role !== 'admin') {
         return (<div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-red-600">Access Denied</h1>
-          <p className="text-gray-600">You need admin privileges to access this page.</p>
+          <p className="text-gray-600">Admin access required.</p>
+          <button onClick={function () { return router.push('/dashboard'); }} className="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">
+            Go to Dashboard
+          </button>
         </div>
       </div>);
     }
@@ -343,7 +368,7 @@ function AdminPanel() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {user.lastPaymentDate ?
-                    new Date(user.lastPaymentDate).toLocaleDateString() : '-'}
+                    (new Date(user.lastPaymentDate).getTime() ? new Date(user.lastPaymentDate).toLocaleDateString() : 'არავალიდური თარიღი') : '-'}
                       {user.paymentAmount ? (<div className="text-xs text-gray-500">₾{user.paymentAmount}</div>) : null}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
@@ -353,7 +378,7 @@ function AdminPanel() {
                 }} className="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded">
                         Grant Access
                       </button>
-                      {((_d = user.subscription) === null || _d === void 0 ? void 0 : _d.isActive) && (<button onClick={function () { return handleRevokeSubscription(user.id); }} className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1 rounded">
+                      {((_d = user.subscription) === null || _d === void 0 ? void 0 : _d.isActive) && (<button onClick={function () { return handleRevokeSubscription(user._id || user.id); }} className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1 rounded">
                           Revoke
                         </button>)}
                     </td>

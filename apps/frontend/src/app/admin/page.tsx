@@ -14,7 +14,7 @@ interface UserWithSubscription extends User {
 }
 
 export default function AdminPanel() {
-  const { user, token, loading: authLoading, loadFromStorage } = useAuthStore();
+  const { user, token, loading: authLoading } = useAuthStore();
   const router = useRouter();
   const [users, setUsers] = useState<UserWithSubscription[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,10 +26,7 @@ export default function AdminPanel() {
     paymentNote: ''
   });
 
-  // Load user from storage on mount
-  useEffect(() => {
-    loadFromStorage();
-  }, [loadFromStorage]);
+  // No need to call loadFromStorage here - handled by AuthProvider
 
   // Check if user is authenticated (only after auth loading is complete)
   useEffect(() => {

@@ -50,7 +50,7 @@ interface DashboardProps {
 export default function Dashboard({ user: propUser }: DashboardProps) {
   const router = useRouter();
   const { documents, createDocument, fetchDocuments, updateDocument, deleteDocument } = useDocumentStore();
-  const { user, logout, loadFromStorage } = useAuthStore();
+  const { user, logout } = useAuthStore();
   
   // Use auth store user if available, otherwise use prop user
   const currentUser = user || propUser;
@@ -61,10 +61,7 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
   const [openForm, setOpenForm] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
-  // Load user from storage on mount
-  React.useEffect(() => {
-    loadFromStorage();
-  }, []); // Only on mount
+  // No need to call loadFromStorage here - handled by AuthProvider
 
   // Debug: Log user data when it changes
   React.useEffect(() => {
@@ -146,7 +143,7 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
         reviewDate: hazard.reviewDate ? new Date(hazard.reviewDate) : new Date(),
         photos: hazard.photos || [] // Keep existing photos
       })),
-      photos: doc.photos || []
+      // photos: doc.photos || [] // TODO: Fix type mismatch between string[] and File[]
     };
   }, []);
 

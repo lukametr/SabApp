@@ -6,12 +6,10 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
 export default function ProfileClient() {
-  const { user, loading, loadFromStorage } = useAuthStore();
+  const { user, loading } = useAuthStore();
   const router = useRouter();
 
-  useEffect(() => {
-    loadFromStorage();
-  }, []); // Load only on mount
+  // No need to call loadFromStorage here - handled by AuthProvider
 
   useEffect(() => {
     // Only redirect if not loading and no user

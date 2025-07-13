@@ -60,6 +60,12 @@ export const authApi = {
   },
 
   async login(data: LoginData): Promise<AuthResponse> {
+    console.log('🌐 API Login request:', { 
+      email: data.email, 
+      passwordLength: data.password?.length,
+      apiUrl: `${API_BASE_URL}/auth/login`
+    });
+    
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: {
@@ -68,12 +74,23 @@ export const authApi = {
       body: JSON.stringify(data),
     });
 
+    console.log('🌐 API Login response status:', response.status);
+    console.log('🌐 API Login response headers:', response.headers);
+
     if (!response.ok) {
       const error = await response.json();
+      console.error('🌐 API Login error response:', error);
       throw new Error(error.message || 'Login failed');
     }
 
-    return response.json();
+    const result = await response.json();
+    console.log('🌐 API Login success:', { 
+      hasUser: !!result?.user, 
+      hasToken: !!result?.accessToken,
+      userEmail: result?.user?.email 
+    });
+    
+    return result;
   },
 
   async googleAuth(data: GoogleAuthData): Promise<AuthResponse> {
