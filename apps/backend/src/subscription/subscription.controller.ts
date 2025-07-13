@@ -9,6 +9,7 @@ import {
   HttpStatus,
   HttpException,
 } from '@nestjs/common';
+import { IsString, IsNumber, IsOptional, Min } from 'class-validator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -17,14 +18,29 @@ import { SubscriptionService } from './subscription.service';
 import { GetUser } from '../auth/decorators/get-user.decorator';
 
 export class GrantSubscriptionDto {
+  @IsString()
   userId: string;
+
+  @IsNumber()
+  @Min(1)
   days: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
   paymentAmount?: number;
+
+  @IsOptional()
+  @IsString()
   paymentNote?: string;
 }
 
 export class RevokeSubscriptionDto {
+  @IsString()
   userId: string;
+
+  @IsOptional()
+  @IsString()
   reason?: string;
 }
 

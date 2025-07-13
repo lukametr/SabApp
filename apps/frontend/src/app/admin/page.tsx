@@ -52,7 +52,12 @@ export default function AdminPanel() {
   useEffect(() => {
     const loadUsers = async () => {
       try {
-        const response = await fetch('/api/subscription/users', {
+        // In production, call backend API directly since frontend is served as static files
+        const apiUrl = process.env.NODE_ENV === 'production' 
+          ? '/api/subscription/users'  // Backend API endpoint (will be served by the backend)
+          : '/api/subscription/users'; // Local Next.js API route
+          
+        const response = await fetch(apiUrl, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',

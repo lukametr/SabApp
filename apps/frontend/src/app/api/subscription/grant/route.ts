@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
 
-    const response = await fetch(`${BACKEND_URL}/subscription/grant`, {
+    const response = await fetch(`${BACKEND_URL}/api/subscription/grant`, {
       method: 'POST',
       headers: {
         'Authorization': authHeader,

@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'No authorization header' }, { status: 401 });
     }
 
-    const response = await fetch(`${BACKEND_URL}/subscription/users`, {
+    const response = await fetch(`${BACKEND_URL}/api/subscription/users`, {
       headers: {
         'Authorization': authHeader,
         'Content-Type': 'application/json',

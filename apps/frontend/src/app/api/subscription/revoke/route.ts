@@ -11,7 +11,7 @@ export async function PUT(request: NextRequest) {
 
     const body = await request.json();
 
-    const response = await fetch(`${BACKEND_URL}/subscription/revoke`, {
+    const response = await fetch(`${BACKEND_URL}/api/subscription/revoke`, {
       method: 'PUT',
       headers: {
         'Authorization': authHeader,
