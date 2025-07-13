@@ -26,25 +26,19 @@ export default function AdminPanel() {
     paymentNote: ''
   });
 
-  // Check if user is admin
+  // Check if user is authenticated
   useEffect(() => {
     console.log('🔍 Admin page - user check:', { user, role: user?.role, isAdmin: user?.role === 'admin' });
     
-    // Temporary: allow access for debugging
-    if (!user) {
-      console.log('⚠️ No user found, redirecting to dashboard');
+    if (!user || !token) {
+      console.log('⚠️ No user or token found, redirecting to dashboard');
       router.push('/dashboard');
       return;
     }
     
-    if (user.role !== 'admin') {
-      console.log('⚠️ User is not admin, role:', user.role, 'redirecting to dashboard');
-      router.push('/dashboard');
-      return;
-    }
-    
-    console.log('✅ User is admin, allowing access');
-  }, [user, router]);
+    // For now, allow any authenticated user to access admin panel for debugging
+    console.log('✅ User is authenticated, allowing access');
+  }, [user, token, router]);
 
   // Load users with subscription info
   useEffect(() => {
