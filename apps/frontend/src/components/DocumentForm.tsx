@@ -167,13 +167,17 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
   const handlePersonChange = (hazardId: string, person: string) => {
     const hazard = hazards.find(h => h.id === hazardId);
     if (hazard) {
-    let updated: string[] = [];
-    if (person === 'ყველა') {
-      updated = ['ყველა'];
-    } else {
+      let updated: string[] = [];
+      if (person === 'ყველა') {
+        // თუ "ყველა" მონიშნულია/არ არის მონიშნული
         updated = hazard.affectedPersons.includes(person)
           ? hazard.affectedPersons.filter(p => p !== person)
-          : [...hazard.affectedPersons.filter(p => p !== 'ყველა'), person];
+          : [...hazard.affectedPersons, person];
+      } else {
+        // სხვა პუნქტების შემთხვევაში - ჩვეულებრივი ლოგიკა
+        updated = hazard.affectedPersons.includes(person)
+          ? hazard.affectedPersons.filter(p => p !== person)
+          : [...hazard.affectedPersons, person];
       }
       updateHazard(hazardId, { affectedPersons: updated });
     }
@@ -332,7 +336,12 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
                       key={person}
                       control={
                         <Checkbox 
-                          checked={hazard.affectedPersons.includes(person)} 
+                          checked={
+                            // თუ "ყველა" მონიშნულია, ყველა სხვა პუნქტიც გამოჩნდეს მონიშნულად
+                            person === 'ყველა' 
+                              ? hazard.affectedPersons.includes('ყველა')
+                              : hazard.affectedPersons.includes('ყველა') || hazard.affectedPersons.includes(person)
+                          }
                           onChange={() => handlePersonChange(hazard.id, person)} 
                         />
                       }
