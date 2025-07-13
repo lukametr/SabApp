@@ -8,7 +8,8 @@ import { UpdateDocumentDto } from './dto/update-document.dto';
 import { existsSync } from 'fs';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { OptionalAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { SubscriptionGuard } from '../auth/guards/subscription.guard';
 
 @Controller('documents')
 export class DocumentsController {
@@ -18,7 +19,7 @@ export class DocumentsController {
   ) {}
 
   @Post()
-  @UseGuards(OptionalAuthGuard)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   @UseInterceptors(FileFieldsInterceptor([
     { name: 'photos', maxCount: 10 },
     { name: 'hazardPhotos', maxCount: 50 }
@@ -125,7 +126,7 @@ export class DocumentsController {
   }
 
   @Get()
-  @UseGuards(OptionalAuthGuard)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   findAll(@Request() req: any) {
     const userId = req.user?.id || req.user?.sub; // Get user ID from JWT token
     console.log('📋 Fetching documents for user:', userId || 'all users');
@@ -133,7 +134,7 @@ export class DocumentsController {
   }
 
   @Get(':id')
-  @UseGuards(OptionalAuthGuard)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   findOne(@Param('id') id: string, @Request() req: any) {
     const userId = req.user?.id || req.user?.sub; // Get user ID from JWT token
     console.log('📋 Fetching document:', id, 'for user:', userId || 'anonymous');
@@ -141,7 +142,7 @@ export class DocumentsController {
   }
 
   @Patch(':id')
-  @UseGuards(OptionalAuthGuard)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   @UseInterceptors(FileFieldsInterceptor([
     { name: 'photos', maxCount: 10 },
     { name: 'hazardPhotos', maxCount: 50 }
@@ -241,7 +242,7 @@ export class DocumentsController {
   }
 
   @Delete(':id')
-  @UseGuards(OptionalAuthGuard)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   remove(@Param('id') id: string, @Request() req: any) {
     const userId = req.user?.id || req.user?.sub; // Get user ID from JWT token
     console.log('🗑️ Deleting document:', id, 'for user:', userId || 'anonymous');

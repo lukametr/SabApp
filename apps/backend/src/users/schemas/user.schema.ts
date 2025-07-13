@@ -11,6 +11,14 @@ export enum UserRole {
 export enum UserStatus {
   ACTIVE = 'active',
   BLOCKED = 'blocked',
+  SUSPENDED = 'suspended', // For subscription expired
+}
+
+export enum SubscriptionStatus {
+  ACTIVE = 'active',
+  EXPIRED = 'expired',
+  CANCELLED = 'cancelled',
+  PENDING = 'pending',
 }
 
 @Schema({ timestamps: true })
@@ -56,6 +64,28 @@ export class User {
 
   @Prop()
   lastLoginAt?: Date;
+
+  // Subscription fields
+  @Prop({ type: String, enum: SubscriptionStatus, default: SubscriptionStatus.PENDING })
+  subscriptionStatus: SubscriptionStatus;
+
+  @Prop()
+  subscriptionStartDate?: Date;
+
+  @Prop()
+  subscriptionEndDate?: Date;
+
+  @Prop({ default: 0 })
+  subscriptionDays: number; // How many days of subscription granted
+
+  @Prop()
+  lastPaymentDate?: Date;
+
+  @Prop({ default: 0 })
+  paymentAmount?: number; // Amount paid in GEL
+
+  @Prop()
+  paymentNote?: string; // Admin note about payment
 
   @Prop()
   createdAt?: Date;

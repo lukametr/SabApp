@@ -27,12 +27,14 @@ import {
   Add,
   Assignment,
   GetApp,
-  Security
+  Security,
+  AdminPanelSettings
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import DocumentList from './DocumentList';
 import DocumentForm from './DocumentForm';
 import DocumentView from './DocumentView';
+import SubscriptionBanner from './subscription/SubscriptionBanner';
 import { useDocumentStore } from '../store/documentStore';
 import { useAuthStore } from '../store/authStore';
 import { CreateDocumentDto, Document } from '../types/document';
@@ -41,6 +43,7 @@ interface DashboardProps {
   user?: {
     name: string;
     email: string;
+    role?: string;
   };
 }
 
@@ -188,6 +191,12 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
               open={Boolean(anchorEl)}
               onClose={handleMenuClose}
             >
+              {currentUser?.role === 'admin' && (
+                <MenuItem onClick={() => router.push('/admin')}>
+                  <AdminPanelSettings sx={{ mr: 1 }} />
+                  Admin Panel
+                </MenuItem>
+              )}
               <MenuItem onClick={handleLogout}>
                 <Logout sx={{ mr: 1 }} />
                 გამოსვლა
@@ -198,6 +207,9 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
       </AppBar>
 
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+        {/* Subscription Banner */}
+        <SubscriptionBanner />
+        
         {/* Stats Cards */}
         <Grid container spacing={3} sx={{ mb: 4 }}>
           <Grid item xs={12} sm={6} md={3}>

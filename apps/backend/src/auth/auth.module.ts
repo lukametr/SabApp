@@ -8,6 +8,8 @@ import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { User, UserSchema } from '../users/schemas/user.schema';
+import { SubscriptionGuard } from './guards/subscription.guard';
+import { SubscriptionModule } from '../subscription/subscription.module';
 
 @Module({
   imports: [
@@ -23,9 +25,10 @@ import { User, UserSchema } from '../users/schemas/user.schema';
       inject: [ConfigService],
     }),
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    SubscriptionModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, UsersService, JwtStrategy],
-  exports: [AuthService, UsersService],
+  providers: [AuthService, UsersService, JwtStrategy, SubscriptionGuard],
+  exports: [AuthService, UsersService, SubscriptionGuard],
 })
 export class AuthModule {} 

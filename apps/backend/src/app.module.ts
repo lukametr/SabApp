@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { ScheduleModule } from '@nestjs/schedule';
 import { join } from 'path';
 import { AppController } from './app.controller';
 import { DocumentsModule } from './documents/documents.module';
@@ -9,12 +10,14 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { HealthModule } from './health.module';
 import { DebugModule } from './debug/debug.module';
+import { SubscriptionModule } from './subscription/subscription.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    ScheduleModule.forRoot(), // For cron jobs
     MongooseModule.forRootAsync({
       useFactory: () => {
         const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/sabap';
@@ -39,6 +42,7 @@ import { DebugModule } from './debug/debug.module';
     UsersModule,
     HealthModule,
     DebugModule,
+    SubscriptionModule,
   ],
   controllers: [AppController],
   providers: [],

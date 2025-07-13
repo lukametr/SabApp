@@ -92,6 +92,7 @@ var navigation_1 = require("next/navigation");
 var DocumentList_1 = __importDefault(require("./DocumentList"));
 var DocumentForm_1 = __importDefault(require("./DocumentForm"));
 var DocumentView_1 = __importDefault(require("./DocumentView"));
+var SubscriptionBanner_1 = __importDefault(require("./subscription/SubscriptionBanner"));
 var documentStore_1 = require("../store/documentStore");
 var authStore_1 = require("../store/authStore");
 function Dashboard(_a) {
@@ -243,6 +244,10 @@ function Dashboard(_a) {
               <icons_material_1.AccountCircle />
             </material_1.IconButton>
             <material_1.Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
+              {(currentUser === null || currentUser === void 0 ? void 0 : currentUser.role) === 'admin' && (<material_1.MenuItem onClick={function () { return router.push('/admin'); }}>
+                  <icons_material_1.AdminPanelSettings sx={{ mr: 1 }}/>
+                  Admin Panel
+                </material_1.MenuItem>)}
               <material_1.MenuItem onClick={handleLogout}>
                 <icons_material_1.Logout sx={{ mr: 1 }}/>
                 გამოსვლა
@@ -253,6 +258,9 @@ function Dashboard(_a) {
       </material_1.AppBar>
 
       <material_1.Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+        {/* Subscription Banner */}
+        <SubscriptionBanner_1.default />
+        
         {/* Stats Cards */}
         <material_1.Grid container spacing={3} sx={{ mb: 4 }}>
           <material_1.Grid item xs={12} sm={6} md={3}>
