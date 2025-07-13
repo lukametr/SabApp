@@ -42,7 +42,7 @@ interface HazardData {
   residualRisk: { probability: number; severity: number; total: number };
   requiredMeasures: string;
   responsiblePerson: string;
-  reviewDate: Date; // Make Date required again
+  reviewDate: Date | null; // Allow null for DatePicker compatibility
   photos: string[]; // Base64 data URLs
 }
 
@@ -70,7 +70,7 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
       residualRisk: { probability: 0, severity: 0, total: 0 },
       requiredMeasures: '',
       responsiblePerson: '',
-      reviewDate: new Date(), // Use current date instead of null
+      reviewDate: null, // Start with null for DatePicker
       photos: []
     };
     console.log('✅ Added new hazard:', newHazard.id);
@@ -511,7 +511,7 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
                     slotProps={{
                       textField: {
                         fullWidth: true,
-                        required: true // Make required again
+                        required: false // Allow empty initially
                       }
                     }}
                   />
@@ -549,22 +549,26 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
       
       if (defaultValues) {
         console.log('🔄 DocumentForm received defaultValues:', defaultValues);
+        console.log('🔄 Hazards from defaultValues:', defaultValues.hazards);
         
         // Convert hazards to internal format
-        const formattedHazards: HazardData[] = (defaultValues.hazards || []).map((hazard: any) => ({
-          id: hazard.id || `hazard_${Date.now()}_${Math.random()}`,
-          hazardIdentification: hazard.hazardIdentification || '',
-          affectedPersons: hazard.affectedPersons || [],
-          injuryDescription: hazard.injuryDescription || '',
-          existingControlMeasures: hazard.existingControlMeasures || '',
-          initialRisk: hazard.initialRisk || { probability: 0, severity: 0, total: 0 },
-          additionalControlMeasures: hazard.additionalControlMeasures || '',
-          residualRisk: hazard.residualRisk || { probability: 0, severity: 0, total: 0 },
-          requiredMeasures: hazard.requiredMeasures || '',
-          responsiblePerson: hazard.responsiblePerson || '',
-          reviewDate: hazard.reviewDate ? new Date(hazard.reviewDate) : new Date(), // Use current date if no date provided
-          photos: hazard.photos || []
-        }));
+        const formattedHazards: HazardData[] = (defaultValues.hazards || []).map((hazard: any, index: number) => {
+          console.log(`🔄 Processing hazard ${index}:`, hazard);
+          return {
+            id: hazard.id || `hazard_${Date.now()}_${Math.random()}`,
+            hazardIdentification: hazard.hazardIdentification || '',
+            affectedPersons: hazard.affectedPersons || [],
+            injuryDescription: hazard.injuryDescription || '',
+            existingControlMeasures: hazard.existingControlMeasures || '',
+            initialRisk: hazard.initialRisk || { probability: 0, severity: 0, total: 0 },
+            additionalControlMeasures: hazard.additionalControlMeasures || '',
+            residualRisk: hazard.residualRisk || { probability: 0, severity: 0, total: 0 },
+            requiredMeasures: hazard.requiredMeasures || '',
+            responsiblePerson: hazard.responsiblePerson || '',
+            reviewDate: hazard.reviewDate ? new Date(hazard.reviewDate) : null, // Keep null if no date
+            photos: hazard.photos || []
+          };
+        });
         
         setHazards(formattedHazards);
         

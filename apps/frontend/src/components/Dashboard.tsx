@@ -131,6 +131,8 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
   };
 
   const convertDocumentToCreateDto = useCallback((doc: Document): Partial<CreateDocumentDto> => {
+    console.log('🔄 Converting document to DTO:', { id: doc.id, hazardsCount: doc.hazards?.length || 0 });
+    
     return {
       evaluatorName: doc.evaluatorName,
       evaluatorLastName: doc.evaluatorLastName,
@@ -138,12 +140,13 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
       workDescription: doc.workDescription,
       date: doc.date,
       time: doc.time,
-      hazards: doc.hazards.map(hazard => ({
+      hazards: (doc.hazards || []).map(hazard => ({
         ...hazard,
+        id: hazard.id || `hazard_${Date.now()}_${Math.random()}`, // Ensure ID exists
         reviewDate: hazard.reviewDate ? new Date(hazard.reviewDate) : new Date(),
-        photos: []
+        photos: hazard.photos || [] // Keep existing photos
       })),
-      photos: []
+      photos: doc.photos || []
     };
   }, []);
 
