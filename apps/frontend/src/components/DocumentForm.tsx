@@ -42,7 +42,7 @@ interface HazardData {
   residualRisk: { probability: number; severity: number; total: number };
   requiredMeasures: string;
   responsiblePerson: string;
-  reviewDate: Date;
+  reviewDate: Date | null; // Allow null for new hazards
   photos: string[]; // Base64 data URLs
 }
 
@@ -70,7 +70,7 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
       residualRisk: { probability: 0, severity: 0, total: 0 },
       requiredMeasures: '',
       responsiblePerson: '',
-      reviewDate: new Date(),
+      reviewDate: null, // Fix invalid date issue
       photos: []
     };
     console.log('✅ Added new hazard:', newHazard.id);
@@ -507,11 +507,11 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
                   <DatePicker
                     label="გადახედვის სავარაუდო დრო"
                     value={hazard.reviewDate}
-                    onChange={(date) => date && updateHazard(hazard.id, { reviewDate: date })}
+                    onChange={(date) => updateHazard(hazard.id, { reviewDate: date })}
                     slotProps={{
                       textField: {
                         fullWidth: true,
-                        required: true
+                        required: false // Allow empty date initially
                       }
                     }}
                   />
@@ -559,7 +559,7 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
           residualRisk: hazard.residualRisk || { probability: 0, severity: 0, total: 0 },
           requiredMeasures: hazard.requiredMeasures || '',
           responsiblePerson: hazard.responsiblePerson || '',
-          reviewDate: hazard.reviewDate ? new Date(hazard.reviewDate) : new Date(),
+          reviewDate: hazard.reviewDate ? new Date(hazard.reviewDate) : null, // Better date handling
           photos: hazard.photos || []
         }));
         
