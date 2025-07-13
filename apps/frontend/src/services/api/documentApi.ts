@@ -34,6 +34,7 @@ export const documentApi = {
     const processedHazards = data.hazards.map(hazard => {
       const processedHazard = {
         ...hazard,
+        reviewDate: hazard.reviewDate ? hazard.reviewDate.toISOString() : null, // Convert Date to ISO string or null
         photos: [] as string[] // Remove File objects, will be added by backend
       };
       
@@ -99,6 +100,7 @@ export const documentApi = {
       const processedHazards = data.hazards.map(hazard => {
         const processedHazard = {
           ...hazard,
+          reviewDate: hazard.reviewDate ? hazard.reviewDate.toISOString() : null, // Convert Date to ISO string or null
           photos: hazard.photos || [] as string[] // Keep existing photos
         };
         

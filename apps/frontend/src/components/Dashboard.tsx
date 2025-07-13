@@ -37,7 +37,7 @@ import DocumentView from './DocumentView';
 import SubscriptionBanner from './subscription/SubscriptionBanner';
 import { useDocumentStore } from '../store/documentStore';
 import { useAuthStore } from '../store/authStore';
-import { CreateDocumentDto, Document } from '../types/document';
+import { CreateDocumentDto, Document, UpdateDocumentDto } from '../types/document';
 
 interface DashboardProps {
   user?: {
@@ -152,7 +152,7 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
 
   const handleSubmit = useCallback(async (data: CreateDocumentDto) => {
     if (editDoc) {
-      const updateData = {
+      const updateData: UpdateDocumentDto = {
         id: editDoc.id,
         evaluatorName: data.evaluatorName,
         evaluatorLastName: data.evaluatorLastName,
@@ -161,7 +161,7 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
         date: data.date,
         time: data.time,
         hazards: data.hazards,
-        photos: []
+        photos: [] // Base64 data URLs - empty for now
       };
       await updateDocument(updateData);
     } else {

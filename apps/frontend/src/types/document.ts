@@ -27,7 +27,7 @@ export interface Hazard {
   residualRisk: Risk;
   requiredMeasures: string;
   responsiblePerson: string;
-  reviewDate: Date;
+  reviewDate: Date | null; // Allow null for DatePicker compatibility
   photos: string[]; // Base64 data URLs
 }
 
