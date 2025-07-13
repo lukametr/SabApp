@@ -527,6 +527,7 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
 
 export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, defaultValues, open, onClose }: Props) {
   const [hazards, setHazards] = useState<HazardData[]>([]);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const { control, handleSubmit: submitForm, formState: { errors }, reset } = useForm<CreateDocumentDto>({
     defaultValues: {
@@ -543,7 +544,9 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
 
   // Update form values when defaultValues change or when dialog opens
   useEffect(() => {
-    if (open) {
+    if (open && !isInitialized) {
+      setIsInitialized(true);
+      
       if (defaultValues) {
         console.log('🔄 DocumentForm received defaultValues:', defaultValues);
         
@@ -598,7 +601,12 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
         });
       }
     }
-  }, [defaultValues, reset, open]);
+    
+    // Reset initialization flag when dialog closes
+    if (!open && isInitialized) {
+      setIsInitialized(false);
+    }
+  }, [defaultValues, open, isInitialized]); // Add isInitialized to dependencies
 
   const handleFormSubmitInternal = async (data: CreateDocumentDto) => {
     // ვალიდაცია - მინიმუმ ერთი საფრთხე უნდა იყოს
@@ -630,17 +638,24 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
     
     try {
       await handleFormSubmit(formattedData);
-      onClose();
+      // Don't clean state on successful submit - just close dialog
+      handleDialogClose();
     } catch (error) {
       console.error('ფორმის გაგზავნის შეცდომა:', error);
       alert('დოკუმენტის შენახვისას მოხდა შეცდომა');
     }
   };
 
-  // Function to handle dialog close and cleanup
-  const handleClose = () => {
-    // Clean up form state
+  // Function to handle dialog close without cleanup (for successful submissions)
+  const handleDialogClose = () => {
+    onClose();
+  };
+
+  // Function to handle dialog close and cleanup (for cancel/escape)
+  const handleCloseWithCleanup = () => {
+    // Clean up form state only when explicitly closing/canceling
     setHazards([]);
+    setIsInitialized(false);
     reset({
       evaluatorName: '',
       evaluatorLastName: '',
@@ -657,17 +672,18 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
   // Function to handle cancel
   const handleCancel = () => {
     setHazards([]);
+    setIsInitialized(false);
     if (onCancel) {
       onCancel();
     } else {
-      handleClose();
+      handleCloseWithCleanup();
     }
   };
 
   return (
     <Dialog 
       open={open} 
-      onClose={handleClose}
+      onClose={handleCloseWithCleanup}
       maxWidth="md"
       fullWidth
       aria-labelledby="document-form-dialog"
