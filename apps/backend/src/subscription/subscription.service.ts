@@ -25,19 +25,19 @@ export class SubscriptionService {
     this.logger.log(`🎯 Granting ${days} days subscription to user ${userId}`);
     console.log(`🔍 Searching for user with ID: ${userId} (type: ${typeof userId})`);
     
-    const user = await this.userModel.findById(userId);
+    let user = await this.userModel.findById(userId);
     if (!user) {
       console.log(`❌ User not found with ID: ${userId}`);
       // Try to find by string conversion
-      const userByString = await this.userModel.findById(userId.toString());
-      if (!userByString) {
+      user = await this.userModel.findById(userId.toString());
+      if (!user) {
         console.log(`❌ User also not found with string ID: ${userId.toString()}`);
         // Debug: show all user IDs in the system
         const allUsers = await this.userModel.find({}, { _id: 1, email: 1 }).limit(5);
-        console.log('📋 Available user IDs:', allUsers.map(u => ({ id: u._id.toString(), email: u.email })));
+        console.log('📋 Available user IDs:', allUsers.map(u => ({ id: (u._id as any).toString(), email: u.email })));
         throw new Error('User not found');
       } else {
-        console.log(`✅ Found user by string conversion: ${userByString.email}`);
+        console.log(`✅ Found user by string conversion: ${user.email}`);
       }
     } else {
       console.log(`✅ Found user: ${user.email}`);
@@ -205,8 +205,8 @@ export class SubscriptionService {
       // Ensure we have both _id and id fields for frontend compatibility
       const result = {
         ...userObject,
-        id: userObject._id.toString(), // Ensure id is a string
-        _id: userObject._id.toString(), // Also include _id as string
+        id: (userObject._id as any).toString(), // Ensure id is a string
+        _id: (userObject._id as any).toString(), // Also include _id as string
         subscription: {
           isActive,
           daysRemaining,
