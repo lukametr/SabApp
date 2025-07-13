@@ -12,7 +12,7 @@ async function createDefaultAdmin(app: any) {
     const usersService = app.get(UsersService);
     
     // Check if admin already exists
-    const existingAdmin = await usersService.findByEmail('lukametr@gmail.com');
+    const existingAdmin = await usersService.findByEmail('admin@saba.com');
     if (existingAdmin) {
       console.log('✅ Admin user already exists');
       return;
@@ -20,11 +20,11 @@ async function createDefaultAdmin(app: any) {
 
     // Create admin user
     const adminData = {
-      name: 'Luka Admin',
-      email: 'lukametr@gmail.com',
-      password: 'rikoriko', // Will be hashed by the service
+      name: 'Super Admin',
+      email: 'admin@saba.com',
+      password: 'admin123', // Will be hashed by the service
       personalNumber: '01234567891',
-      phoneNumber: '555-0002',
+      phoneNumber: '555-0001',
       organization: 'SabaApp',
       position: 'System Administrator'
     };
@@ -35,7 +35,7 @@ async function createDefaultAdmin(app: any) {
     await usersService.updateUserRole(admin.id, UserRole.ADMIN);
     
     console.log('✅ Default admin user created successfully!');
-    console.log('📧 Email: lukametr@gmail.com');
+    console.log('📧 Email: admin@saba.com');
     console.log('👑 Role: ADMIN');
     
   } catch (error) {

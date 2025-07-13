@@ -179,4 +179,15 @@ export class UsersService {
 
     return user;
   }
+
+  async deleteUser(userId: string): Promise<void> {
+    const result = await this.userModel.findByIdAndDelete(userId).exec();
+    if (!result) {
+      throw new NotFoundException('User not found');
+    }
+  }
+
+  async deleteAllUsers(): Promise<void> {
+    await this.userModel.deleteMany({}).exec();
+  }
 }

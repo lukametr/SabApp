@@ -11,19 +11,19 @@ async function createAdminUser() {
 
   try {
     // Check if admin already exists
-    const existingAdmin = await usersService.findByEmail('lukametr@gmail.com');
+    const existingAdmin = await usersService.findByEmail('admin@saba.com');
     if (existingAdmin) {
-      console.log('❌ Admin user already exists with email: lukametr@gmail.com');
+      console.log('❌ Admin user already exists with email: admin@saba.com');
       return;
     }
 
     // Create admin user
     const adminData = {
-      name: 'Luka Admin',
-      email: 'lukametr@gmail.com',
-      password: 'rikoriko', // Will be hashed by the service
+      name: 'Super Admin',
+      email: 'admin@saba.com',
+      password: 'admin123', // Will be hashed by the service
       personalNumber: '01234567891', // Changed to unique number
-      phoneNumber: '555-0002', // Changed to unique number
+      phoneNumber: '555-0001', // Changed to unique number
       organization: 'SabaApp',
       position: 'System Administrator'
     };
@@ -34,8 +34,8 @@ async function createAdminUser() {
     await usersService.updateUserRole(admin.id, UserRole.ADMIN);
     
     console.log('✅ Admin user created successfully!');
-    console.log('📧 Email: lukametr@gmail.com');
-    console.log('🔑 Password: rikoriko');
+    console.log('📧 Email: admin@saba.com');
+    console.log('🔑 Password: admin123');
     console.log('👑 Role: ADMIN');
     console.log('🆔 ID:', admin.id);
     

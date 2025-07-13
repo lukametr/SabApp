@@ -1,9 +1,9 @@
 # Admin Credentials
 
-## Updated Admin Access
+## Super Admin Access
 
-**Email:** lukametr@gmail.com
-**Password:** rikoriko
+**Email:** admin@saba.com
+**Password:** admin123
 **Role:** ADMIN
 
 ## How to Login
