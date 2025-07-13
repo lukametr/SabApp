@@ -11,19 +11,23 @@ var authStore_1 = require("../../store/authStore");
 var Dashboard_1 = __importDefault(require("../../components/Dashboard"));
 function DashboardPage() {
     var router = (0, navigation_1.useRouter)();
-    var _a = (0, authStore_1.useAuthStore)(), user = _a.user, loadFromStorage = _a.loadFromStorage;
+    var _a = (0, authStore_1.useAuthStore)(), user = _a.user, loading = _a.loading, loadFromStorage = _a.loadFromStorage;
     (0, react_1.useEffect)(function () {
         loadFromStorage();
     }, []); // Only on mount
     (0, react_1.useEffect)(function () {
-        // Simple auth check - redirect to login if no user
-        if (!user) {
+        // Only redirect if not loading and no user
+        if (!loading && !user) {
             router.push('/auth/login');
         }
-    }, [user, router]);
-    // Show loading or dashboard based on auth state
+    }, [user, loading, router]);
+    // Show loading while checking auth state
+    if (loading) {
+        return <div>Loading...</div>; // or loading spinner
+    }
+    // Show nothing if no user (will redirect)
     if (!user) {
-        return null; // or loading spinner
+        return null;
     }
     return <Dashboard_1.default />;
 }

@@ -18,15 +18,15 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   token: null,
-  loading: false,
+  loading: true, // Start with loading true
   error: null,
   login: (data) => {
-    set({ user: data.user, token: data.accessToken });
+    set({ user: data.user, token: data.accessToken, loading: false });
     localStorage.setItem('token', data.accessToken);
     localStorage.setItem('user', JSON.stringify(data.user));
   },
   logout: () => {
-    set({ user: null, token: null });
+    set({ user: null, token: null, loading: false });
     localStorage.removeItem('token');
     localStorage.removeItem('user');
   },
@@ -35,10 +35,17 @@ export const useAuthStore = create<AuthState>((set) => ({
   setError: (error) => set({ error }),
   setLoading: (loading) => set({ loading }),
   loadFromStorage: () => {
-    const token = localStorage.getItem('token');
-    const user = localStorage.getItem('user');
-    if (token && user) {
-      set({ token, user: JSON.parse(user) });
+    try {
+      const token = localStorage.getItem('token');
+      const user = localStorage.getItem('user');
+      if (token && user) {
+        set({ token, user: JSON.parse(user), loading: false });
+      } else {
+        set({ loading: false });
+      }
+    } catch (error) {
+      console.error('Error loading from storage:', error);
+      set({ loading: false });
     }
   },
 })); 

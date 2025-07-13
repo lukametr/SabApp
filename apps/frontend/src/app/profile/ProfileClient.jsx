@@ -10,16 +10,20 @@ var react_1 = require("react");
 var navigation_1 = require("next/navigation");
 var image_1 = __importDefault(require("next/image"));
 function ProfileClient() {
-    var _a = (0, authStore_1.useAuthStore)(), user = _a.user, loadFromStorage = _a.loadFromStorage;
+    var _a = (0, authStore_1.useAuthStore)(), user = _a.user, loading = _a.loading, loadFromStorage = _a.loadFromStorage;
     var router = (0, navigation_1.useRouter)();
     (0, react_1.useEffect)(function () {
         loadFromStorage();
     }, []); // Load only on mount
     (0, react_1.useEffect)(function () {
-        if (!user) {
+        // Only redirect if not loading and no user
+        if (!loading && !user) {
             router.replace('/');
         }
-    }, [user, router]);
+    }, [user, loading, router]);
+    if (loading) {
+        return <div>Loading...</div>; // or loading spinner
+    }
     if (!user)
         return null;
     return (<div className="max-w-xl mx-auto mt-10 p-6 bg-white rounded shadow">

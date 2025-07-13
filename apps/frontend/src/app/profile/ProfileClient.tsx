@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
 export default function ProfileClient() {
-  const { user, loadFromStorage } = useAuthStore();
+  const { user, loading, loadFromStorage } = useAuthStore();
   const router = useRouter();
 
   useEffect(() => {
@@ -14,10 +14,15 @@ export default function ProfileClient() {
   }, []); // Load only on mount
 
   useEffect(() => {
-    if (!user) {
+    // Only redirect if not loading and no user
+    if (!loading && !user) {
       router.replace('/');
     }
-  }, [user, router]);
+  }, [user, loading, router]);
+
+  if (loading) {
+    return <div>Loading...</div>; // or loading spinner
+  }
 
   if (!user) return null;
 

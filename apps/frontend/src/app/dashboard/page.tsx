@@ -7,22 +7,27 @@ import Dashboard from '../../components/Dashboard';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { user, loadFromStorage } = useAuthStore();
+  const { user, loading, loadFromStorage } = useAuthStore();
 
   useEffect(() => {
     loadFromStorage();
   }, []); // Only on mount
 
   useEffect(() => {
-    // Simple auth check - redirect to login if no user
-    if (!user) {
+    // Only redirect if not loading and no user
+    if (!loading && !user) {
       router.push('/auth/login');
     }
-  }, [user, router]);
+  }, [user, loading, router]);
 
-  // Show loading or dashboard based on auth state
+  // Show loading while checking auth state
+  if (loading) {
+    return <div>Loading...</div>; // or loading spinner
+  }
+
+  // Show nothing if no user (will redirect)
   if (!user) {
-    return null; // or loading spinner
+    return null;
   }
 
   return <Dashboard />;
