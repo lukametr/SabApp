@@ -23,10 +23,24 @@ export class SubscriptionService {
     const { userId, days, paymentAmount, paymentNote } = dto;
     
     this.logger.log(`🎯 Granting ${days} days subscription to user ${userId}`);
+    console.log(`🔍 Searching for user with ID: ${userId} (type: ${typeof userId})`);
     
     const user = await this.userModel.findById(userId);
     if (!user) {
-      throw new Error('User not found');
+      console.log(`❌ User not found with ID: ${userId}`);
+      // Try to find by string conversion
+      const userByString = await this.userModel.findById(userId.toString());
+      if (!userByString) {
+        console.log(`❌ User also not found with string ID: ${userId.toString()}`);
+        // Debug: show all user IDs in the system
+        const allUsers = await this.userModel.find({}, { _id: 1, email: 1 }).limit(5);
+        console.log('📋 Available user IDs:', allUsers.map(u => ({ id: u._id.toString(), email: u.email })));
+        throw new Error('User not found');
+      } else {
+        console.log(`✅ Found user by string conversion: ${userByString.email}`);
+      }
+    } else {
+      console.log(`✅ Found user: ${user.email}`);
     }
 
     const now = new Date();
@@ -67,6 +81,7 @@ export class SubscriptionService {
 
   async revokeSubscription(userId: string, reason?: string): Promise<UserDocument> {
     this.logger.log(`🚫 Revoking subscription for user ${userId}`);
+    console.log(`🔍 Searching for user to revoke: ${userId} (type: ${typeof userId})`);
     
     const updatedUser = await this.userModel.findByIdAndUpdate(
       userId,
@@ -79,6 +94,7 @@ export class SubscriptionService {
     );
 
     if (!updatedUser) {
+      console.log(`❌ User not found for revocation with ID: ${userId}`);
       throw new Error('Failed to revoke user subscription');
     }
 
@@ -184,14 +200,22 @@ export class SubscriptionService {
         ? Math.max(0, Math.ceil((user.subscriptionEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
         : 0;
 
-      return {
-        ...user.toObject(),
+      const userObject = user.toObject();
+      
+      // Ensure we have both _id and id fields for frontend compatibility
+      const result = {
+        ...userObject,
+        id: userObject._id.toString(), // Ensure id is a string
+        _id: userObject._id.toString(), // Also include _id as string
         subscription: {
           isActive,
           daysRemaining,
           status: user.subscriptionStatus,
         }
       };
+
+      console.log(`🔧 Mapped user: ${user.email} with ID: ${result.id} (_id: ${result._id})`);
+      return result;
     });
   }
 }
