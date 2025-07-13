@@ -14,7 +14,7 @@ function DashboardPage() {
     var _a = (0, authStore_1.useAuthStore)(), user = _a.user, loadFromStorage = _a.loadFromStorage;
     (0, react_1.useEffect)(function () {
         loadFromStorage();
-    }, [loadFromStorage]);
+    }, []); // Only on mount
     (0, react_1.useEffect)(function () {
         // Simple auth check - redirect to login if no user
         if (!user) {

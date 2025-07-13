@@ -74,7 +74,7 @@ function Navigation() {
     var _g = (0, react_1.useState)(false), mobileMenuOpen = _g[0], setMobileMenuOpen = _g[1];
     (0, react_1.useEffect)(function () {
         loadFromStorage();
-    }, [loadFromStorage]);
+    }, []); // Only on mount
     var handleGoogleSuccess = (0, react_1.useCallback)(function (credentialResponse) { return __awaiter(_this, void 0, void 0, function () {
         var idToken, res, err_1, error, err_2, error;
         var _a, _b, _c, _d, _e, _f, _g;

@@ -111,7 +111,7 @@ function Dashboard(_a) {
     // Load user from storage on mount
     react_1.default.useEffect(function () {
         loadFromStorage();
-    }, [loadFromStorage]);
+    }, []); // Only on mount
     react_1.default.useEffect(function () {
         fetchDocuments();
     }, [fetchDocuments]);

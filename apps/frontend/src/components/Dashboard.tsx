@@ -61,7 +61,7 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
   // Load user from storage on mount
   React.useEffect(() => {
     loadFromStorage();
-  }, [loadFromStorage]);
+  }, []); // Only on mount
 
   React.useEffect(() => { 
     fetchDocuments(); 

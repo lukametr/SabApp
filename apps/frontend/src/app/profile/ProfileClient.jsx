@@ -14,10 +14,12 @@ function ProfileClient() {
     var router = (0, navigation_1.useRouter)();
     (0, react_1.useEffect)(function () {
         loadFromStorage();
+    }, []); // Load only on mount
+    (0, react_1.useEffect)(function () {
         if (!user) {
             router.replace('/');
         }
-    }, [user, loadFromStorage, router]);
+    }, [user, router]);
     if (!user)
         return null;
     return (<div className="max-w-xl mx-auto mt-10 p-6 bg-white rounded shadow">

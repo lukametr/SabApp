@@ -11,10 +11,13 @@ export default function ProfileClient() {
 
   useEffect(() => {
     loadFromStorage();
+  }, []); // Load only on mount
+
+  useEffect(() => {
     if (!user) {
       router.replace('/');
     }
-  }, [user, loadFromStorage, router]);
+  }, [user, router]);
 
   if (!user) return null;
 

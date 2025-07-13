@@ -61,7 +61,7 @@ export default function Navigation() {
 
   useEffect(() => {
     loadFromStorage()
-  }, [loadFromStorage])
+  }, []) // Only on mount
 
   const handleGoogleSuccess = useCallback(async (credentialResponse: CredentialResponse) => {
     try {

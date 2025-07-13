@@ -11,7 +11,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     loadFromStorage();
-  }, [loadFromStorage]);
+  }, []); // Only on mount
 
   useEffect(() => {
     // Simple auth check - redirect to login if no user
