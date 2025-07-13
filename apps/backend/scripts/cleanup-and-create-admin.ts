@@ -21,7 +21,7 @@ async function cleanupAndCreateAdmin() {
     const adminData = {
       name: 'Super Admin',
       email: 'admin@saba.com',
-      password: 'admin123', // Will be hashed by the service
+      password: 'admin123', // Will be hashed by createEmailUser
       personalNumber: '01234567891',
       phoneNumber: '555-0001',
       organization: 'SabaApp',

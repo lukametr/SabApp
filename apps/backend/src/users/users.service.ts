@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User, UserDocument, UserRole, UserStatus } from './schemas/user.schema';
 import { GoogleUserInfo } from './dto/google-auth.dto';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class UsersService {
@@ -103,6 +104,11 @@ export class UsersService {
       }
       console.log('✅ Phone number is available');
 
+      // Hash the password
+      const saltRounds = 10;
+      const hashedPassword = await bcrypt.hash(userData.password, saltRounds);
+      console.log('🔒 Password hashed');
+
       console.log('🔧 Creating new user document...');
       const user = new this.userModel({
         name: userData.name,
@@ -111,7 +117,7 @@ export class UsersService {
         picture: null,
         personalNumber: userData.personalNumber,
         phoneNumber: userData.phoneNumber,
-        password: userData.password, // Already hashed
+        password: hashedPassword, // Now properly hashed
         organization: userData.organization,
         position: userData.position,
         role: UserRole.USER,

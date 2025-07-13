@@ -21,7 +21,7 @@ async function createAdminUser() {
     const adminData = {
       name: 'Super Admin',
       email: 'admin@saba.com',
-      password: 'admin123', // Will be hashed by the service
+      password: 'admin123', // Will be hashed by createEmailUser
       personalNumber: '01234567891', // Changed to unique number
       phoneNumber: '555-0001', // Changed to unique number
       organization: 'SabaApp',

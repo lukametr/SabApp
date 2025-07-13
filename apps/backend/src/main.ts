@@ -6,6 +6,7 @@ import helmet from 'helmet';
 import compression from 'compression';
 import { UsersService } from './users/users.service';
 import { UserRole } from './users/schemas/user.schema';
+import * as bcrypt from 'bcryptjs';
 
 async function createDefaultAdmin(app: any) {
   try {
@@ -22,7 +23,7 @@ async function createDefaultAdmin(app: any) {
     const adminData = {
       name: 'Super Admin',
       email: 'admin@saba.com',
-      password: 'admin123', // Will be hashed by the service
+      password: 'admin123', // Will be hashed by createEmailUser
       personalNumber: '01234567891',
       phoneNumber: '555-0001',
       organization: 'SabaApp',
