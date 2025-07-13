@@ -1,5 +1,6 @@
 export type User = {
   id: string;
+  _id?: string; // MongoDB ObjectId
   name: string;
   email: string;
   picture?: string;

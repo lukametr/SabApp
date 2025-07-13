@@ -61,6 +61,16 @@ export default function AdminPanel() {
 
         if (response.ok) {
           const data = await response.json();
+          console.log('👥 Loaded users data:', data.data);
+          // Log the first user to see its structure
+          if (data.data && data.data.length > 0) {
+            console.log('🔍 First user structure:', data.data[0]);
+            console.log('🆔 First user id fields:', {
+              id: data.data[0].id,
+              _id: data.data[0]._id,
+              objectId: data.data[0]._id?.toString()
+            });
+          }
           setUsers(data.data || []);
         } else {
           console.error('Failed to load users');
@@ -72,7 +82,7 @@ export default function AdminPanel() {
       }
     };
 
-    if (token && user?.role === 'admin') {
+    if (token) {
       loadUsers();
     }
   }, [token, user]);
@@ -81,8 +91,11 @@ export default function AdminPanel() {
     if (!selectedUser) return;
 
     try {
+      // Try to get the correct user ID - MongoDB uses _id, but it might be mapped to id
+      const userId = selectedUser._id || selectedUser.id;
+      
       const payload: GrantSubscriptionRequest = {
-        userId: selectedUser.id,
+        userId: userId,
         days: grantForm.days,
         paymentAmount: grantForm.paymentAmount || undefined,
         paymentNote: grantForm.paymentNote || undefined,
@@ -90,6 +103,12 @@ export default function AdminPanel() {
 
       console.log('🚀 Sending grant request:', payload);
       console.log('📋 Selected user:', selectedUser);
+      console.log('🆔 Using userId:', userId);
+      console.log('🔧 Available IDs:', {
+        id: selectedUser.id,
+        _id: selectedUser._id,
+        originalUser: selectedUser
+      });
 
       const response = await fetch('/api/subscription/grant', {
         method: 'POST',
@@ -141,6 +160,7 @@ export default function AdminPanel() {
         window.location.reload();
       } else {
         const error = await response.json();
+        console.error('❌ Revoke failed:', error);
         alert(`Error: ${error.message || 'Failed to revoke subscription'}`);
       }
     } catch (error) {
@@ -332,7 +352,7 @@ export default function AdminPanel() {
                       </button>
                       {user.subscription?.isActive && (
                         <button
-                          onClick={() => handleRevokeSubscription(user.id)}
+                          onClick={() => handleRevokeSubscription(user._id || user.id)}
                           className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1 rounded"
                         >
                           Revoke
