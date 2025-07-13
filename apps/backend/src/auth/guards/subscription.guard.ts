@@ -1,5 +1,6 @@
 import { Injectable, CanActivate, ExecutionContext, HttpException, HttpStatus } from '@nestjs/common';
 import { SubscriptionService } from '../../subscription/subscription.service';
+import { UserRole } from '../../users/schemas/user.schema';
 
 @Injectable()
 export class SubscriptionGuard implements CanActivate {
@@ -11,6 +12,11 @@ export class SubscriptionGuard implements CanActivate {
 
     if (!user) {
       throw new HttpException('User not authenticated', HttpStatus.UNAUTHORIZED);
+    }
+
+    // Admin users bypass subscription check
+    if (user.role === UserRole.ADMIN) {
+      return true;
     }
 
     // Check if user has active subscription
