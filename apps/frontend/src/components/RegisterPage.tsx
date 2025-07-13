@@ -13,9 +13,11 @@ import {
   CircularProgress,
   Divider,
   FormControlLabel,
-  Checkbox
+  Checkbox,
+  InputAdornment,
+  IconButton
 } from '@mui/material';
-import { Google, Shield } from '@mui/icons-material';
+import { Google, Shield, Visibility, VisibilityOff } from '@mui/icons-material';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useGoogleLogin } from '@react-oauth/google';
 import { authApi } from '../services/api';
@@ -45,6 +47,8 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [isGoogleRegistration, setIsGoogleRegistration] = useState(false);
   const [googleUserInfo, setGoogleUserInfo] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Check if this is a Google registration completion
   useEffect(() => {
@@ -304,23 +308,49 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
                 <TextField
                   fullWidth
                   label="პაროლი"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
                   required
                   sx={{ mb: 2 }}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          aria-label="toggle password visibility"
+                          onClick={() => setShowPassword(!showPassword)}
+                          edge="end"
+                        >
+                          {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
                 />
                 
                 <TextField
                   fullWidth
                   label="პაროლის დადასტურება"
-                  type="password"
+                  type={showConfirmPassword ? 'text' : 'password'}
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   required
                   sx={{ mb: 2 }}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          aria-label="toggle confirm password visibility"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          edge="end"
+                        >
+                          {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
                 />
               </>
             )}

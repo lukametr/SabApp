@@ -11,9 +11,11 @@ import {
   Link,
   Alert,
   CircularProgress,
-  Divider
+  Divider,
+  IconButton,
+  InputAdornment
 } from '@mui/material';
-import { Google, Shield } from '@mui/icons-material';
+import { Google, Shield, Visibility, VisibilityOff } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { useGoogleLogin } from '@react-oauth/google';
 import { authApi } from '../services/api';
@@ -28,6 +30,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
   const { login } = useAuthStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -139,11 +142,25 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
             <TextField
               fullWidth
               label="პაროლი"
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               sx={{ mb: 3 }}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label="toggle password visibility"
+                      onClick={() => setShowPassword(!showPassword)}
+                      onMouseDown={(e) => e.preventDefault()}
+                      edge="end"
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
             />
             <Button
               type="submit"
