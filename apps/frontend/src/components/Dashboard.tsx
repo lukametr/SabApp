@@ -66,6 +66,13 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
     loadFromStorage();
   }, []); // Only on mount
 
+  // Debug: Log user data when it changes
+  React.useEffect(() => {
+    console.log('🔍 Dashboard - Current User:', currentUser);
+    console.log('🔍 Dashboard - User Role:', currentUser?.role);
+    console.log('🔍 Dashboard - Is Admin?:', currentUser?.role === 'admin');
+  }, [currentUser]);
+
   React.useEffect(() => { 
     fetchDocuments(); 
   }, [fetchDocuments]);
@@ -116,6 +123,11 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
   const handleLogout = () => {
     logout();
     router.push('/');
+  };
+
+  const handleClearCache = () => {
+    localStorage.clear();
+    window.location.reload();
   };
 
   const convertDocumentToCreateDto = useCallback((doc: Document): Partial<CreateDocumentDto> => {
@@ -191,12 +203,22 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
               open={Boolean(anchorEl)}
               onClose={handleMenuClose}
             >
+              {/* Debug: Show current user info */}
+              <MenuItem disabled>
+                <Typography variant="caption">
+                  Role: {currentUser?.role || 'undefined'} | Admin: {currentUser?.role === 'admin' ? 'Yes' : 'No'}
+                </Typography>
+              </MenuItem>
               {currentUser?.role === 'admin' && (
                 <MenuItem onClick={() => router.push('/admin')}>
                   <AdminPanelSettings sx={{ mr: 1 }} />
                   Admin Panel
                 </MenuItem>
               )}
+              <MenuItem onClick={handleClearCache}>
+                <Security sx={{ mr: 1 }} />
+                Clear Cache
+              </MenuItem>
               <MenuItem onClick={handleLogout}>
                 <Logout sx={{ mr: 1 }} />
                 გამოსვლა

@@ -113,6 +113,12 @@ function Dashboard(_a) {
     react_1.default.useEffect(function () {
         loadFromStorage();
     }, []); // Only on mount
+    // Debug: Log user data when it changes
+    react_1.default.useEffect(function () {
+        console.log('🔍 Dashboard - Current User:', currentUser);
+        console.log('🔍 Dashboard - User Role:', currentUser === null || currentUser === void 0 ? void 0 : currentUser.role);
+        console.log('🔍 Dashboard - Is Admin?:', (currentUser === null || currentUser === void 0 ? void 0 : currentUser.role) === 'admin');
+    }, [currentUser]);
     react_1.default.useEffect(function () {
         fetchDocuments();
     }, [fetchDocuments]);
@@ -173,6 +179,10 @@ function Dashboard(_a) {
     var handleLogout = function () {
         logout();
         router.push('/');
+    };
+    var handleClearCache = function () {
+        localStorage.clear();
+        window.location.reload();
     };
     var convertDocumentToCreateDto = (0, react_1.useCallback)(function (doc) {
         return {
@@ -244,10 +254,20 @@ function Dashboard(_a) {
               <icons_material_1.AccountCircle />
             </material_1.IconButton>
             <material_1.Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
+              {/* Debug: Show current user info */}
+              <material_1.MenuItem disabled>
+                <material_1.Typography variant="caption">
+                  Role: {(currentUser === null || currentUser === void 0 ? void 0 : currentUser.role) || 'undefined'} | Admin: {(currentUser === null || currentUser === void 0 ? void 0 : currentUser.role) === 'admin' ? 'Yes' : 'No'}
+                </material_1.Typography>
+              </material_1.MenuItem>
               {(currentUser === null || currentUser === void 0 ? void 0 : currentUser.role) === 'admin' && (<material_1.MenuItem onClick={function () { return router.push('/admin'); }}>
                   <icons_material_1.AdminPanelSettings sx={{ mr: 1 }}/>
                   Admin Panel
                 </material_1.MenuItem>)}
+              <material_1.MenuItem onClick={handleClearCache}>
+                <icons_material_1.Security sx={{ mr: 1 }}/>
+                Clear Cache
+              </material_1.MenuItem>
               <material_1.MenuItem onClick={handleLogout}>
                 <icons_material_1.Logout sx={{ mr: 1 }}/>
                 გამოსვლა
