@@ -158,7 +158,7 @@ export default function LandingPage() {
       </Box>
 
       {/* Features Section */}
-      <Box sx={{ py: 8, backgroundColor: 'white' }}>
+      <Box id="about" sx={{ py: 8, backgroundColor: 'white' }}>
         <Container maxWidth="lg">
           <Typography variant="h3" align="center" gutterBottom sx={{ mb: 6 }}>
             რატომ ჩვენ?
@@ -186,7 +186,7 @@ export default function LandingPage() {
       </Box>
 
       {/* Demo Section */}
-      <Box sx={{ py: 8, backgroundColor: '#f9f9f9' }}>
+      <Box id="demo" sx={{ py: 8, backgroundColor: '#f9f9f9' }}>
         <Container maxWidth="lg">
           <Typography variant="h3" align="center" gutterBottom sx={{ mb: 6 }}>
             ნიმუშის ხილვა
@@ -307,7 +307,7 @@ export default function LandingPage() {
               <Typography variant="h6" gutterBottom>
                 კავშირი
               </Typography>
-              <Stack spacing={1}>
+              <Stack spacing={1} id="contact">
                 <Typography variant="body2" color="grey.400">მხარდაჭერა</Typography>
                 <Typography variant="body2" color="grey.400">წესები და პირობები</Typography>
                 <Typography variant="body2" color="grey.400">კონფიდენციალურობა</Typography>

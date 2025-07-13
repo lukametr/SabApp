@@ -59,6 +59,16 @@ export default function Navigation() {
   const [authError, setAuthError] = useState<string>('')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
+  const handleSmoothScroll = (elementId: string) => {
+    const element = document.getElementById(elementId);
+    if (element) {
+      element.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start' 
+      });
+    }
+  };
+
   useEffect(() => {
     loadFromStorage()
   }, []) // Only on mount
@@ -292,24 +302,24 @@ export default function Navigation() {
                     >
                       მთავარი
                     </Link>
-                    <Link
-                      href="/#about"
+                    <button
+                      onClick={() => handleSmoothScroll('about')}
                       className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
                     >
                       ჩვენი მიზანი
-                    </Link>
-                    <Link
-                      href="/#demo"
+                    </button>
+                    <button
+                      onClick={() => handleSmoothScroll('demo')}
                       className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
                     >
                       ფორმების ნიმუშები
-                    </Link>
-                    <Link
-                      href="/#contact"
+                    </button>
+                    <button
+                      onClick={() => handleSmoothScroll('contact')}
                       className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
                     >
                       კავშირი
-                    </Link>
+                    </button>
                   </>
                 )}
                 {user && (
@@ -409,39 +419,44 @@ export default function Navigation() {
           <div className="sm:hidden">
             <div className="pt-2 pb-3 space-y-1">
               {!user && (
-                <>
-                  <Link
+                <>                  <Link
                     href="/"
                     className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
-                      isActive('/') 
-                        ? 'bg-primary-50 border-primary-500 text-primary-700' 
+                      isActive('/')
+                        ? 'bg-primary-50 border-primary-500 text-primary-700'
                         : 'border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300'
                     }`}
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     მთავარი
                   </Link>
-                  <Link
-                    href="/#about"
-                    className="border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
-                    onClick={() => setMobileMenuOpen(false)}
+                  <button
+                    onClick={() => {
+                      handleSmoothScroll('about');
+                      setMobileMenuOpen(false);
+                    }}
+                    className="border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300 block pl-3 pr-4 py-2 border-l-4 text-base font-medium w-full text-left"
                   >
                     ჩვენი მიზანი
-                  </Link>
-                  <Link
-                    href="/#demo"
-                    className="border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
-                    onClick={() => setMobileMenuOpen(false)}
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleSmoothScroll('demo');
+                      setMobileMenuOpen(false);
+                    }}
+                    className="border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300 block pl-3 pr-4 py-2 border-l-4 text-base font-medium w-full text-left"
                   >
                     ფორმების ნიმუშები
-                  </Link>
-                  <Link
-                    href="/#contact"
-                    className="border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
-                    onClick={() => setMobileMenuOpen(false)}
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleSmoothScroll('contact');
+                      setMobileMenuOpen(false);
+                    }}
+                    className="border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300 block pl-3 pr-4 py-2 border-l-4 text-base font-medium w-full text-left"
                   >
                     კავშირი
-                  </Link>
+                  </button>
                 </>
               )}
               {user && (
