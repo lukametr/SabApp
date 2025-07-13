@@ -232,6 +232,85 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
         {/* Subscription Banner */}
         <SubscriptionBanner />
         
+        {/* Admin Panel Access - Prominent Card for Admin Users */}
+        {currentUser?.role === 'admin' && (
+          <Paper 
+            elevation={3} 
+            sx={{ 
+              p: 3, 
+              mb: 4, 
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              position: 'relative',
+              overflow: 'hidden'
+            }}
+          >
+            <Box sx={{ position: 'relative', zIndex: 1 }}>
+              <Grid container alignItems="center" spacing={3}>
+                <Grid item xs={12} md={8}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    <AdminPanelSettings sx={{ fontSize: 40, mr: 2 }} />
+                    <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+                      Admin Panel
+                    </Typography>
+                  </Box>
+                  <Typography variant="h6" sx={{ mb: 1, opacity: 0.9 }}>
+                    მომხმარებლების მართვა და გამოწერების კონტროლი
+                  </Typography>
+                  <Typography variant="body1" sx={{ opacity: 0.8 }}>
+                    დაამატეთ, ჩაშალეთ ან განაახლეთ მომხმარებლების გამოწერები, ნახეთ სისტემის სტატისტიკა
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} md={4} sx={{ textAlign: 'center' }}>
+                  <Button
+                    variant="contained"
+                    size="large"
+                    onClick={() => router.push('/admin')}
+                    sx={{
+                      bgcolor: 'rgba(255, 255, 255, 0.2)',
+                      '&:hover': {
+                        bgcolor: 'rgba(255, 255, 255, 0.3)',
+                      },
+                      fontSize: '1.1rem',
+                      px: 4,
+                      py: 1.5,
+                      borderRadius: 2
+                    }}
+                    startIcon={<AdminPanelSettings />}
+                  >
+                    Admin Panel-ში გადასვლა
+                  </Button>
+                </Grid>
+              </Grid>
+            </Box>
+            {/* Decorative background elements */}
+            <Box
+              sx={{
+                position: 'absolute',
+                top: -50,
+                right: -50,
+                width: 200,
+                height: 200,
+                borderRadius: '50%',
+                bgcolor: 'rgba(255, 255, 255, 0.1)',
+                zIndex: 0
+              }}
+            />
+            <Box
+              sx={{
+                position: 'absolute',
+                bottom: -30,
+                left: -30,
+                width: 150,
+                height: 150,
+                borderRadius: '50%',
+                bgcolor: 'rgba(255, 255, 255, 0.05)',
+                zIndex: 0
+              }}
+            />
+          </Paper>
+        )}
+        
         {/* Stats Cards */}
         <Grid container spacing={3} sx={{ mb: 4 }}>
           <Grid item xs={12} sm={6} md={3}>

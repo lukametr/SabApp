@@ -234,8 +234,13 @@ function AdminPanel() {
               <h1 className="text-2xl font-bold text-gray-900">Admin Panel</h1>
               <p className="text-gray-600">Manage user subscriptions</p>
             </div>
-            <div className="text-sm text-gray-500">
-              Welcome, {user.name}
+            <div className="flex items-center space-x-4">
+              <button onClick={function () { return router.push('/dashboard'); }} className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                ← Dashboard-ზე დაბრუნება
+              </button>
+              <div className="text-sm text-gray-500">
+                Welcome, {user.name}
+              </div>
             </div>
           </div>
         </div>
