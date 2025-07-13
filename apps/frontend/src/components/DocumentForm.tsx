@@ -170,14 +170,24 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
       let updated: string[] = [];
       if (person === 'ყველა') {
         // თუ "ყველა" მონიშნულია/არ არის მონიშნული
-        updated = hazard.affectedPersons.includes(person)
-          ? hazard.affectedPersons.filter(p => p !== person)
-          : [...hazard.affectedPersons, person];
+        if (hazard.affectedPersons.includes('ყველა')) {
+          // თუ "ყველა" უკვე მონიშნულია, მაშინ გავუქმოთ ყველაფერი
+          updated = [];
+        } else {
+          // თუ "ყველა" არ არის მონიშნული, მაშინ დავამატოთ ყველა
+          updated = [...PERSONS];
+        }
       } else {
-        // სხვა პუნქტების შემთხვევაში - ჩვეულებრივი ლოგიკა
-        updated = hazard.affectedPersons.includes(person)
-          ? hazard.affectedPersons.filter(p => p !== person)
-          : [...hazard.affectedPersons, person];
+        // სხვა პუნქტების შემთხვევაში
+        if (hazard.affectedPersons.includes('ყველა')) {
+          // თუ "ყველა" მონიშნულია, მაშინ ამოვიღოთ "ყველა" და დავტოვოთ მხოლოდ ეს პუნქტი
+          updated = [person];
+        } else {
+          // ჩვეულებრივი ლოგიკა
+          updated = hazard.affectedPersons.includes(person)
+            ? hazard.affectedPersons.filter(p => p !== person)
+            : [...hazard.affectedPersons, person];
+        }
       }
       updateHazard(hazardId, { affectedPersons: updated });
     }
@@ -336,12 +346,7 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
                       key={person}
                       control={
                         <Checkbox 
-                          checked={
-                            // თუ "ყველა" მონიშნულია, ყველა სხვა პუნქტიც გამოჩნდეს მონიშნულად
-                            person === 'ყველა' 
-                              ? hazard.affectedPersons.includes('ყველა')
-                              : hazard.affectedPersons.includes('ყველა') || hazard.affectedPersons.includes(person)
-                          }
+                          checked={hazard.affectedPersons.includes(person)}
                           onChange={() => handlePersonChange(hazard.id, person)} 
                         />
                       }
@@ -536,63 +541,79 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
     },
   });
 
-  // Update form values when defaultValues change
+  // Update form values when defaultValues change or when dialog opens
   useEffect(() => {
-    if (defaultValues) {
-      console.log('🔄 DocumentForm received defaultValues:', defaultValues);
-      
-      // Convert hazards to internal format
-      const formattedHazards: HazardData[] = (defaultValues.hazards || []).map((hazard: any) => ({
-        id: hazard.id || `hazard_${Date.now()}_${Math.random()}`,
-        hazardIdentification: hazard.hazardIdentification || '',
-        affectedPersons: hazard.affectedPersons || [],
-        injuryDescription: hazard.injuryDescription || '',
-        existingControlMeasures: hazard.existingControlMeasures || '',
-        initialRisk: hazard.initialRisk || { probability: 0, severity: 0, total: 0 },
-        additionalControlMeasures: hazard.additionalControlMeasures || '',
-        residualRisk: hazard.residualRisk || { probability: 0, severity: 0, total: 0 },
-        requiredMeasures: hazard.requiredMeasures || '',
-        responsiblePerson: hazard.responsiblePerson || '',
-        reviewDate: hazard.reviewDate ? new Date(hazard.reviewDate) : new Date(),
-        photos: hazard.photos || []
-      }));
-      
-      setHazards(formattedHazards);
-      
-      // Reset form with new values
-      reset({
-        evaluatorName: defaultValues.evaluatorName || '',
-        evaluatorLastName: defaultValues.evaluatorLastName || '',
-        objectName: defaultValues.objectName || '',
-        workDescription: defaultValues.workDescription || '',
-        date: defaultValues.date ? new Date(defaultValues.date) : new Date(),
-        time: defaultValues.time ? new Date(defaultValues.time) : new Date(),
-        hazards: formattedHazards as any,
-        photos: defaultValues.photos || []
-      });
-      
-      console.log('✅ Form reset with values:', {
-        evaluatorName: defaultValues.evaluatorName,
-        hazardsCount: formattedHazards.length,
-        photosCount: defaultValues.photos?.length || 0
-      });
-    } else {
-      // Reset to empty form
-      setHazards([]);
-      reset({
-        evaluatorName: '',
-        evaluatorLastName: '',
-        objectName: '',
-        workDescription: '',
-        date: new Date(),
-        time: new Date(),
-        hazards: [],
-        photos: []
-      });
+    if (open) {
+      if (defaultValues) {
+        console.log('🔄 DocumentForm received defaultValues:', defaultValues);
+        
+        // Convert hazards to internal format
+        const formattedHazards: HazardData[] = (defaultValues.hazards || []).map((hazard: any) => ({
+          id: hazard.id || `hazard_${Date.now()}_${Math.random()}`,
+          hazardIdentification: hazard.hazardIdentification || '',
+          affectedPersons: hazard.affectedPersons || [],
+          injuryDescription: hazard.injuryDescription || '',
+          existingControlMeasures: hazard.existingControlMeasures || '',
+          initialRisk: hazard.initialRisk || { probability: 0, severity: 0, total: 0 },
+          additionalControlMeasures: hazard.additionalControlMeasures || '',
+          residualRisk: hazard.residualRisk || { probability: 0, severity: 0, total: 0 },
+          requiredMeasures: hazard.requiredMeasures || '',
+          responsiblePerson: hazard.responsiblePerson || '',
+          reviewDate: hazard.reviewDate ? new Date(hazard.reviewDate) : new Date(),
+          photos: hazard.photos || []
+        }));
+        
+        setHazards(formattedHazards);
+        
+        // Reset form with new values
+        reset({
+          evaluatorName: defaultValues.evaluatorName || '',
+          evaluatorLastName: defaultValues.evaluatorLastName || '',
+          objectName: defaultValues.objectName || '',
+          workDescription: defaultValues.workDescription || '',
+          date: defaultValues.date ? new Date(defaultValues.date) : new Date(),
+          time: defaultValues.time ? new Date(defaultValues.time) : new Date(),
+          hazards: formattedHazards as any,
+          photos: defaultValues.photos || []
+        });
+        
+        console.log('✅ Form reset with values:', {
+          evaluatorName: defaultValues.evaluatorName,
+          hazardsCount: formattedHazards.length,
+          photosCount: defaultValues.photos?.length || 0
+        });
+      } else {
+        // Reset to empty form for new document
+        console.log('🆕 Creating new document - resetting form');
+        setHazards([]);
+        reset({
+          evaluatorName: '',
+          evaluatorLastName: '',
+          objectName: '',
+          workDescription: '',
+          date: new Date(),
+          time: new Date(),
+          hazards: [],
+          photos: []
+        });
+      }
     }
-  }, [defaultValues, reset]);
+  }, [defaultValues, reset, open]);
 
   const handleFormSubmitInternal = async (data: CreateDocumentDto) => {
+    // ვალიდაცია - მინიმუმ ერთი საფრთხე უნდა იყოს
+    if (hazards.length === 0) {
+      alert('გთხოვთ დაამატოთ მინიმუმ ერთი საფრთხე');
+      return;
+    }
+
+    // ველების ვალიდაცია
+    if (!data.evaluatorName?.trim() || !data.evaluatorLastName?.trim() || 
+        !data.objectName?.trim() || !data.workDescription?.trim()) {
+      alert('გთხოვთ შეავსოთ ყველა სავალდებულო ველი');
+      return;
+    }
+
     const formattedData: CreateDocumentDto = {
       ...data,
       hazards: hazards as unknown as CreateDocumentDto['hazards'],
@@ -608,17 +629,45 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
     });
     
     try {
-        await handleFormSubmit(formattedData);
+      await handleFormSubmit(formattedData);
       onClose();
     } catch (error) {
       console.error('ფორმის გაგზავნის შეცდომა:', error);
+      alert('დოკუმენტის შენახვისას მოხდა შეცდომა');
+    }
+  };
+
+  // Function to handle dialog close and cleanup
+  const handleClose = () => {
+    // Clean up form state
+    setHazards([]);
+    reset({
+      evaluatorName: '',
+      evaluatorLastName: '',
+      objectName: '',
+      workDescription: '',
+      date: new Date(),
+      time: new Date(),
+      hazards: [],
+      photos: []
+    });
+    onClose();
+  };
+
+  // Function to handle cancel
+  const handleCancel = () => {
+    setHazards([]);
+    if (onCancel) {
+      onCancel();
+    } else {
+      handleClose();
     }
   };
 
   return (
     <Dialog 
       open={open} 
-      onClose={onClose}
+      onClose={handleClose}
       maxWidth="md"
       fullWidth
       aria-labelledby="document-form-dialog"
@@ -630,7 +679,7 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
         {defaultValues ? 'დოკუმენტის რედაქტირება' : 'ახალი დოკუმენტი'}
           </Typography>
           <Box sx={{ display: 'flex', gap: 2 }}>
-            <Button variant="outlined" onClick={onCancel}>
+            <Button variant="outlined" onClick={handleCancel}>
               გაუქმება
             </Button>
             <Button 
@@ -711,7 +760,7 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
             </Grid>
             <Grid item xs={12}>
               <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2 }}>
-                <Button variant="outlined" onClick={onCancel}>
+                <Button variant="outlined" onClick={handleCancel}>
                   გაუქმება
                 </Button>
                 <Button type="submit" variant="contained">
