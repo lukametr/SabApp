@@ -26,6 +26,7 @@
 
 The admin user is automatically created when the app starts in production on Railway.
 The subscription system includes:
+
 - Daily cron job to check for expired subscriptions
 - User access control for document operations
 - Email notifications for subscription changes
@@ -34,6 +35,7 @@ The subscription system includes:
 ## Testing
 
 To test the admin functionality:
+
 1. Login with admin credentials
 2. Navigate to Admin Panel
 3. Grant a test user subscription

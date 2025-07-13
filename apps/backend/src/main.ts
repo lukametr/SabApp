@@ -4,6 +4,44 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import compression from 'compression';
+import { UsersService } from './users/users.service';
+import { UserRole } from './users/schemas/user.schema';
+
+async function createDefaultAdmin(app: any) {
+  try {
+    const usersService = app.get(UsersService);
+    
+    // Check if admin already exists
+    const existingAdmin = await usersService.findByEmail('lukametr@gmail.com');
+    if (existingAdmin) {
+      console.log('✅ Admin user already exists');
+      return;
+    }
+
+    // Create admin user
+    const adminData = {
+      name: 'Luka Admin',
+      email: 'lukametr@gmail.com',
+      password: 'rikoriko', // Will be hashed by the service
+      personalNumber: '01234567891',
+      phoneNumber: '555-0002',
+      organization: 'SabaApp',
+      position: 'System Administrator'
+    };
+
+    const admin = await usersService.createEmailUser(adminData);
+    
+    // Update role to ADMIN after creation
+    await usersService.updateUserRole(admin.id, UserRole.ADMIN);
+    
+    console.log('✅ Default admin user created successfully!');
+    console.log('📧 Email: lukametr@gmail.com');
+    console.log('👑 Role: ADMIN');
+    
+  } catch (error) {
+    console.error('❌ Error creating default admin user:', error.message);
+  }
+}
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -160,6 +198,9 @@ async function bootstrap() {
     // Start the application
     await app.listen(port, '0.0.0.0');
     console.log(`✅ Application is running on: http://0.0.0.0:${port}`);
+    
+    // Create default admin user after app starts
+    await createDefaultAdmin(app);
     console.log(`📚 API Documentation available at: http://0.0.0.0:${port}/docs`);
     console.log(`🏥 Health check available at: http://0.0.0.0:${port}/health`);
     console.log(`🌐 CORS Origin: ${corsOrigin}`);
