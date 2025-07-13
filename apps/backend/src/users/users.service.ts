@@ -16,7 +16,20 @@ export class UsersService {
   }
 
   async findByEmail(email: string): Promise<UserDocument | null> {
-    return this.userModel.findOne({ email }).exec();
+    console.log('🔍 Looking up user by email:', email);
+    try {
+      const user = await this.userModel.findOne({ email }).exec();
+      console.log('🔍 User lookup result:', {
+        found: !!user,
+        email: user?.email,
+        hasPassword: !!user?.password,
+        passwordPrefix: user?.password?.substring(0, 10) + '...'
+      });
+      return user;
+    } catch (error) {
+      console.error('🔍 Error finding user by email:', error);
+      throw error;
+    }
   }
 
   async findById(id: string): Promise<UserDocument | null> {
