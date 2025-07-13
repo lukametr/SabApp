@@ -88,6 +88,9 @@ export default function AdminPanel() {
         paymentNote: grantForm.paymentNote || undefined,
       };
 
+      console.log('🚀 Sending grant request:', payload);
+      console.log('📋 Selected user:', selectedUser);
+
       const response = await fetch('/api/subscription/grant', {
         method: 'POST',
         headers: {
@@ -97,12 +100,15 @@ export default function AdminPanel() {
         body: JSON.stringify(payload),
       });
 
+      const responseData = await response.json();
+      console.log('📥 Response:', responseData);
+
       if (response.ok) {
         // Reload users list
         window.location.reload();
       } else {
-        const error = await response.json();
-        alert(`Error: ${error.message || 'Failed to grant subscription'}`);
+        console.error('❌ Grant failed:', responseData);
+        alert(`Error: ${responseData.message || responseData.error || 'Failed to grant subscription'}`);
       }
     } catch (error) {
       console.error('Error granting subscription:', error);
