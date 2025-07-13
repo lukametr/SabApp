@@ -30,10 +30,10 @@ export class User {
   @Prop()
   picture?: string;
 
-  @Prop({ required: true })
+  @Prop({ required: true, unique: true, sparse: true })
   personalNumber: string;
 
-  @Prop({ required: true })
+  @Prop({ required: true, unique: true, sparse: true })
   phoneNumber: string;
 
   @Prop()
@@ -64,8 +64,4 @@ export class User {
   updatedAt?: Date;
 }
 
-export const UserSchema = SchemaFactory.createForClass(User);
-
-// Additional indexes for better performance (excluding email and googleId which are already indexed by unique: true)
-UserSchema.index({ personalNumber: 1 });
-UserSchema.index({ phoneNumber: 1 }); 
+export const UserSchema = SchemaFactory.createForClass(User); 
