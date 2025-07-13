@@ -67,10 +67,19 @@ function AdminPanel() {
     }), grantForm = _f[0], setGrantForm = _f[1];
     // Check if user is admin
     (0, react_1.useEffect)(function () {
-        if (!user || user.role !== 'admin') {
+        console.log('🔍 Admin page - user check:', { user: user, role: user === null || user === void 0 ? void 0 : user.role, isAdmin: (user === null || user === void 0 ? void 0 : user.role) === 'admin' });
+        // Temporary: allow access for debugging
+        if (!user) {
+            console.log('⚠️ No user found, redirecting to dashboard');
             router.push('/dashboard');
             return;
         }
+        if (user.role !== 'admin') {
+            console.log('⚠️ User is not admin, role:', user.role, 'redirecting to dashboard');
+            router.push('/dashboard');
+            return;
+        }
+        console.log('✅ User is admin, allowing access');
     }, [user, router]);
     // Load users with subscription info
     (0, react_1.useEffect)(function () {

@@ -28,10 +28,22 @@ export default function AdminPanel() {
 
   // Check if user is admin
   useEffect(() => {
-    if (!user || user.role !== 'admin') {
+    console.log('🔍 Admin page - user check:', { user, role: user?.role, isAdmin: user?.role === 'admin' });
+    
+    // Temporary: allow access for debugging
+    if (!user) {
+      console.log('⚠️ No user found, redirecting to dashboard');
       router.push('/dashboard');
       return;
     }
+    
+    if (user.role !== 'admin') {
+      console.log('⚠️ User is not admin, role:', user.role, 'redirecting to dashboard');
+      router.push('/dashboard');
+      return;
+    }
+    
+    console.log('✅ User is admin, allowing access');
   }, [user, router]);
 
   // Load users with subscription info
