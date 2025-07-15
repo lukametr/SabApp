@@ -121,8 +121,8 @@ export class AuthController {
       picture: user.picture,
       role: user.role,
       status: user.status,
-      personalNumber: user.personalNumber,
-      phoneNumber: user.phoneNumber,
+      // personalNumber: user.personalNumber, // Field removed
+      // phoneNumber: user.phoneNumber, // Field removed
       isEmailVerified: user.isEmailVerified,
       lastLoginAt: user.lastLoginAt,
       createdAt: user.createdAt,
@@ -147,8 +147,8 @@ export class AuthController {
       picture: user.picture,
       role: user.role,
       status: user.status,
-      personalNumber: user.personalNumber,
-      phoneNumber: user.phoneNumber,
+      // personalNumber: user.personalNumber, // Field removed
+      // phoneNumber: user.phoneNumber, // Field removed
       isEmailVerified: user.isEmailVerified,
       lastLoginAt: user.lastLoginAt,
       createdAt: user.createdAt,

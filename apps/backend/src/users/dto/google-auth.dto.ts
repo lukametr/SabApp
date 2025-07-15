@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class GoogleAuthDto {
@@ -7,9 +7,7 @@ export class GoogleAuthDto {
   @IsNotEmpty()
   idToken: string;
 
-  @ApiProperty({ description: 'Personal number (required for registration)', required: false })
 
-  @ApiProperty({ description: 'Phone number (required for registration)', required: false })
 }
 
 export class CompleteRegistrationDto {
@@ -18,9 +16,7 @@ export class CompleteRegistrationDto {
   @IsNotEmpty()
   idToken: string;
 
-  @ApiProperty({ description: 'Personal number (required for registration)' })
 
-  @ApiProperty({ description: 'Phone number (required for registration)' })
 }
 
 export class GoogleUserInfo {
