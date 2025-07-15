@@ -319,8 +319,42 @@ export class AuthService {
       }
 
       console.log('🔐 Email Login - Comparing passwords...');
-      const isPasswordValid = await bcrypt.compare(loginDto.password, user.password);
-      console.log('🔐 Email Login - Password comparison result:', isPasswordValid);
+      console.log('🔐 Email Login - Debug info:', {
+        inputPasswordLength: loginDto.password.length,
+        storedHashLength: user.password.length,
+        hashPrefix: user.password.substring(0, 7), // Should show $2a$ or $2b$
+        bcryptVersion: require('bcryptjs').version || 'unknown'
+      });
+      
+      let isPasswordValid = false;
+      
+      try {
+        isPasswordValid = await bcrypt.compare(loginDto.password, user.password);
+        console.log('🔐 Email Login - bcrypt.compare result:', isPasswordValid);
+        
+        // If bcrypt fails and hash is $2a$ format, try creating new hash
+        if (!isPasswordValid && user.password.startsWith('$2a$')) {
+          console.log('🔐 Email Login - Detected $2a$ hash, attempting compatibility fix...');
+          
+          // Create a new $2b$ hash and update the user's password
+          const newHash = await bcrypt.hash(loginDto.password, 10);
+          console.log('🔐 Email Login - Created new $2b$ hash');
+          
+          // Update user's password hash in database
+          await this.usersService.updateUserPassword(String(user._id), newHash);
+          console.log('🔐 Email Login - Updated user password hash to $2b$ format');
+          
+          // Verify the new hash works
+          isPasswordValid = await bcrypt.compare(loginDto.password, newHash);
+          console.log('🔐 Email Login - New hash verification result:', isPasswordValid);
+        }
+        
+      } catch (bcryptError) {
+        console.error('🔐 Email Login - bcrypt error:', bcryptError);
+        throw new UnauthorizedException('Password verification failed');
+      }
+      
+      console.log('🔐 Email Login - Final password validation result:', isPasswordValid);
       
       if (!isPasswordValid) {
         console.error('🔐 Email Login - Password mismatch for user:', user.email);

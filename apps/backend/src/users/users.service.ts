@@ -167,6 +167,14 @@ export class UsersService {
     });
   }
 
+  async updateUserPassword(userId: string, newPasswordHash: string): Promise<void> {
+    console.log('🔒 Updating password hash for user:', userId);
+    await this.userModel.findByIdAndUpdate(userId, {
+      password: newPasswordHash,
+    });
+    console.log('🔒 Password hash updated successfully');
+  }
+
   async findAll(): Promise<UserDocument[]> {
     return this.userModel.find().select('-__v').exec();
   }
