@@ -570,7 +570,6 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
       if (defaultValues) {
         console.log('🔄 DocumentForm received defaultValues:', defaultValues);
         console.log('🔄 Hazards from defaultValues:', defaultValues.hazards);
-        
         // Convert hazards to internal format
         const formattedHazards: HazardData[] = (defaultValues.hazards || []).map((hazard: any, index: number) => {
           console.log(`🔄 Processing hazard ${index}:`, hazard);
@@ -589,10 +588,8 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
             photos: hazard.photos || []
           };
         });
-        
         setHazards(formattedHazards);
-        
-        // Reset form with new values
+        // Reset form with new values, but do NOT set hazards in reset (let state manage it)
         reset({
           evaluatorName: defaultValues.evaluatorName || '',
           evaluatorLastName: defaultValues.evaluatorLastName || '',
@@ -600,10 +597,8 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
           workDescription: defaultValues.workDescription || '',
           date: defaultValues.date ? new Date(defaultValues.date) : new Date(),
           time: defaultValues.time ? new Date(defaultValues.time) : new Date(),
-          hazards: formattedHazards as any,
           photos: defaultValues.photos || []
         });
-        
         console.log('✅ Form reset with values:', {
           evaluatorName: defaultValues.evaluatorName,
           hazardsCount: formattedHazards.length,
@@ -620,7 +615,6 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
           workDescription: '',
           date: new Date(),
           time: new Date(),
-          hazards: [],
           photos: []
         });
       }
