@@ -2,6 +2,16 @@
 // minor: trigger redeploy
 
 import React, { useState, useEffect } from 'react';
+// ინტერფეისი GoogleUserInfo
+interface GoogleUserInfo {
+  id?: string;
+  email?: string;
+  given_name?: string;
+  family_name?: string;
+  access_token?: string;
+  idToken?: string;
+  [key: string]: any;
+}
 import { 
   Box, 
   Container, 
@@ -51,7 +61,7 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
   const [success, setSuccess] = useState('');
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [isGoogleRegistration, setIsGoogleRegistration] = useState(false);
-  const [googleUserInfo, setGoogleUserInfo] = useState(null);
+  const [googleUserInfo, setGoogleUserInfo] = useState<GoogleUserInfo | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -113,7 +123,8 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
           setLoading(false);
           return;
         }
-        const idToken = googleUserInfo.idToken || googleUserInfo.access_token;
+        // authApi.googleAuth-სთვის idToken უნდა იყოს string (არა undefined)
+        const idToken = googleUserInfo.idToken || googleUserInfo.access_token || '';
         const response = await authApi.googleAuth({ idToken });
         setSuccess('Google-ით რეგისტრაცია წარმატებით დასრულდა!');
         setTimeout(() => {
@@ -189,8 +200,10 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
           console.log('[Google OAuth] userInfo:', userInfo);
           // access_token/idToken დაამატე userInfo-ში
           userInfo.access_token = tokenResponse.access_token;
-          if (tokenResponse.id_token) {
-            userInfo.idToken = tokenResponse.id_token;
+          // TypeScript: id_token შეიძლება არ იყოს TokenResponse-ში, ამიტომ დავამატოთ as any
+          const idToken = (tokenResponse as any).id_token;
+          if (idToken) {
+            userInfo.idToken = idToken;
           }
           const userInfoParam = encodeURIComponent(JSON.stringify(userInfo));
           console.log('[Google OAuth] redirecting to /auth/register?from=google&userInfo=...');
@@ -212,7 +225,7 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
     onNonOAuthError: (err) => {
       console.error('[Google OAuth] onNonOAuthError callback', err);
     },
-    flow: 'implicit',
+    flow: 'auth-code',
     scope: 'openid email profile',
   });
 

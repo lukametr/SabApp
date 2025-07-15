@@ -6,8 +6,6 @@ export class GoogleAuthDto {
   @IsString()
   @IsNotEmpty()
   idToken: string;
-
-
 }
 
 export class CompleteRegistrationDto {
@@ -15,8 +13,6 @@ export class CompleteRegistrationDto {
   @IsString()
   @IsNotEmpty()
   idToken: string;
-
-
 }
 
 export class GoogleUserInfo {
@@ -50,4 +46,4 @@ export class AuthResponseDto {
     status: string;
     // Removed personalNumber and phoneNumber
   };
-} 
+}
