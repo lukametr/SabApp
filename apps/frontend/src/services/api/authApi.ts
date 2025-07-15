@@ -5,8 +5,6 @@ export interface RegisterData {
   lastName: string;
   email: string;
   password: string;
-  personalNumber: string;
-  phoneNumber: string;
   organization?: string;
   position?: string;
 }
@@ -18,8 +16,6 @@ export interface LoginData {
 
 export interface GoogleAuthData {
   idToken: string;
-  personalNumber?: string;
-  phoneNumber?: string;
 }
 
 export interface GoogleCallbackData {
@@ -36,8 +32,7 @@ export interface AuthResponse {
     picture?: string;
     role: 'user' | 'admin';
     status: 'active' | 'blocked';
-    personalNumber: string;
-    phoneNumber: string;
+    isEmailVerified?: boolean;
   };
 }
 
@@ -89,7 +84,11 @@ export const authApi = {
       hasToken: !!result?.accessToken,
       userEmail: result?.user?.email 
     });
-    
+
+    if (result?.user && result.user.isEmailVerified === false) {
+      throw new Error('გთხოვთ, დაადასტურეთ ელფოსტა ანგარიშის გასააქტიურებლად');
+    }
+
     return result;
   },
 

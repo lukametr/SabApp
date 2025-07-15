@@ -33,15 +33,15 @@ export default function SubscriptionBanner() {
             </div>
             <div className="ml-3">
               <h3 className="text-sm font-medium text-red-800">
-                Subscription Required
+                გამოწერა აუცილებელია
               </h3>
               <div className="mt-2 text-sm text-red-700">
                 <p>
-                  {error || 'Your subscription has expired. Please contact admin for renewal to continue using the service.'}
+                  {'თქვენი საცდელი პერიოდი დასრულდა. სისტემის გასაგრძელებლად შეიძინეთ გამოწერა.'}
                 </p>
                 {subscriptionInfo && subscriptionInfo.endDate && (
                   <p className="mt-1">
-                    Expired on: {new Date(subscriptionInfo.endDate).getTime() ? new Date(subscriptionInfo.endDate).toLocaleDateString() : 'არავალიდური თარიღი'}
+                    დასრულდა: {new Date(subscriptionInfo.endDate).getTime() ? new Date(subscriptionInfo.endDate).toLocaleDateString() : 'არავალიდური თარიღი'}
                   </p>
                 )}
               </div>

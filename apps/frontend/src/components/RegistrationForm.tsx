@@ -6,45 +6,21 @@ import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, T
 interface RegistrationFormProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (personalNumber: string, phoneNumber: string) => void;
+  onSubmit: () => void;
   loading?: boolean;
 }
 
 export default function RegistrationForm({ open, onClose, onSubmit, loading = false }: RegistrationFormProps) {
-  const [personalNumber, setPersonalNumber] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [errors, setErrors] = useState<{ personalNumber?: string; phoneNumber?: string }>({});
+  // Removed personalNumber, phoneNumber, and errors state
 
-  const validateForm = () => {
-    const newErrors: { personalNumber?: string; phoneNumber?: string } = {};
-
-    if (!personalNumber.trim()) {
-      newErrors.personalNumber = 'პირადი ნომერი სავალდებულოა';
-    } else if (personalNumber.length !== 11) {
-      newErrors.personalNumber = 'პირადი ნომერი უნდა შეიცავდეს 11 ციფრს';
-    }
-
-    if (!phoneNumber.trim()) {
-      newErrors.phoneNumber = 'ტელეფონის ნომერი სავალდებულოა';
-    } else if (!/^5\d{8}$/.test(phoneNumber)) {
-      newErrors.phoneNumber = 'ტელეფონის ნომერი უნდა იწყებოდეს 5-ით და შეიცავდეს 9 ციფრს';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  // Removed validateForm
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
-      onSubmit(personalNumber.trim(), phoneNumber.trim());
-    }
+    onSubmit();
   };
 
   const handleClose = () => {
-    setPersonalNumber('');
-    setPhoneNumber('');
-    setErrors({});
     onClose();
   };
 
@@ -62,29 +38,7 @@ export default function RegistrationForm({ open, onClose, onSubmit, loading = fa
           </Typography>
           
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <TextField
-              label="პირადი ნომერი"
-              value={personalNumber}
-              onChange={(e) => setPersonalNumber(e.target.value)}
-              error={!!errors.personalNumber}
-              helperText={errors.personalNumber}
-              placeholder="00000000000"
-              inputProps={{ maxLength: 11 }}
-              fullWidth
-              required
-            />
-            
-            <TextField
-              label="ტელეფონის ნომერი"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              error={!!errors.phoneNumber}
-              helperText={errors.phoneNumber}
-              placeholder="500000000"
-              inputProps={{ maxLength: 9 }}
-              fullWidth
-              required
-            />
+            {/* Removed personalNumber and phoneNumber fields */}
           </Box>
         </DialogContent>
         
@@ -95,7 +49,7 @@ export default function RegistrationForm({ open, onClose, onSubmit, loading = fa
           <Button 
             type="submit" 
             variant="contained" 
-            disabled={loading || !personalNumber.trim() || !phoneNumber.trim()}
+            disabled={loading}
           >
             {loading ? 'რეგისტრაცია...' : 'რეგისტრაცია'}
           </Button>

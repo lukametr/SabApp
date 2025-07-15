@@ -23,6 +23,12 @@ export enum SubscriptionStatus {
 
 @Schema({ timestamps: true })
 export class User {
+  @Prop()
+  picture?: string;
+
+  @Prop()
+  password?: string;
+
   @Prop({ required: true })
   name: string;
 
@@ -31,18 +37,6 @@ export class User {
 
   @Prop({ required: false, unique: true, sparse: true })
   googleId?: string;
-
-  @Prop({ required: false })
-  password?: string;
-
-  @Prop()
-  picture?: string;
-
-  @Prop({ required: true, unique: true, sparse: true })
-  personalNumber: string;
-
-  @Prop({ required: true, unique: true, sparse: true })
-  phoneNumber: string;
 
   @Prop()
   organization?: string;
@@ -64,6 +58,12 @@ export class User {
 
   @Prop()
   lastLoginAt?: Date;
+
+  @Prop()
+  emailVerificationToken?: string;
+
+  @Prop()
+  emailVerificationTokenExpires?: Date;
 
   // Subscription fields
   @Prop({ type: String, enum: SubscriptionStatus, default: SubscriptionStatus.PENDING })

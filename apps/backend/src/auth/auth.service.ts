@@ -1,3 +1,5 @@
+import { randomBytes } from 'crypto';
+import { sendVerificationEmail } from '../utils/email';
 import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -66,8 +68,7 @@ export class AuthService {
   async googleAuth(authDto: GoogleAuthDto): Promise<AuthResponseDto> {
     console.log('≡ƒöº Google Auth - Starting authentication process');
     console.log('≡ƒöº Google Auth - ID Token present:', !!authDto.idToken);
-    console.log('≡ƒöº Google Auth - Personal Number:', authDto.personalNumber);
-    console.log('≡ƒöº Google Auth - Phone Number:', authDto.phoneNumber);
+    // Removed personalNumber and phoneNumber logs
 
     try {
       // Validate Google token
@@ -79,21 +80,9 @@ export class AuthService {
 
       if (!user) {
         console.log('≡ƒöº Google Auth - New user registration');
-        // New user registration - check if additional info is provided
-        if (!authDto.personalNumber || !authDto.phoneNumber) {
-          // Return special response indicating registration is needed
-          throw new BadRequestException({
-            message: 'Additional registration information required',
-            code: 'REGISTRATION_REQUIRED',
-            userInfo: googleUserInfo
-          });
-        }
-        
         // Create new user
         user = await this.usersService.createUser(
-          googleUserInfo,
-          authDto.personalNumber,
-          authDto.phoneNumber,
+          googleUserInfo
         );
         console.log('≡ƒöº Google Auth - New user created successfully');
       } else {
@@ -126,8 +115,7 @@ export class AuthService {
           picture: user.picture,
           role: user.role,
           status: user.status,
-          personalNumber: user.personalNumber,
-          phoneNumber: user.phoneNumber,
+          // Removed personalNumber and phoneNumber from response
         },
       };
     } catch (error) {
@@ -203,8 +191,6 @@ export class AuthService {
           picture: user.picture,
           role: user.role,
           status: user.status,
-          personalNumber: user.personalNumber,
-          phoneNumber: user.phoneNumber,
         },
       };
     } catch (error) {
@@ -234,23 +220,25 @@ export class AuthService {
         throw new BadRequestException('First name and last name are required');
       }
 
-      if (!registerDto.personalNumber || !registerDto.phoneNumber) {
-        throw new BadRequestException('Personal number and phone number are required');
-      }
+      // Removed personalNumber and phoneNumber validation
 
       // Hash password
       const saltRounds = 10;
       const hashedPassword = await bcrypt.hash(registerDto.password, saltRounds);
 
-      // Create user with email/password
+      // Generate email verification token before user creation
+      const emailVerificationToken = randomBytes(32).toString('hex');
+      const emailVerificationTokenExpires = new Date(Date.now() + 1000 * 60 * 60 * 24); // 24h
+
+      // Create user with email/password and verification token
       const user = await this.usersService.createEmailUser({
         email: registerDto.email,
         name: `${registerDto.firstName} ${registerDto.lastName}`,
-        personalNumber: registerDto.personalNumber,
-        phoneNumber: registerDto.phoneNumber,
         password: hashedPassword,
         organization: registerDto.organization,
         position: registerDto.position,
+        emailVerificationToken,
+        emailVerificationTokenExpires,
       });
 
       // Generate JWT token
@@ -267,6 +255,8 @@ export class AuthService {
       });
 
       console.log('≡ƒöº Email Registration - Success:', user.email);
+      // Send verification email
+      await sendVerificationEmail(user.email, emailVerificationToken);
 
       return {
         accessToken,
@@ -277,8 +267,7 @@ export class AuthService {
           picture: user.picture,
           role: user.role,
           status: user.status,
-          personalNumber: user.personalNumber,
-          phoneNumber: user.phoneNumber,
+          // Removed personalNumber and phoneNumber from response
         },
       };
     } catch (error) {
@@ -392,8 +381,7 @@ export class AuthService {
           picture: user.picture,
           role: user.role,
           status: user.status,
-          personalNumber: user.personalNumber,
-          phoneNumber: user.phoneNumber,
+          // Removed personalNumber and phoneNumber
         },
       };
     } catch (error) {

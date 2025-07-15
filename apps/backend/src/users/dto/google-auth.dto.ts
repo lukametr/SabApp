@@ -8,14 +8,8 @@ export class GoogleAuthDto {
   idToken: string;
 
   @ApiProperty({ description: 'Personal number (required for registration)', required: false })
-  @IsString()
-  @IsOptional()
-  personalNumber?: string;
 
   @ApiProperty({ description: 'Phone number (required for registration)', required: false })
-  @IsString()
-  @IsOptional()
-  phoneNumber?: string;
 }
 
 export class CompleteRegistrationDto {
@@ -25,14 +19,8 @@ export class CompleteRegistrationDto {
   idToken: string;
 
   @ApiProperty({ description: 'Personal number (required for registration)' })
-  @IsString()
-  @IsNotEmpty()
-  personalNumber: string;
 
   @ApiProperty({ description: 'Phone number (required for registration)' })
-  @IsString()
-  @IsNotEmpty()
-  phoneNumber: string;
 }
 
 export class GoogleUserInfo {
@@ -64,7 +52,6 @@ export class AuthResponseDto {
     picture?: string;
     role: string;
     status: string;
-    personalNumber: string;
-    phoneNumber: string;
+    // Removed personalNumber and phoneNumber
   };
 } 

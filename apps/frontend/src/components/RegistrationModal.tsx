@@ -14,8 +14,7 @@ import {
 import { useForm } from 'react-hook-form';
 
 interface RegistrationFormData {
-  personalNumber: string;
-  phoneNumber: string;
+  // Removed personalNumber and phoneNumber fields
 }
 
 interface RegistrationModalProps {
@@ -81,37 +80,9 @@ export default function RegistrationModal({
             </Alert>
           )}
           
-          <TextField
-            fullWidth
-            label="პირადი ნომერი"
-            margin="normal"
-            {...register('personalNumber', {
-              required: 'პირადი ნომერი აუცილებელია',
-              pattern: {
-                value: /^\d{11}$/,
-                message: 'პირადი ნომერი უნდა შეიცავდეს 11 ციფრს',
-              },
-            })}
-            error={!!errors.personalNumber}
-            helperText={errors.personalNumber?.message}
-            placeholder="01234567890"
-          />
+          // Removed personalNumber TextField
           
-          <TextField
-            fullWidth
-            label="ტელეფონის ნომერი"
-            margin="normal"
-            {...register('phoneNumber', {
-              required: 'ტელეფონის ნომერი აუცილებელია',
-              pattern: {
-                value: /^5\d{8}$/,
-                message: 'ტელეფონის ნომერი უნდა იყოს 9 ციფრისა და იწყებოდეს 5-ით',
-              },
-            })}
-            error={!!errors.phoneNumber}
-            helperText={errors.phoneNumber?.message}
-            placeholder="591234567"
-          />
+          // Removed phoneNumber TextField
           
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mt: 3 }}>
             <Button onClick={handleClose} disabled={loading}>

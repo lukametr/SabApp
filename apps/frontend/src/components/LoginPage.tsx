@@ -49,6 +49,12 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
         password: password,
       });
       
+      if (response?.user && response.user.isEmailVerified === false) {
+        setError('გთხოვთ, დაადასტურეთ ელფოსტა ანგარიშის გასააქტიურებლად');
+        setLoading(false);
+        return;
+      }
+
       console.log('🔐 Login response received:', { 
         hasUser: !!response?.user, 
         hasToken: !!response?.accessToken,

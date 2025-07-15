@@ -1,3 +1,4 @@
+  // ...existing code...
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -37,9 +38,7 @@ export class UsersService {
   }
 
   async createUser(
-    googleUserInfo: GoogleUserInfo,
-    personalNumber: string,
-    phoneNumber: string,
+    googleUserInfo: GoogleUserInfo
   ): Promise<UserDocument> {
     // Check if user already exists
     const existingUser = await this.findByGoogleId(googleUserInfo.sub);
@@ -53,29 +52,23 @@ export class UsersService {
       throw new ConflictException('Email already registered');
     }
 
-    // Check if personal number is already taken
-    const existingPersonalNumber = await this.userModel.findOne({ personalNumber }).exec();
-    if (existingPersonalNumber) {
-      throw new ConflictException('Personal number already registered');
-    }
+    // Removed personalNumber and phoneNumber checks
 
-    // Check if phone number is already taken
-    const existingPhoneNumber = await this.userModel.findOne({ phoneNumber }).exec();
-    if (existingPhoneNumber) {
-      throw new ConflictException('Phone number already registered');
-    }
-
+    const now = new Date();
+    const end = new Date(now.getTime() + 1000 * 60 * 60 * 24 * 14); // 14 დღე
     const user = new this.userModel({
       name: googleUserInfo.name,
       email: googleUserInfo.email,
       googleId: googleUserInfo.sub,
       picture: googleUserInfo.picture,
-      personalNumber,
-      phoneNumber,
       role: UserRole.USER,
       status: UserStatus.ACTIVE,
       isEmailVerified: googleUserInfo.email_verified,
-      lastLoginAt: new Date(),
+      lastLoginAt: now,
+      subscriptionStatus: 'active',
+      subscriptionStartDate: now,
+      subscriptionEndDate: end,
+      subscriptionDays: 14,
     });
 
     return user.save();
@@ -84,11 +77,11 @@ export class UsersService {
   async createEmailUser(userData: {
     email: string;
     name: string;
-    personalNumber: string;
-    phoneNumber: string;
     password: string;
     organization?: string;
     position?: string;
+    emailVerificationToken?: string;
+    emailVerificationTokenExpires?: Date;
   }): Promise<UserDocument> {
     try {
       console.log('≡ƒöº Creating email user - Starting validation...');
@@ -101,21 +94,7 @@ export class UsersService {
       }
       console.log('✅ Email is available');
 
-      // Check if personal number is already taken
-      const existingPersonalNumber = await this.userModel.findOne({ personalNumber: userData.personalNumber }).exec();
-      if (existingPersonalNumber) {
-        console.log('❌ Personal number already exists:', userData.personalNumber);
-        throw new ConflictException('Personal number already registered');
-      }
-      console.log('✅ Personal number is available');
-
-      // Check if phone number is already taken
-      const existingPhoneNumber = await this.userModel.findOne({ phoneNumber: userData.phoneNumber }).exec();
-      if (existingPhoneNumber) {
-        console.log('❌ Phone number already exists:', userData.phoneNumber);
-        throw new ConflictException('Phone number already registered');
-      }
-      console.log('✅ Phone number is available');
+      // Removed personalNumber and phoneNumber checks
 
       // Hash the password
       const saltRounds = 10;
@@ -123,21 +102,27 @@ export class UsersService {
       console.log('🔒 Password hashed');
 
       console.log('🔧 Creating new user document...');
+      const now = new Date();
+      const end = new Date(now.getTime() + 1000 * 60 * 60 * 24 * 14); // 14 დღე
       const user = new this.userModel({
         name: userData.name,
         email: userData.email,
         // googleId is omitted for email users to avoid unique constraint issues
         picture: null,
-        personalNumber: userData.personalNumber,
-        phoneNumber: userData.phoneNumber,
         password: hashedPassword, // Now properly hashed
         organization: userData.organization,
         position: userData.position,
         role: UserRole.USER,
         status: UserStatus.ACTIVE,
         isEmailVerified: false, // TODO: implement email verification
-        lastLoginAt: new Date(),
+        lastLoginAt: now,
         authProvider: 'email',
+        emailVerificationToken: userData.emailVerificationToken,
+        emailVerificationTokenExpires: userData.emailVerificationTokenExpires,
+        subscriptionStatus: 'active',
+        subscriptionStartDate: now,
+        subscriptionEndDate: end,
+        subscriptionDays: 14,
       });
 
       console.log('≡ƒöº Saving user to database...');
@@ -153,8 +138,6 @@ export class UsersService {
         userData: {
           email: userData.email,
           name: userData.name,
-          personalNumber: userData.personalNumber,
-          phoneNumber: userData.phoneNumber,
         }
       });
       throw error;
@@ -216,5 +199,8 @@ export class UsersService {
 
   async deleteAllUsers(): Promise<void> {
     await this.userModel.deleteMany({}).exec();
+  }
+  async findByVerificationToken(token: string): Promise<UserDocument | null> {
+    return this.userModel.findOne({ emailVerificationToken: token }).exec();
   }
 }

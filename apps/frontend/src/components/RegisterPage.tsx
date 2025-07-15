@@ -39,8 +39,6 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
     confirmPassword: '',
     organization: '',
     position: '',
-    personalNumber: '',
-    phoneNumber: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -105,31 +103,6 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
       return;
     }
 
-    if (!formData.personalNumber) {
-      setError('პირადი ნომერი აუცილებელია');
-      setLoading(false);
-      return;
-    }
-
-    if (!formData.phoneNumber) {
-      setError('ტელეფონის ნომერი აუცილებელია');
-      setLoading(false);
-      return;
-    }
-
-    // Basic validation for personal number (11 digits)
-    if (!/^\d{11}$/.test(formData.personalNumber)) {
-      setError('პირადი ნომერი უნდა შეიცავდეს 11 ციფრს');
-      setLoading(false);
-      return;
-    }
-
-    // Basic validation for phone number
-    if (!/^\d{9,15}$/.test(formData.phoneNumber)) {
-      setError('ტელეფონის ნომერი უნდა შეიცავდეს 9-15 ციფრს');
-      setLoading(false);
-      return;
-    }
 
     try {
       // Call the real backend API
@@ -138,20 +111,23 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
         lastName: formData.lastName,
         email: formData.email,
         password: formData.password,
-        personalNumber: formData.personalNumber,
-        phoneNumber: formData.phoneNumber,
         organization: formData.organization,
         position: formData.position,
       });
-      
-      // Store in auth store
-      login(response);
-      
-      if (onRegister) {
-        onRegister(response.user);
-      }
-      
-      router.push('/dashboard');
+
+      // წარმატების შეტყობინება ვერიფიკაციისთვის
+      setSuccess('რეგისტრაცია წარმატებით დასრულდა! გთხოვთ გადაამოწმოთ ელფოსტა და დაადასტუროთ ანგარიში.');
+      setFormData({
+        firstName: '',
+        lastName: '',
+        email: '',
+        password: '',
+        confirmPassword: '',
+        organization: '',
+        position: ''
+      });
+      setAcceptTerms(false);
+  const [success, setSuccess] = useState('');
     } catch (err: any) {
       setError(err.message || 'რეგისტრაციისას დაფიქსირდა შეცდომა');
     } finally {
@@ -221,9 +197,15 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
             )}
           </Box>
 
+
           {error && (
             <Alert severity="error" sx={{ mb: 3 }}>
               {error}
+            </Alert>
+          )}
+          {success && (
+            <Alert severity="success" sx={{ mb: 3 }}>
+              {success}
             </Alert>
           )}
 
@@ -279,29 +261,6 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
               sx={{ mb: 2 }}
             />
             
-            <TextField
-              fullWidth
-              label="პირადი ნომერი"
-              name="personalNumber"
-              value={formData.personalNumber}
-              onChange={handleChange}
-              required
-              sx={{ mb: 2 }}
-              helperText="11 ციფრი"
-              inputProps={{ maxLength: 11, pattern: '[0-9]*' }}
-            />
-            
-            <TextField
-              fullWidth
-              label="ტელეფონის ნომერი"
-              name="phoneNumber"
-              value={formData.phoneNumber}
-              onChange={handleChange}
-              required
-              sx={{ mb: 2 }}
-              helperText="მაგ: 555123456"
-              inputProps={{ maxLength: 15 }}
-            />
             
             {!isGoogleRegistration && (
               <>
