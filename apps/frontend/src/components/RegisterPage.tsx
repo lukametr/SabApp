@@ -84,30 +84,56 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
     setLoading(true);
     setError('');
 
-    // For Google registration, password is not required
-    if (!isGoogleRegistration) {
-      if (formData.password !== formData.confirmPassword) {
-        setError('პაროლები არ ემთხვევა');
-        setLoading(false);
-        return;
-      }
-      
-      if (!formData.password) {
-        setError('პაროლი აუცილებელია');
-        setLoading(false);
-        return;
-      }
-    }
-
     if (!acceptTerms) {
       setError('საჭიროა წესებისა და პირობების მიღება');
       setLoading(false);
       return;
     }
 
+    if (isGoogleRegistration) {
+      // Google-ით რეგისტრაციის დასრულება
+      try {
+        if (!googleUserInfo || !googleUserInfo.id) {
+          setError('Google მომხმარებლის ინფორმაცია ვერ მოიძებნა');
+          setLoading(false);
+          return;
+        }
+        // აქ შეგიძლია გამოიყენო idToken ან accessToken, თუ გაქვს შენახული
+        // მაგალითად, თუ googleUserInfo-ში არის idToken:
+        // const response = await authApi.googleAuth({ idToken: googleUserInfo.idToken });
+        // მაგრამ შენს კოდში მხოლოდ userInfo მოდის, ამიტომ accessToken უნდა შეინახო useState-ში Google login-ის დროს
+        // აქ ვამოწმებთ accessToken-ს
+        if (!googleUserInfo.access_token && !googleUserInfo.idToken) {
+          setError('Google accessToken/idToken ვერ მოიძებნა');
+          setLoading(false);
+          return;
+        }
+        const idToken = googleUserInfo.idToken || googleUserInfo.access_token;
+        const response = await authApi.googleAuth({ idToken });
+        setSuccess('Google-ით რეგისტრაცია წარმატებით დასრულდა!');
+        setTimeout(() => {
+          router.push('/');
+        }, 1500);
+      } catch (err: any) {
+        setError(err.message || 'Google-ით რეგისტრაციისას დაფიქსირდა შეცდომა');
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
 
+    // ჩვეულებრივი რეგისტრაცია
+    if (formData.password !== formData.confirmPassword) {
+      setError('პაროლები არ ემთხვევა');
+      setLoading(false);
+      return;
+    }
+    if (!formData.password) {
+      setError('პაროლი აუცილებელია');
+      setLoading(false);
+      return;
+    }
     try {
-      // Call the real backend API
       const response = await authApi.register({
         firstName: formData.firstName,
         lastName: formData.lastName,
@@ -116,8 +142,6 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
         organization: formData.organization,
         position: formData.position,
       });
-
-      // წარმატების შეტყობინება ვერიფიკაციისთვის
       setSuccess('რეგისტრაცია წარმატებით დასრულდა! გთხოვთ გადაამოწმოთ ელფოსტა და დაადასტუროთ ანგარიში.');
       setFormData({
         firstName: '',
