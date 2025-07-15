@@ -83,7 +83,9 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
   };
 
   const updateHazard = (id: string, updates: Partial<HazardData>) => {
-    onHazardsChange(hazards.map(h => h.id === id ? { ...h, ...updates } : h));
+    const updatedHazards = hazards.map(h => h.id === id ? { ...h, ...updates } : h);
+    console.log('[HazardSection] updateHazard', { id, updates, result: updatedHazards.find(h => h.id === id) });
+    onHazardsChange(updatedHazards);
   };
 
   const handleCamera = async (hazardId: string) => {
@@ -241,7 +243,10 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
                   multiline
                   rows={2}
                   value={hazard.hazardIdentification}
-                  onChange={(e) => updateHazard(hazard.id, { hazardIdentification: e.target.value })}
+                  onChange={(e) => {
+                    console.log('[HazardSection] hazardIdentification change', { id: hazard.id, value: e.target.value });
+                    updateHazard(hazard.id, { hazardIdentification: e.target.value });
+                  }}
                 />
               </Grid>
 
@@ -363,7 +368,10 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
                   multiline
                   rows={2}
                   value={hazard.injuryDescription}
-                  onChange={(e) => updateHazard(hazard.id, { injuryDescription: e.target.value })}
+                  onChange={(e) => {
+                    console.log('[HazardSection] injuryDescription change', { id: hazard.id, value: e.target.value });
+                    updateHazard(hazard.id, { injuryDescription: e.target.value });
+                  }}
                 />
               </Grid>
 
@@ -374,7 +382,10 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
                   multiline
                   rows={2}
                   value={hazard.existingControlMeasures}
-                  onChange={(e) => updateHazard(hazard.id, { existingControlMeasures: e.target.value })}
+                  onChange={(e) => {
+                    console.log('[HazardSection] existingControlMeasures change', { id: hazard.id, value: e.target.value });
+                    updateHazard(hazard.id, { existingControlMeasures: e.target.value });
+                  }}
                 />
               </Grid>
 
@@ -429,7 +440,10 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
                   multiline
                   rows={2}
                   value={hazard.additionalControlMeasures}
-                  onChange={(e) => updateHazard(hazard.id, { additionalControlMeasures: e.target.value })}
+                  onChange={(e) => {
+                    console.log('[HazardSection] additionalControlMeasures change', { id: hazard.id, value: e.target.value });
+                    updateHazard(hazard.id, { additionalControlMeasures: e.target.value });
+                  }}
                 />
               </Grid>
 
@@ -489,7 +503,10 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
                   multiline
                   rows={2}
                   value={hazard.requiredMeasures}
-                  onChange={(e) => updateHazard(hazard.id, { requiredMeasures: e.target.value })}
+                  onChange={(e) => {
+                    console.log('[HazardSection] requiredMeasures change', { id: hazard.id, value: e.target.value });
+                    updateHazard(hazard.id, { requiredMeasures: e.target.value });
+                  }}
                 />
               </Grid>
 
@@ -498,7 +515,10 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
                   label="შესრულებაზე პასუხისმგებელი"
                   fullWidth
                   value={hazard.responsiblePerson}
-                  onChange={(e) => updateHazard(hazard.id, { responsiblePerson: e.target.value })}
+                  onChange={(e) => {
+                    console.log('[HazardSection] responsiblePerson change', { id: hazard.id, value: e.target.value });
+                    updateHazard(hazard.id, { responsiblePerson: e.target.value });
+                  }}
                 />
               </Grid>
 
