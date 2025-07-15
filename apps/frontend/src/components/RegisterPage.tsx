@@ -245,6 +245,7 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
                 onChange={handleChange}
                 required
                 disabled={isGoogleRegistration}
+                autoComplete="given-name"
               />
               <TextField
                 fullWidth
@@ -254,6 +255,7 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
                 onChange={handleChange}
                 required
                 disabled={isGoogleRegistration}
+                autoComplete="family-name"
               />
             </Box>
             
@@ -267,6 +269,7 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
               required
               disabled={isGoogleRegistration}
               sx={{ mb: 2 }}
+              autoComplete="email"
             />
             
             <TextField
@@ -299,6 +302,7 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
                   onChange={handleChange}
                   required
                   sx={{ mb: 2 }}
+                  autoComplete="new-password"
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
@@ -323,6 +327,7 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
                   onChange={handleChange}
                   required
                   sx={{ mb: 2 }}
+                  autoComplete="new-password"
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
