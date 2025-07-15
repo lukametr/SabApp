@@ -74,7 +74,9 @@ export default function DocumentsClient() {
   };
 
   // უნივერსალური onSubmit ფუნქცია
-  const handleFormSubmit = async (data: CreateDocumentDto) => {
+  // hazardsFix: always get hazards from DocumentForm local state, not from data.hazards
+  const handleFormSubmit = async (data: CreateDocumentDto, hazardsOverride?: any[]) => {
+    const hazardsToSend = Array.isArray(hazardsOverride) ? hazardsOverride : data.hazards;
     if (selectedDocument) {
       // რედაქტირების რეჟიმი - გადავაკეთოთ UpdateDocumentDto-ში
       const updateData: UpdateDocumentDto = {
@@ -85,13 +87,13 @@ export default function DocumentsClient() {
         workDescription: data.workDescription,
         date: data.date,
         time: data.time,
-        hazards: data.hazards,
+        hazards: hazardsToSend,
         photos: [] // UpdateDocumentDto-ში photos არის string[]
       };
       await handleUpdate(updateData);
     } else {
       // შექმნის რეჟიმი
-      await handleCreate(data);
+      await handleCreate({ ...data, hazards: hazardsToSend });
     }
   };
 

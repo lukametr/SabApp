@@ -19,7 +19,7 @@ const PERSONS = [
 ];
 
 interface Props {
-  onSubmit: (data: CreateDocumentDto, file?: File) => void;
+  onSubmit: (data: CreateDocumentDto, hazards?: HazardData[]) => void;
   onCancel?: () => void;
   defaultValues?: Partial<CreateDocumentDto>;
   open: boolean;
@@ -626,11 +626,12 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
       return;
     }
 
+    // Always send hazards from local state, not from data.hazards
     const formattedData: CreateDocumentDto = {
       ...data,
       hazards: hazards as unknown as CreateDocumentDto['hazards'],
     };
-    
+
     console.log('📊 Form submission data:', {
       hazardsCount: hazards.length,
       hazardPhotos: hazards.map(h => ({
@@ -639,9 +640,10 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
         hasMediaPreview: !!(h as any).mediaPreview
       }))
     });
-    
+
     try {
-      await handleFormSubmit(formattedData);
+      // Pass hazards as second argument so parent always gets correct data
+      await handleFormSubmit(formattedData, hazards);
       // Don't clean state on successful submit - just close dialog
       handleDialogClose();
     } catch (error) {
