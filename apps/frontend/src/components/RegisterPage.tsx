@@ -170,6 +170,7 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
 
   const handleGoogleRegister = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
+      console.log('[Google OAuth] onSuccess callback', tokenResponse);
       try {
         setLoading(true);
         // Get user info from Google
@@ -185,24 +186,34 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
 
         if (userInfoResponse.ok) {
           const userInfo = await userInfoResponse.json();
+          console.log('[Google OAuth] userInfo:', userInfo);
           // access_token/idToken დაამატე userInfo-ში
           userInfo.access_token = tokenResponse.access_token;
           if (tokenResponse.id_token) {
             userInfo.idToken = tokenResponse.id_token;
           }
           const userInfoParam = encodeURIComponent(JSON.stringify(userInfo));
+          console.log('[Google OAuth] redirecting to /auth/register?from=google&userInfo=...');
           router.push(`/auth/register?from=google&userInfo=${userInfoParam}`);
+        } else {
+          console.error('[Google OAuth] userInfoResponse not ok', userInfoResponse.status);
         }
       } catch (error) {
-        console.error('Google registration error:', error);
+        console.error('[Google OAuth] registration error:', error);
         setError('Google-ით რეგისტრაციისას დაფიქსირდა შეცდომა');
       } finally {
         setLoading(false);
       }
     },
-    onError: () => {
+    onError: (err) => {
+      console.error('[Google OAuth] onError callback', err);
       setError('Google-ით რეგისტრაციისას დაფიქსირდა შეცდომა');
-    }
+    },
+    onNonOAuthError: (err) => {
+      console.error('[Google OAuth] onNonOAuthError callback', err);
+    },
+    flow: 'implicit',
+    scope: 'openid email profile',
   });
 
   return (
@@ -405,7 +416,10 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
                 variant="outlined"
                 size="large"
                 startIcon={<Google />}
-                onClick={() => handleGoogleRegister()}
+                onClick={() => {
+                  console.log('[Google OAuth] Google რეგისტრაციის ღილაკზე დაჭერილია');
+                  handleGoogleRegister();
+                }}
                 disabled={loading || !clientId}
                 sx={{ mb: 3 }}
               >
