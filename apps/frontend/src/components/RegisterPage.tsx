@@ -283,6 +283,7 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
               value={formData.organization}
               onChange={handleChange}
               sx={{ mb: 2 }}
+              autoComplete="organization"
             />
             
             <TextField
@@ -292,6 +293,7 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
               value={formData.position}
               onChange={handleChange}
               sx={{ mb: 2 }}
+              autoComplete="organization-title"
             />
             
             
