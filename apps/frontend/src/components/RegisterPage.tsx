@@ -164,7 +164,6 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
     onSuccess: async (tokenResponse) => {
       try {
         setLoading(true);
-        
         // Get user info from Google
         const userInfoResponse = await fetch(
           `https://www.googleapis.com/oauth2/v2/userinfo?access_token=${tokenResponse.access_token}`,
@@ -178,9 +177,11 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
 
         if (userInfoResponse.ok) {
           const userInfo = await userInfoResponse.json();
-          
-          // Redirect to registration form with Google user info
-          // User must complete registration with personal number and phone
+          // access_token/idToken დაამატე userInfo-ში
+          userInfo.access_token = tokenResponse.access_token;
+          if (tokenResponse.id_token) {
+            userInfo.idToken = tokenResponse.id_token;
+          }
           const userInfoParam = encodeURIComponent(JSON.stringify(userInfo));
           router.push(`/auth/register?from=google&userInfo=${userInfoParam}`);
         }
