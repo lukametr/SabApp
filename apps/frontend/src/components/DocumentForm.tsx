@@ -116,7 +116,6 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
       canvas.getContext('2d')?.drawImage(videoRef.current, 0, 0);
       canvas.toBlob(blob => {
         if (blob) {
-          // Convert blob to base64 data URL instead of blob URL
           const reader = new FileReader();
           reader.onloadend = () => {
             const base64DataUrl = reader.result as string;
@@ -124,9 +123,12 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
             console.log('📸 Captured photo:', { base64DataUrl: base64DataUrl.substring(0, 50) + '...' });
             const hazard = hazards.find(h => h.id === hazardId);
             if (hazard) {
+              // Always add to photos array for persistence
+              const newPhotos = [...(hazard.photos || []), base64DataUrl];
               updateHazard(hazardId, {
                 mediaFile: capturedFile,
-                mediaPreview: base64DataUrl // Use base64 data URL instead of blob URL
+                mediaPreview: undefined, // remove preview after save
+                photos: newPhotos
               });
             }
           };
@@ -148,14 +150,16 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
     if (f) {
       const hazard = hazards.find(h => h.id === hazardId);
       if (hazard) {
-        // Convert file to base64 data URL for preview
         const reader = new FileReader();
         reader.onloadend = () => {
           const base64DataUrl = reader.result as string;
           console.log('📁 File uploaded:', { fileName: f.name, base64DataUrl: base64DataUrl.substring(0, 50) + '...' });
+          // Always add to photos array for persistence
+          const newPhotos = [...(hazard.photos || []), base64DataUrl];
           updateHazard(hazardId, {
             mediaFile: f,
-            mediaPreview: base64DataUrl // Use base64 data URL instead of blob URL
+            mediaPreview: undefined, // remove preview after save
+            photos: newPhotos
           });
         };
         reader.onerror = (error) => {
@@ -291,22 +295,7 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
                     </Button>
                   </Box>
                 )}
-                {hazard.mediaPreview && cameraActive !== hazard.id && (
-                  <Box mt={2}>
-                    <Image 
-                      src={hazard.mediaPreview} 
-                      alt="preview" 
-                      width={200}
-                      height={150}
-                      unoptimized
-                      style={{ maxWidth: 200, borderRadius: 8, objectFit: 'cover' }}
-                      onLoad={() => console.log('✅ Preview image loaded for hazard:', hazard.id)}
-                      onError={(e) => console.error('❌ Preview image failed to load:', e)}
-                    />
-                  </Box>
-                )}
-                {/* Show existing saved photos (base64) */}
-                {hazard.photos && hazard.photos.length > 0 && !hazard.mediaPreview && (
+                {hazard.photos && hazard.photos.length > 0 && (
                   <Box mt={2}>
                     <Typography variant="body2" mb={1}>შენახული ფოტოები:</Typography>
                     <Box display="flex" flexWrap="wrap" gap={1}>
