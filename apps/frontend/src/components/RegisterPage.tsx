@@ -153,6 +153,9 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
         position: ''
       });
       setAcceptTerms(false);
+      setTimeout(() => {
+        router.push('/auth/login');
+      }, 1500);
     } catch (err: any) {
       setError(err.message || 'რეგისტრაციისას დაფიქსირდა შეცდომა');
     } finally {
