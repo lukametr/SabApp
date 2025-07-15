@@ -27,6 +27,7 @@ interface RegisterPageProps {
   onRegister?: (user: any) => void;
 }
 
+
 export default function RegisterPage({ onRegister }: RegisterPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -42,6 +43,7 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [isGoogleRegistration, setIsGoogleRegistration] = useState(false);
   const [googleUserInfo, setGoogleUserInfo] = useState(null);
@@ -127,7 +129,6 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
         position: ''
       });
       setAcceptTerms(false);
-  const [success, setSuccess] = useState('');
     } catch (err: any) {
       setError(err.message || 'რეგისტრაციისას დაფიქსირდა შეცდომა');
     } finally {
