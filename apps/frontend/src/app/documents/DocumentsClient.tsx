@@ -27,8 +27,8 @@ export default function DocumentsClient() {
   const handleUpdate = async (data: UpdateDocumentDto) => {
     if (selectedDocument) {
       await updateDocument({ ...data, id: selectedDocument.id });
-      setSelectedDocument(null);
-      setIsFormOpen(false);
+      setIsFormOpen(false); // Just close the form, don't clear selectedDocument yet
+      // setSelectedDocument(null); // Don't clear here, let dialog close handle it
     }
   };
 
@@ -122,7 +122,7 @@ export default function DocumentsClient() {
         open={isFormOpen}
         onClose={() => {
           setIsFormOpen(false);
-          setSelectedDocument(null);
+          setSelectedDocument(null); // Now clear selectedDocument only when dialog is fully closed
         }}
         defaultValues={selectedDocument ? convertDocumentToCreateDto(selectedDocument) : undefined}
         onSubmit={handleFormSubmit}
