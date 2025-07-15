@@ -111,6 +111,10 @@ export const authApi = {
   },
 
   async googleCallback(data: GoogleCallbackData): Promise<AuthResponse> {
+    console.log('🌐 [authApi] Google Callback API გამოძახება:', {
+      apiUrl: `${API_BASE_URL}/auth/google/callback`,
+      data
+    });
     const response = await fetch(`${API_BASE_URL}/auth/google/callback`, {
       method: 'POST',
       headers: {
@@ -119,12 +123,22 @@ export const authApi = {
       body: JSON.stringify(data),
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Google callback failed');
+    console.log('🌐 [authApi] Google Callback API პასუხის სტატუსი:', response.status);
+    let responseBody;
+    try {
+      responseBody = await response.clone().json();
+      console.log('🌐 [authApi] Google Callback API პასუხი:', responseBody);
+    } catch (e) {
+      responseBody = null;
+      console.error('🌐 [authApi] Google Callback API პასუხის წაკითხვის შეცდომა:', e);
     }
 
-    return response.json();
+    if (!response.ok) {
+      console.error('🌐 [authApi] Google Callback API შეცდომა:', responseBody);
+      throw new Error((responseBody && responseBody.message) || 'Google callback failed');
+    }
+
+    return responseBody;
   },
 
   async getProfile(token: string): Promise<any> {
