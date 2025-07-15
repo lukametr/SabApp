@@ -20,6 +20,10 @@ import {
 } from '@mui/material';
 import { Google, Shield, Visibility, VisibilityOff } from '@mui/icons-material';
 import { useRouter, useSearchParams } from 'next/navigation';
+
+// Get Google Client ID from env (runtime check)
+const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
+console.log('[Google OAuth] NEXT_PUBLIC_GOOGLE_CLIENT_ID:', clientId);
 import { useGoogleLogin } from '@react-oauth/google';
 import { authApi } from '../services/api';
 import { useAuthStore } from '../store/authStore';
@@ -233,6 +237,12 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
               {error}
             </Alert>
           )}
+          {!clientId && (
+            <Alert severity="error" sx={{ mb: 3 }}>
+              Google რეგისტრაცია მიუწვდომელია: NEXT_PUBLIC_GOOGLE_CLIENT_ID არ არის ხელმისაწვდომი გარემოში!<br />
+              გთხოვ შეამოწმე გარემოს ცვლადი deployment settings-ში.
+            </Alert>
+          )}
           {success && (
             <Alert severity="success" sx={{ mb: 3 }}>
               {success}
@@ -396,7 +406,7 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
                 size="large"
                 startIcon={<Google />}
                 onClick={() => handleGoogleRegister()}
-                disabled={loading}
+                disabled={loading || !clientId}
                 sx={{ mb: 3 }}
               >
                 Google-ით რეგისტრაცია
