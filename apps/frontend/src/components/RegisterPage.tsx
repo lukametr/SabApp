@@ -44,7 +44,6 @@ interface RegisterPageProps {
 export default function RegisterPage({ onRegister }: RegisterPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login } = useAuthStore();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
