@@ -69,7 +69,6 @@ export class AuthService {
     console.log('≡ƒöº Google Auth - Starting authentication process (code or access_token)');
     try {
       let googleUserInfo: GoogleUserInfo | null = null;
-
       if (authDto.code) {
         // Exchange code for tokens
         const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
@@ -85,13 +84,10 @@ export class AuthService {
             grant_type: 'authorization_code',
           } as Record<string, string>),
         });
-
         if (!tokenResponse.ok) {
           throw new UnauthorizedException('Failed to exchange authorization code');
         }
-
         const tokens = await tokenResponse.json() as { id_token: string; access_token: string; };
-        // Validate the ID token
         googleUserInfo = await this.validateGoogleToken(tokens.id_token);
       } else if (authDto.accessToken) {
         // Fallback: use access_token to get userinfo
@@ -123,6 +119,11 @@ export class AuthService {
         throw new BadRequestException('Neither code nor accessToken provided');
       }
 
+      // დამატებითი ველები frontend-დან
+      const name = authDto['name'] || googleUserInfo.name;
+      const organization = authDto['organization'] || undefined;
+      const position = authDto['position'] || undefined;
+
       console.log('≡ƒöº Google Auth - Token validated successfully for:', googleUserInfo.email);
 
       // Check if user exists
@@ -131,9 +132,12 @@ export class AuthService {
       if (!user) {
         console.log('≡ƒöº Google Auth - New user registration');
         // Create new user
-        user = await this.usersService.createUser(
-          googleUserInfo
-        );
+        user = await this.usersService.createUser({
+          ...googleUserInfo,
+          name,
+          organization,
+          position,
+        });
         console.log('≡ƒöº Google Auth - New user created successfully');
       } else {
         console.log('≡ƒöº Google Auth - Existing user login');

@@ -120,6 +120,10 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
         } else if (googleUserInfo.access_token) {
           payload.accessToken = googleUserInfo.access_token;
         }
+        // დამატებითი ველები
+        payload.name = (formData.firstName + ' ' + formData.lastName).trim();
+        payload.organization = formData.organization;
+        payload.position = formData.position;
         const response = await authApi.googleAuth(payload);
         setSuccess('Google-ით რეგისტრაცია წარმატებით დასრულდა!');
         setTimeout(() => {

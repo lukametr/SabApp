@@ -9,6 +9,18 @@ export class GoogleAuthDto {
   @ApiProperty({ description: 'Google access token from frontend', required: false })
   @IsString()
   accessToken?: string;
+
+  @ApiProperty({ description: 'Full name from frontend', required: false })
+  @IsString()
+  name?: string;
+
+  @ApiProperty({ description: 'Organization from frontend', required: false })
+  @IsString()
+  organization?: string;
+
+  @ApiProperty({ description: 'Position from frontend', required: false })
+  @IsString()
+  position?: string;
 }
 
 export class CompleteRegistrationDto {
@@ -33,6 +45,12 @@ export class GoogleUserInfo {
 
   @ApiProperty()
   email_verified: boolean;
+
+  @ApiProperty({ required: false })
+  organization?: string;
+
+  @ApiProperty({ required: false })
+  position?: string;
 }
 
 export class AuthResponseDto {
