@@ -8,8 +8,8 @@ interface GoogleUserInfo {
   email?: string;
   given_name?: string;
   family_name?: string;
-  access_token?: string;
-  idToken?: string;
+  // No access_token or idToken, only code
+  code?: string;
   [key: string]: any;
 }
 import { 
@@ -106,26 +106,14 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
     }
 
     if (isGoogleRegistration) {
-      // Google-ით რეგისტრაციის დასრულება
+      // Google-ით რეგისტრაციის დასრულება (auth code flow)
       try {
-        if (!googleUserInfo || !googleUserInfo.id) {
-          setError('Google მომხმარებლის ინფორმაცია ვერ მოიძებნა');
+        if (!googleUserInfo || !googleUserInfo.code) {
+          setError('Google მომხმარებლის კოდი ვერ მოიძებნა');
           setLoading(false);
           return;
         }
-        // აქ შეგიძლია გამოიყენო idToken ან accessToken, თუ გაქვს შენახული
-        // მაგალითად, თუ googleUserInfo-ში არის idToken:
-        // const response = await authApi.googleAuth({ idToken: googleUserInfo.idToken });
-        // მაგრამ შენს კოდში მხოლოდ userInfo მოდის, ამიტომ accessToken უნდა შეინახო useState-ში Google login-ის დროს
-        // აქ ვამოწმებთ accessToken-ს
-        if (!googleUserInfo.access_token && !googleUserInfo.idToken) {
-          setError('Google accessToken/idToken ვერ მოიძებნა');
-          setLoading(false);
-          return;
-        }
-        // authApi.googleAuth-სთვის idToken უნდა იყოს string (არა undefined)
-        const idToken = googleUserInfo.idToken || googleUserInfo.access_token || '';
-        const response = await authApi.googleAuth({ idToken });
+        const response = await authApi.googleAuth({ code: googleUserInfo.code });
         setSuccess('Google-ით რეგისტრაცია წარმატებით დასრულდა!');
         setTimeout(() => {
           router.push('/');
@@ -180,43 +168,17 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
   };
 
   const handleGoogleRegister = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      console.log('[Google OAuth] onSuccess callback', tokenResponse);
-      try {
-        setLoading(true);
-        // Get user info from Google
-        const userInfoResponse = await fetch(
-          `https://www.googleapis.com/oauth2/v2/userinfo?access_token=${tokenResponse.access_token}`,
-          {
-            headers: {
-              Authorization: `Bearer ${tokenResponse.access_token}`,
-              Accept: 'application/json'
-            }
-          }
-        );
-
-        if (userInfoResponse.ok) {
-          const userInfo = await userInfoResponse.json();
-          console.log('[Google OAuth] userInfo:', userInfo);
-          // access_token/idToken დაამატე userInfo-ში
-          userInfo.access_token = tokenResponse.access_token;
-          // TypeScript: id_token შეიძლება არ იყოს TokenResponse-ში, ამიტომ დავამატოთ as any
-          const idToken = (tokenResponse as any).id_token;
-          if (idToken) {
-            userInfo.idToken = idToken;
-          }
-          const userInfoParam = encodeURIComponent(JSON.stringify(userInfo));
-          console.log('[Google OAuth] redirecting to /auth/register?from=google&userInfo=...');
-          router.push(`/auth/register?from=google&userInfo=${userInfoParam}`);
-        } else {
-          console.error('[Google OAuth] userInfoResponse not ok', userInfoResponse.status);
-        }
-      } catch (error) {
-        console.error('[Google OAuth] registration error:', error);
-        setError('Google-ით რეგისტრაციისას დაფიქსირდა შეცდომა');
-      } finally {
-        setLoading(false);
+    flow: 'auth-code',
+    onSuccess: async (response) => {
+      // response.code უნდა იყოს
+      if (!response.code) {
+        setError('Google-მა ვერ დააბრუნა ავტორიზაციის კოდი');
+        return;
       }
+      // Save code in userInfo and redirect
+      const userInfo = { code: response.code };
+      const userInfoParam = encodeURIComponent(JSON.stringify(userInfo));
+      router.push(`/auth/register?from=google&userInfo=${userInfoParam}`);
     },
     onError: (err) => {
       console.error('[Google OAuth] onError callback', err);
@@ -225,7 +187,6 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
     onNonOAuthError: (err) => {
       console.error('[Google OAuth] onNonOAuthError callback', err);
     },
-    flow: 'auth-code',
     scope: 'openid email profile',
   });
 

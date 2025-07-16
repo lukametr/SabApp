@@ -66,13 +66,35 @@ export class AuthService {
   }
 
   async googleAuth(authDto: GoogleAuthDto): Promise<AuthResponseDto> {
-    console.log('≡ƒöº Google Auth - Starting authentication process');
-    console.log('≡ƒöº Google Auth - ID Token present:', !!authDto.idToken);
-    // Removed personalNumber and phoneNumber logs
-
+    console.log('≡ƒöº Google Auth - Starting authentication process (auth code flow)');
     try {
-      // Validate Google token
-      const googleUserInfo = await this.validateGoogleToken(authDto.idToken);
+      if (!authDto.code) {
+        throw new BadRequestException('Authorization code is required');
+      }
+
+      // Exchange code for tokens
+      const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          code: authDto.code,
+          client_id: this.configService.get<string>('GOOGLE_CLIENT_ID') || '',
+          client_secret: this.configService.get<string>('GOOGLE_CLIENT_SECRET') || '',
+          redirect_uri: `${this.configService.get<string>('FRONTEND_URL') || 'https://saba-app-production.up.railway.app'}/auth/google/callback`,
+          grant_type: 'authorization_code',
+        } as Record<string, string>),
+      });
+
+      if (!tokenResponse.ok) {
+        throw new UnauthorizedException('Failed to exchange authorization code');
+      }
+
+      const tokens = await tokenResponse.json() as { id_token: string; access_token: string; };
+
+      // Validate the ID token
+      const googleUserInfo = await this.validateGoogleToken(tokens.id_token);
       console.log('≡ƒöº Google Auth - Token validated successfully for:', googleUserInfo.email);
 
       // Check if user exists
@@ -115,7 +137,6 @@ export class AuthService {
           picture: user.picture,
           role: user.role,
           status: user.status,
-          // Removed personalNumber and phoneNumber from response
         },
       };
     } catch (error) {

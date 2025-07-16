@@ -15,7 +15,7 @@ export interface LoginData {
 }
 
 export interface GoogleAuthData {
-  idToken: string;
+  code: string;
 }
 
 export interface GoogleCallbackData {
@@ -98,7 +98,7 @@ export const authApi = {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify({ code: data.code }),
     });
 
     if (!response.ok) {
