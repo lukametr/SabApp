@@ -40,7 +40,7 @@ export class GoogleUserInfo {
   @ApiProperty()
   name: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   picture?: string;
 
   @ApiProperty()
@@ -48,7 +48,6 @@ export class GoogleUserInfo {
 
   @ApiProperty({ required: false })
   organization?: string;
-
   @ApiProperty({ required: false })
   position?: string;
 }

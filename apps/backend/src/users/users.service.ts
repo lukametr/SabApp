@@ -60,7 +60,7 @@ export class UsersService {
       name: googleUserInfo.name,
       email: googleUserInfo.email,
       googleId: googleUserInfo.sub,
-      picture: googleUserInfo.picture,
+      picture: googleUserInfo.picture || undefined,
       role: UserRole.USER,
       status: UserStatus.ACTIVE,
       isEmailVerified: googleUserInfo.email_verified,

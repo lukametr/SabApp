@@ -23,7 +23,7 @@ export enum SubscriptionStatus {
 
 @Schema({ timestamps: true })
 export class User {
-  @Prop()
+  @Prop({ required: false })
   picture?: string;
 
   @Prop()
