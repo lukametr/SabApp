@@ -15,7 +15,8 @@ export interface LoginData {
 }
 
 export interface GoogleAuthData {
-  code: string;
+  code?: string;
+  accessToken?: string;
 }
 
 export interface GoogleCallbackData {
@@ -93,12 +94,19 @@ export const authApi = {
   },
 
   async googleAuth(data: GoogleAuthData): Promise<AuthResponse> {
+    let body: any = {};
+    if (data.code) {
+      body.code = data.code;
+    }
+    if (data.accessToken) {
+      body.accessToken = data.accessToken;
+    }
     const response = await fetch(`${API_BASE_URL}/auth/google`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ code: data.code }),
+      body: JSON.stringify(body),
     });
 
     if (!response.ok) {

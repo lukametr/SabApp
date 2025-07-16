@@ -2,10 +2,13 @@ import { IsString, IsNotEmpty } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class GoogleAuthDto {
-  @ApiProperty({ description: 'Google authorization code from frontend' })
+  @ApiProperty({ description: 'Google authorization code from frontend', required: false })
   @IsString()
-  @IsNotEmpty()
-  code: string;
+  code?: string;
+
+  @ApiProperty({ description: 'Google access token from frontend', required: false })
+  @IsString()
+  accessToken?: string;
 }
 
 export class CompleteRegistrationDto {

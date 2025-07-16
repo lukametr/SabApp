@@ -66,35 +66,63 @@ export class AuthService {
   }
 
   async googleAuth(authDto: GoogleAuthDto): Promise<AuthResponseDto> {
-    console.log('≡ƒöº Google Auth - Starting authentication process (auth code flow)');
+    console.log('≡ƒöº Google Auth - Starting authentication process (code or access_token)');
     try {
-      if (!authDto.code) {
-        throw new BadRequestException('Authorization code is required');
+      let googleUserInfo: GoogleUserInfo | null = null;
+
+      if (authDto.code) {
+        // Exchange code for tokens
+        const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: new URLSearchParams({
+            code: authDto.code,
+            client_id: this.configService.get<string>('GOOGLE_CLIENT_ID') || '',
+            client_secret: this.configService.get<string>('GOOGLE_CLIENT_SECRET') || '',
+            redirect_uri: `${this.configService.get<string>('FRONTEND_URL') || 'https://saba-app-production.up.railway.app'}/auth/google/callback`,
+            grant_type: 'authorization_code',
+          } as Record<string, string>),
+        });
+
+        if (!tokenResponse.ok) {
+          throw new UnauthorizedException('Failed to exchange authorization code');
+        }
+
+        const tokens = await tokenResponse.json() as { id_token: string; access_token: string; };
+        // Validate the ID token
+        googleUserInfo = await this.validateGoogleToken(tokens.id_token);
+      } else if (authDto.accessToken) {
+        // Fallback: use access_token to get userinfo
+        const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+          headers: {
+            Authorization: `Bearer ${authDto.accessToken}`,
+            Accept: 'application/json',
+          },
+        });
+        if (!userInfoResponse.ok) {
+          throw new UnauthorizedException('Failed to fetch Google user info');
+        }
+        const userInfo = await userInfoResponse.json() as {
+          id: string;
+          email: string;
+          name?: string;
+          given_name?: string;
+          picture?: string;
+          verified_email?: boolean;
+        };
+        googleUserInfo = {
+          sub: userInfo.id,
+          email: userInfo.email,
+          name: userInfo.name || userInfo.given_name || '',
+          picture: userInfo.picture,
+          email_verified: userInfo.verified_email || false,
+        };
+      } else {
+        throw new BadRequestException('Neither code nor accessToken provided');
       }
 
-      // Exchange code for tokens
-      const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          code: authDto.code,
-          client_id: this.configService.get<string>('GOOGLE_CLIENT_ID') || '',
-          client_secret: this.configService.get<string>('GOOGLE_CLIENT_SECRET') || '',
-          redirect_uri: `${this.configService.get<string>('FRONTEND_URL') || 'https://saba-app-production.up.railway.app'}/auth/google/callback`,
-          grant_type: 'authorization_code',
-        } as Record<string, string>),
-      });
-
-      if (!tokenResponse.ok) {
-        throw new UnauthorizedException('Failed to exchange authorization code');
-      }
-
-      const tokens = await tokenResponse.json() as { id_token: string; access_token: string; };
-
-      // Validate the ID token
-      const googleUserInfo = await this.validateGoogleToken(tokens.id_token);
       console.log('≡ƒöº Google Auth - Token validated successfully for:', googleUserInfo.email);
 
       // Check if user exists

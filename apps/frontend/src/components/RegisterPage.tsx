@@ -94,6 +94,7 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
     });
   };
 
+
   const handleEmailRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -106,14 +107,20 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
     }
 
     if (isGoogleRegistration) {
-      // Google-ით რეგისტრაციის დასრულება (auth code flow)
+      // Google-ით რეგისტრაციის დასრულება (code ან access_token)
       try {
-        if (!googleUserInfo || !googleUserInfo.code) {
-          setError('Google მომხმარებლის კოდი ვერ მოიძებნა');
+        if (!googleUserInfo || (!googleUserInfo.code && !googleUserInfo.access_token)) {
+          setError('Google მომხმარებლის კოდი ან access_token ვერ მოიძებნა');
           setLoading(false);
           return;
         }
-        const response = await authApi.googleAuth({ code: googleUserInfo.code });
+        let payload: any = {};
+        if (googleUserInfo.code) {
+          payload.code = googleUserInfo.code;
+        } else if (googleUserInfo.access_token) {
+          payload.accessToken = googleUserInfo.access_token;
+        }
+        const response = await authApi.googleAuth(payload);
         setSuccess('Google-ით რეგისტრაცია წარმატებით დასრულდა!');
         setTimeout(() => {
           router.push('/');
@@ -170,13 +177,17 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
   const handleGoogleRegister = useGoogleLogin({
     flow: 'auth-code',
     onSuccess: async (response) => {
-      // response.code უნდა იყოს
-      if (!response.code) {
-        setError('Google-მა ვერ დააბრუნა ავტორიზაციის კოდი');
+      // Try code-based flow first, fallback to access_token if present
+      let userInfo: any = {};
+      if (response.code) {
+        userInfo.code = response.code;
+      } else if (response.access_token) {
+        userInfo.access_token = response.access_token;
+      }
+      if (!userInfo.code && !userInfo.access_token) {
+        setError('Google-მა ვერ დააბრუნა ავტორიზაციის კოდი ან access_token');
         return;
       }
-      // Save code in userInfo and redirect
-      const userInfo = { code: response.code };
       const userInfoParam = encodeURIComponent(JSON.stringify(userInfo));
       router.push(`/auth/register?from=google&userInfo=${userInfoParam}`);
     },
