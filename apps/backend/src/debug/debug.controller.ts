@@ -1,8 +1,10 @@
-import { Controller, Get, Post } from '@nestjs/common';
+import { Controller, Get, Post, Body } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { MigrationService } from './migration.service';
 import { InjectConnection } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
+import { AuthService } from '../auth/auth.service';
+import { ConfigService } from '@nestjs/config';
 
 @Controller('debug')
 export class DebugController {
@@ -10,6 +12,8 @@ export class DebugController {
     private usersService: UsersService,
     private migrationService: MigrationService,
     @InjectConnection() private connection: Connection,
+    private authService: AuthService,
+    private configService: ConfigService,
   ) {}
 
   @Get('db-connection')
@@ -165,6 +169,135 @@ export class DebugController {
         hasGoogleClientSecret: !!process.env.GOOGLE_CLIENT_SECRET,
         googleClientIdLength: process.env.GOOGLE_CLIENT_ID?.length || 0,
         googleClientSecretLength: process.env.GOOGLE_CLIENT_SECRET?.length || 0
+      }
+    };
+  }
+
+  @Get('oauth-test')
+  async testOAuthFlow() {
+    const googleClientId = process.env.GOOGLE_CLIENT_ID;
+    const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://saba-app-production.up.railway.app/api';
+    const frontendUrl = process.env.FRONTEND_URL || 'https://saba-app-production.up.railway.app';
+    
+    const redirectUri = `${backendUrl}/auth/google/callback`;
+    
+    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+      `client_id=${googleClientId}&` +
+      `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+      `response_type=code&` +
+      `scope=email profile&` +
+      `access_type=offline&` +
+      `prompt=consent`;
+    
+    return {
+      status: 'success',
+      timestamp: new Date().toISOString(),
+      oauthFlow: {
+        step1_frontend_to_backend: '/api/auth/google',
+        step2_backend_redirects_to: googleAuthUrl,
+        step3_google_callback_to: redirectUri,
+        step4_backend_redirects_to: `${frontendUrl}/?auth=success&token=JWT_TOKEN&user=USER_DATA`,
+      },
+      configuration: {
+        backendUrl,
+        frontendUrl,
+        redirectUri,
+        googleClientId: googleClientId ? `${googleClientId.substring(0, 20)}...` : 'NOT_SET',
+        googleClientSecretSet: !!googleClientSecret,
+      },
+      debug: {
+        encodedRedirectUri: encodeURIComponent(redirectUri),
+        googleAuthUrlLength: googleAuthUrl.length,
+      }
+    };
+  }
+
+  @Post('oauth-token-exchange-test')
+  async testTokenExchange(@Body() body: { code?: string } = {}) {
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://saba-app-production.up.railway.app/api';
+    const redirectUri = `${backendUrl}/auth/google/callback`;
+    
+    return {
+      status: 'simulation',
+      timestamp: new Date().toISOString(),
+      providedCode: body.code || 'NO_CODE_PROVIDED',
+      tokenExchangeParams: {
+        grant_type: 'authorization_code',
+        code: body.code || 'AUTHORIZATION_CODE_FROM_GOOGLE',
+        redirect_uri: redirectUri,
+        client_id: clientId ? `${clientId.substring(0, 20)}...` : 'NOT_SET',
+        client_secret: clientSecret ? 'SET' : 'NOT_SET',
+      },
+      googleTokenEndpoint: 'https://oauth2.googleapis.com/token',
+      expectedResponse: {
+        access_token: 'ACCESS_TOKEN',
+        refresh_token: 'REFRESH_TOKEN',
+        id_token: 'ID_TOKEN',
+        token_type: 'Bearer',
+        expires_in: 3600
+      },
+      possibleErrors: [
+        'invalid_grant - თუ authorization code არასწორია ან გამოყენებულია',
+        'redirect_uri_mismatch - თუ redirect_uri არ ემთხვევა Google Console-ში დარეგისტრირებულს',
+        'invalid_client - თუ client_id ან client_secret არასწორია'
+      ]
+    };
+  }
+
+  @Get('oauth-detailed-check')
+  async detailedOAuthCheck() {
+    // Get all OAuth related configs
+    const configs = {
+      env: {
+        GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+        GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+        FRONTEND_URL: process.env.FRONTEND_URL,
+        NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+      },
+      configService: {
+        GOOGLE_CLIENT_ID: this.configService.get<string>('GOOGLE_CLIENT_ID'),
+        GOOGLE_CLIENT_SECRET: this.configService.get<string>('GOOGLE_CLIENT_SECRET'),
+        FRONTEND_URL: this.configService.get<string>('FRONTEND_URL'),
+      }
+    };
+
+    // Build URLs
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://saba-app-production.up.railway.app/api';
+    const frontendUrl = process.env.FRONTEND_URL || 'https://saba-app-production.up.railway.app';
+    const redirectUri = `${backendUrl}/auth/google/callback`;
+
+    return {
+      status: 'success',
+      timestamp: new Date().toISOString(),
+      urls: {
+        backend: backendUrl,
+        frontend: frontendUrl,
+        redirectUri: redirectUri,
+        googleConsoleRedirectUri: 'Should be: ' + redirectUri,
+      },
+      configComparison: {
+        clientId: {
+          fromEnv: configs.env.GOOGLE_CLIENT_ID ? 'SET' : 'NOT_SET',
+          fromConfigService: configs.configService.GOOGLE_CLIENT_ID ? 'SET' : 'NOT_SET',
+          match: configs.env.GOOGLE_CLIENT_ID === configs.configService.GOOGLE_CLIENT_ID
+        },
+        clientSecret: {
+          fromEnv: configs.env.GOOGLE_CLIENT_SECRET ? 'SET' : 'NOT_SET',
+          fromConfigService: configs.configService.GOOGLE_CLIENT_SECRET ? 'SET' : 'NOT_SET',
+          match: configs.env.GOOGLE_CLIENT_SECRET === configs.configService.GOOGLE_CLIENT_SECRET
+        },
+        frontendUrl: {
+          fromEnv: configs.env.FRONTEND_URL,
+          fromConfigService: configs.configService.FRONTEND_URL,
+          match: configs.env.FRONTEND_URL === configs.configService.FRONTEND_URL
+        }
+      },
+      authServiceCheck: {
+        hasAuthService: !!this.authService,
+        hasConfigService: !!this.configService,
       }
     };
   }
