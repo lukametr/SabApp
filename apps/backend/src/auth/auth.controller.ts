@@ -1,5 +1,6 @@
 import { Controller, Post, Body, Get, UseGuards, Request, Res, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { AuthResponseDto, CompleteRegistrationDto } from '../users/dto/google-auth.dto';
@@ -15,6 +16,7 @@ export class AuthController {
   constructor(
     private authService: AuthService,
     private usersService: UsersService,
+    private configService: ConfigService,
   ) {}
 
   @Get('google')
@@ -75,22 +77,27 @@ export class AuthController {
       const { code, state } = req.query;
       
       if (!code) {
-        return res.redirect('/?error=Authorization code is required');
+        const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'https://saba-app-production.up.railway.app';
+        return res.redirect(`${frontendUrl}/?error=Authorization code is required`);
       }
 
       // Exchange code for tokens and get user info
       const result = await this.authService.handleGoogleCallback(code, state);
 
+      // Get frontend URL for redirect
+      const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'https://saba-app-production.up.railway.app';
+
       // For Railway deployment - redirect to frontend with token
       if (result.accessToken) {
-        const successUrl = `/?auth=success&token=${result.accessToken}&user=${encodeURIComponent(JSON.stringify(result.user))}`;
+        const successUrl = `${frontendUrl}/?auth=success&token=${result.accessToken}&user=${encodeURIComponent(JSON.stringify(result.user))}`;
         return res.redirect(successUrl);
       } else {
-        return res.redirect('/?error=Authentication failed');
+        return res.redirect(`${frontendUrl}/?error=Authentication failed`);
       }
     } catch (error) {
       console.error('Google callback error:', error);
-      return res.redirect(`/?error=${encodeURIComponent(error.message || 'Authentication failed')}`);
+      const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'https://saba-app-production.up.railway.app';
+      return res.redirect(`${frontendUrl}/?error=${encodeURIComponent(error.message || 'Authentication failed')}`);
     }
   }
 
