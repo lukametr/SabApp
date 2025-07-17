@@ -155,7 +155,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
           <Box component="form" onSubmit={handleEmailLogin} sx={{ mb: 3 }}>
             <TextField
               fullWidth
-              label="ელ. ფოსტა"
+              label={email ? "" : "ელ. ფოსტა"}
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -164,7 +164,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
             />
             <TextField
               fullWidth
-              label="პაროლი"
+              label={password ? "" : "პაროლი"}
               type={showPassword ? 'text' : 'password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}

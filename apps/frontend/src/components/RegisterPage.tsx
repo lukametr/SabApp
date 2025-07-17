@@ -168,7 +168,7 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
             <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
               <TextField
                 fullWidth
-                label="სახელი"
+                label={formData.firstName ? "" : "სახელი"}
                 name="firstName"
                 value={formData.firstName}
                 onChange={handleChange}
@@ -177,7 +177,7 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
               />
               <TextField
                 fullWidth
-                label="გვარი"
+                label={formData.lastName ? "" : "გვარი"}
                 name="lastName"
                 value={formData.lastName}
                 onChange={handleChange}
@@ -188,7 +188,7 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
             
             <TextField
               fullWidth
-              label="ელ. ფოსტა"
+              label={formData.email ? "" : "ელ. ფოსტა"}
               type="email"
               name="email"
               value={formData.email}
@@ -200,7 +200,7 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
             
             <TextField
               fullWidth
-              label="ორგანიზაცია"
+              label={formData.organization ? "" : "ორგანიზაცია"}
               name="organization"
               value={formData.organization}
               onChange={handleChange}
@@ -210,7 +210,7 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
             
             <TextField
               fullWidth
-              label="პოზიცია"
+              label={formData.position ? "" : "პოზიცია"}
               name="position"
               value={formData.position}
               onChange={handleChange}
@@ -222,7 +222,7 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
             <>
               <TextField
                   fullWidth
-                  label="პაროლი"
+                  label={formData.password ? "" : "პაროლი"}
                   type={showPassword ? 'text' : 'password'}
                   name="password"
                   value={formData.password}
@@ -247,7 +247,7 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
                 
                 <TextField
                   fullWidth
-                  label="პაროლის დადასტურება"
+                  label={formData.confirmPassword ? "" : "პაროლის დადასტურება"}
                   type={showConfirmPassword ? 'text' : 'password'}
                   name="confirmPassword"
                   value={formData.confirmPassword}
