@@ -17,6 +17,31 @@ export class AuthController {
     private usersService: UsersService,
   ) {}
 
+  @Get('google')
+  @ApiOperation({ summary: 'Initiate Google OAuth flow' })
+  @ApiResponse({ status: 302, description: 'Redirect to Google OAuth' })
+  async initiateGoogleAuth(@Res() res: Response) {
+    try {
+      const googleClientId = process.env.GOOGLE_CLIENT_ID;
+      const backendUrl = process.env.BACKEND_URL || process.env.NEXTAUTH_URL || 'http://localhost:10000';
+      const redirectUri = `${backendUrl}/api/auth/google/callback`;
+      
+      const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+        `client_id=${googleClientId}&` +
+        `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+        `response_type=code&` +
+        `scope=email profile&` +
+        `access_type=offline&` +
+        `prompt=consent`;
+      
+      console.log('🔗 Redirecting to Google OAuth:', googleAuthUrl);
+      return res.redirect(googleAuthUrl);
+    } catch (error) {
+      console.error('Google OAuth initiation error:', error);
+      return res.redirect('/?error=Google OAuth initialization failed');
+    }
+  }
+
   @Post('google')
   @ApiOperation({ summary: 'Google OAuth authentication' })
   @ApiResponse({ status: 200, description: 'Successfully authenticated', type: AuthResponseDto })
