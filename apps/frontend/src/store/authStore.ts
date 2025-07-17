@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { User, AuthResponse } from '../types/user';
+import { authApi } from '../lib/api';
 
 interface AuthState {
   user: User | null;
@@ -13,6 +14,7 @@ interface AuthState {
   setError: (error: string | null) => void;
   setLoading: (loading: boolean) => void;
   loadFromStorage: () => void;
+  fetchUserData: () => Promise<boolean>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -43,15 +45,33 @@ export const useAuthStore = create<AuthState>((set) => ({
     console.log('🗃️ AuthStore state updated');
   },
   logout: () => {
-    console.log('🗃️ AuthStore logout - clearing data');
-    set({ user: null, token: null, loading: false });
+    console.log('� Logging out...');
+    
+    // Clear all auth data
+    set({ 
+      user: null, 
+      token: null, 
+      loading: false,
+      error: null
+    });
     
     // Clear localStorage
     if (typeof window !== 'undefined') {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       console.log('🗃️ localStorage cleared');
+      
+      // Clear any Google session
+      if (window.google?.accounts?.id) {
+        try {
+          (window.google.accounts.id as any).disableAutoSelect();
+        } catch (e) {
+          console.log('🔧 Could not disable Google auto-select:', e);
+        }
+      }
     }
+    
+    console.log('✅ Logout complete');
   },
   setUser: (user) => set({ user }),
   setToken: (token) => set({ token }),
@@ -112,6 +132,54 @@ export const useAuthStore = create<AuthState>((set) => ({
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       set({ user: null, token: null, loading: false });
+    }
+  },
+  fetchUserData: async () => {
+    console.log('🔄 Fetching user data from /auth/me...');
+    
+    // Only run on client side
+    if (typeof window === 'undefined') {
+      console.log('🔄 Server-side, skipping fetchUserData');
+      return false;
+    }
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.log('🔄 No token found, cannot fetch user data');
+      return false;
+    }
+
+    try {
+      const response = await authApi.me();
+      console.log('✅ User data fetched successfully:', response.data);
+      
+      set({ 
+        user: response.data, 
+        loading: false,
+        error: null 
+      });
+      
+      // Update localStorage with fresh user data
+      localStorage.setItem('user', JSON.stringify(response.data));
+      
+      return true;
+    } catch (error: any) {
+      console.error('❌ Failed to fetch user data:', error);
+      
+      // If token is invalid, clear auth state
+      if (error.response?.status === 401) {
+        console.log('🔄 Token invalid, clearing auth state');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        set({ 
+          user: null, 
+          token: null, 
+          loading: false,
+          error: 'Session expired' 
+        });
+      }
+      
+      return false;
     }
   },
 }));

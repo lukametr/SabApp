@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, UseGuards, Request, Res, BadRequestException, Query } from '@nestjs/common';
+import { Controller, Post, Body, Get, UseGuards, Request, Res, BadRequestException, Query, Req, NotFoundException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
@@ -150,6 +150,35 @@ export class AuthController {
       });
       throw error;
     }
+  }
+
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get current user information' })
+  @ApiResponse({ status: 200, description: 'User information retrieved successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async getMe(@Request() req: any) {
+    console.log('📍 /auth/me called for user:', req.user?.email);
+    
+    const user = await this.usersService.findById(req.user.sub);
+    
+    if (!user) {
+      console.error('❌ User not found for ID:', req.user.sub);
+      throw new NotFoundException('User not found');
+    }
+    
+    return {
+      id: String(user._id),
+      email: user.email,
+      name: user.name,
+      picture: user.picture,
+      role: user.role,
+      googleId: user.googleId,
+      organization: user.organization,
+      position: user.position,
+    };
   }
 
   @Post('register')

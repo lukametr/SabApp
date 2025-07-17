@@ -89,4 +89,9 @@ api.interceptors.response.use(
   }
 );
 
+// Auth API functions
+export const authApi = {
+  me: () => api.get('/auth/me'),
+};
+
 export default api;

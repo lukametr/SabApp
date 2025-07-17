@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '../../../store/authStore';
 import { CircularProgress, Box, Typography } from '@mui/material';
@@ -8,57 +8,81 @@ import { CircularProgress, Box, Typography } from '@mui/material';
 export default function AuthCallbackPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { setToken, setUser, login } = useAuthStore();
+  const { setToken, setUser, fetchUserData } = useAuthStore();
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const handleCallback = async () => {
-      const token = searchParams.get('token');
-      const error = searchParams.get('error');
-
-      console.log('[Auth Callback] Processing...', { token: !!token, error });
-
-      if (error) {
-        console.error('[Auth Callback] Error:', error);
-        router.push(`/login?error=${error}`);
+      if (!searchParams) {
+        console.error('[Auth Callback] No search params available');
+        router.push('/login?error=invalid_callback');
         return;
       }
 
-      if (token) {
-        try {
-          console.log('[Auth Callback] Setting token and logging in...');
-          
-          // Store token and set user data
-          localStorage.setItem('token', token);
-          setToken(token);
-          
-          // Fetch user data with the token
-          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me`, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            }
-          });
+      const token = searchParams.get('token');
+      const errorParam = searchParams.get('error');
 
-          if (response.ok) {
-            const userData = await response.json();
-            setUser(userData);
-            console.log('[Auth Callback] Login successful, redirecting to dashboard...');
-            router.push('/dashboard');
-          } else {
-            throw new Error('Failed to fetch user data');
-          }
-        } catch (error) {
-          console.error('[Auth Callback] Error processing token:', error);
-          router.push('/login?error=callback_failed');
-        }
-      } else {
+      console.log('[Auth Callback] Processing...', { token: !!token, error: errorParam });
+
+      if (errorParam) {
+        console.error('[Auth Callback] Error from backend:', errorParam);
+        router.push(`/login?error=${errorParam}`);
+        return;
+      }
+
+      if (!token) {
         console.error('[Auth Callback] No token received');
         router.push('/login?error=no_token');
+        return;
+      }
+
+      try {
+        // Store token first
+        setToken(token);
+        localStorage.setItem('token', token);
+        console.log('[Auth Callback] Token stored');
+
+        // Try to fetch user data using the new authStore method
+        const success = await fetchUserData();
+        
+        if (success) {
+          console.log('[Auth Callback] User data fetched successfully');
+        } else {
+          console.warn('[Auth Callback] fetchUserData failed, but continuing');
+        }
+        
+        // Always redirect to dashboard - the app will handle auth validation there
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 100);
+
+      } catch (error) {
+        console.error('[Auth Callback] Error:', error);
+        // Don't fail completely, try to proceed
+        router.push('/dashboard');
       }
     };
 
     handleCallback();
-  }, [searchParams, router, setToken, setUser]);
+  }, [searchParams, router, setToken, setUser, fetchUserData]);
+
+  if (error) {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+        }}
+      >
+        <Typography variant="h6" color="error">
+          {error}
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box
