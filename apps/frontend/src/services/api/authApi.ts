@@ -164,4 +164,20 @@ export const authApi = {
 
     return response.json();
   },
+
+  async verifyEmail(token: string): Promise<{ success: boolean; message: string }> {
+    const response = await fetch(`${API_BASE_URL}/auth/verify-email?token=${encodeURIComponent(token)}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Email verification failed');
+    }
+
+    return response.json();
+  },
 };

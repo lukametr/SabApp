@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, UseGuards, Request, Res, BadRequestException } from '@nestjs/common';
+import { Controller, Post, Body, Get, UseGuards, Request, Res, BadRequestException, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
@@ -201,5 +201,39 @@ export class AuthController {
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     }));
+  }
+
+  @Get('verify-email')
+  @ApiOperation({ summary: 'Verify email address' })
+  @ApiResponse({ status: 200, description: 'Email verified successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid or expired token' })
+  async verifyEmail(@Query('token') token: string) {
+    try {
+      if (!token) {
+        throw new BadRequestException('Verification token is required');
+      }
+
+      // Find user by verification token
+      const user = await this.usersService.findByVerificationToken(token);
+      if (!user) {
+        throw new BadRequestException('Invalid verification token');
+      }
+
+      // Check if token is expired
+      if (user.emailVerificationTokenExpires && user.emailVerificationTokenExpires < new Date()) {
+        throw new BadRequestException('Verification token has expired');
+      }
+
+      // Mark email as verified
+      await this.usersService.verifyEmail(String(user._id));
+
+      return {
+        message: 'Email verified successfully. You can now login.',
+        success: true,
+      };
+    } catch (error) {
+      console.error('Email verification error:', error);
+      throw error;
+    }
   }
 }

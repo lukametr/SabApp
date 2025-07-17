@@ -213,4 +213,13 @@ export class UsersService {
   async findByVerificationToken(token: string): Promise<UserDocument | null> {
     return this.userModel.findOne({ emailVerificationToken: token }).exec();
   }
+
+  async verifyEmail(userId: string): Promise<void> {
+    await this.userModel.findByIdAndUpdate(userId, {
+      isEmailVerified: true,
+      emailVerificationToken: undefined,
+      emailVerificationTokenExpires: undefined,
+    });
+    console.log('✅ Email verified for user:', userId);
+  }
 }

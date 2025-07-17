@@ -182,6 +182,33 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
             </Alert>
           )}
 
+          {/* Google Login Button - moved to top */}
+          <Button
+            fullWidth
+            variant="outlined"
+            size="large"
+            startIcon={<Google />}
+            onClick={() => handleGoogleLogin()}
+            disabled={loading}
+            sx={{ 
+              mb: 3,
+              color: '#4285f4',
+              borderColor: '#4285f4',
+              '&:hover': {
+                backgroundColor: 'rgba(66, 133, 244, 0.1)',
+                borderColor: '#4285f4',
+              },
+            }}
+          >
+            Google-ით შესვლა
+          </Button>
+
+          <Divider sx={{ my: 3 }}>
+            <Typography variant="body2" color="text.secondary">
+              ან ელ. ფოსტით
+            </Typography>
+          </Divider>
+
           <Box component="form" onSubmit={handleEmailLogin} sx={{ mb: 3 }}>
             <TextField
               fullWidth
@@ -226,24 +253,6 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
               {loading ? <CircularProgress size={24} /> : 'შესვლა'}
             </Button>
           </Box>
-
-          <Divider sx={{ my: 3 }}>
-            <Typography variant="body2" color="text.secondary">
-              ან
-            </Typography>
-          </Divider>
-
-          <Button
-            fullWidth
-            variant="outlined"
-            size="large"
-            startIcon={<Google />}
-            onClick={() => handleGoogleLogin()}
-            disabled={loading}
-            sx={{ mb: 3 }}
-          >
-            Google-ით შესვლა
-          </Button>
 
           <Box sx={{ textAlign: 'center' }}>
             <Typography variant="body2" color="text.secondary">

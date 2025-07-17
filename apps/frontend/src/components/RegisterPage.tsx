@@ -92,8 +92,8 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
       return;
     }
     try {
-      // პირველ ეტაპზე registration backend-ზე
-      await authService.register({
+      // რეგისტრაცია backend-ზე (ახლა არ იცემს JWT token)
+      const response = await authService.register({
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
@@ -102,13 +102,18 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
         position: formData.position,
       });
 
-      // მეორე ეტაპზე login backend service-ით
-      await authService.signIn(formData.email, formData.password);
-      
-      setSuccess('რეგისტრაცია და შესვლა წარმატებით დასრულდა!');
-      setTimeout(() => {
-        router.push('/');
-      }, 1000);
+      // თუ requiresEmailVerification არის true, მაშინ email verification საჭიროა
+      if (response.requiresEmailVerification) {
+        setSuccess('რეგისტრაცია წარმატებით დასრულდა! გთხოვთ, შეამოწმოთ ელ. ფოსტა ანგარიშის დასადასტურებლად.');
+        // არ ვასვლით სისტემაში, მომხმარებელმა email უნდა დაადასტუროს
+      } else {
+        // თუ email verification არ არის საჭირო (Google users), მაშინ შევდივართ
+        await authService.signIn(formData.email, formData.password);
+        setSuccess('რეგისტრაცია და შესვლა წარმატებით დასრულდა!');
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 1000);
+      }
     } catch (err: any) {
       setError(err.message || 'რეგისტრაციისას დაფიქსირდა შეცდომა');
     } finally {
@@ -163,6 +168,33 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
               {success}
             </Alert>
           )}
+
+          {/* Google Registration Button - moved to top */}
+          <Button
+            fullWidth
+            variant="outlined"
+            size="large"
+            startIcon={<Google />}
+            onClick={handleGoogleRegister}
+            disabled={loading || !clientId}
+            sx={{ 
+              mb: 3,
+              color: '#4285f4',
+              borderColor: '#4285f4',
+              '&:hover': {
+                backgroundColor: 'rgba(66, 133, 244, 0.1)',
+                borderColor: '#4285f4',
+              },
+            }}
+          >
+            Google-ით რეგისტრაცია
+          </Button>
+
+          <Divider sx={{ my: 3 }}>
+            <Typography variant="body2" color="text.secondary">
+              ან ელ. ფოსტით
+            </Typography>
+          </Divider>
 
           <Box component="form" onSubmit={handleEmailRegister} sx={{ mb: 3 }}>
             <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
@@ -301,24 +333,6 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
               {loading ? <CircularProgress size={24} /> : 'რეგისტრაცია'}
             </Button>
           </Box>
-
-          <Divider sx={{ my: 3 }}>
-            <Typography variant="body2" color="text.secondary">
-              ან
-            </Typography>
-          </Divider>
-
-          <Button
-            fullWidth
-            variant="outlined"
-            size="large"
-            startIcon={<Google />}
-            onClick={handleGoogleRegister}
-            disabled={loading || !clientId}
-            sx={{ mb: 3 }}
-          >
-            Google-ით რეგისტრაცია
-          </Button>
 
           <Box sx={{ textAlign: 'center' }}>
             <Typography variant="body2" color="text.secondary">

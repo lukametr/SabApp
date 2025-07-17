@@ -342,18 +342,18 @@ export class AuthService {
       // Send verification email
       await sendVerificationEmail(user.email, emailVerificationToken);
 
+      // Return success without JWT token - user must verify email first
       return {
-        accessToken,
+        message: 'Registration successful. Please check your email to verify your account.',
         user: {
           id: String(user._id),
           name: user.name,
           email: user.email,
-          picture: user.picture,
-          role: user.role,
+          isEmailVerified: user.isEmailVerified,
           status: user.status,
-          // Removed personalNumber and phoneNumber from response
         },
-      };
+        requiresEmailVerification: true,
+      } as any;
     } catch (error) {
       console.error('≡ƒöº Email Registration - Error:', error);
       throw error;
