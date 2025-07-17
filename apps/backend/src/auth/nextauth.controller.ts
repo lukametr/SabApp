@@ -1,7 +1,7 @@
 import { Controller, Get, Req, Res, Param } from '@nestjs/common';
 import { Request, Response } from 'express';
 
-@Controller('api/auth')
+@Controller('auth')
 export class NextAuthController {
   
   @Get('session')
