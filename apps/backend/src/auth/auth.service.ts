@@ -51,6 +51,7 @@ export class AuthService {
       }
 
       console.log('≡ƒöº Google token validated successfully for user:', payload.email);
+      console.log('≡ƒöº Google user sub (ID):', payload.sub);
 
       return {
         sub: payload.sub,
@@ -223,6 +224,15 @@ export class AuthService {
       // Validate the ID token
       const googleUserInfo = await this.validateGoogleToken(tokens.id_token);
       
+      console.log('🔍 Google user info:', {
+        sub: googleUserInfo.sub,
+        email: googleUserInfo.email,
+        name: googleUserInfo.name
+      });
+      
+      // Debug all users first
+      await this.usersService.debugAllUsers();
+      
       // Check if user exists
       let user = await this.usersService.findByGoogleId(googleUserInfo.sub);
 
@@ -242,6 +252,8 @@ export class AuthService {
           user = await this.usersService.createUser(googleUserInfo);
           console.log('✅ New Google user created successfully:', user.email);
         }
+      } else {
+        console.log('✅ Existing Google user found:', user.email);
       }
 
       if (!user) {

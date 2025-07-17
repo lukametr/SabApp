@@ -13,7 +13,20 @@ export class UsersService {
   ) {}
 
   async findByGoogleId(googleId: string): Promise<UserDocument | null> {
-    return this.userModel.findOne({ googleId }).exec();
+    console.log('🔍 Looking up user by Google ID:', googleId);
+    try {
+      const user = await this.userModel.findOne({ googleId }).exec();
+      console.log('🔍 Google ID lookup result:', {
+        found: !!user,
+        email: user?.email,
+        googleId: user?.googleId,
+        authProvider: user?.authProvider
+      });
+      return user;
+    } catch (error) {
+      console.error('🔍 Error finding user by Google ID:', error);
+      throw error;
+    }
   }
 
   async findByEmail(email: string): Promise<UserDocument | null> {
@@ -56,6 +69,7 @@ export class UsersService {
 
     const now = new Date();
     const end = new Date(now.getTime() + 1000 * 60 * 60 * 24 * 14); // 14 დღე
+    
     const user = new this.userModel({
       name: googleUserInfo.name,
       email: googleUserInfo.email,
@@ -72,7 +86,18 @@ export class UsersService {
       subscriptionDays: 14,
     });
 
-    return user.save();
+    // დაამატე ლოგი დებაგისთვის
+    console.log('🔍 Creating user with data:', {
+      email: user.email,
+      googleId: user.googleId,
+      authProvider: user.authProvider
+    });
+
+    const savedUser = await user.save();
+    
+    console.log('✅ User saved with ID:', savedUser._id);
+    
+    return savedUser;
   }
 
   async createEmailUser(userData: {
@@ -160,16 +185,36 @@ export class UsersService {
   }
 
   async linkGoogleId(userId: string, googleId: string): Promise<void> {
-    console.log('🔗 Linking Google ID to existing user:', userId);
-    await this.userModel.findByIdAndUpdate(userId, {
+    console.log('🔗 Linking Google ID to existing user:', userId, 'Google ID:', googleId);
+    const result = await this.userModel.findByIdAndUpdate(userId, {
       googleId: googleId,
       authProvider: 'google',
+    }, { new: true });
+    console.log('🔗 Google ID linked successfully:', {
+      userId: result?._id,
+      email: result?.email,
+      googleId: result?.googleId,
+      authProvider: result?.authProvider
     });
-    console.log('🔗 Google ID linked successfully with authProvider set to google');
   }
 
   async findAll(): Promise<UserDocument[]> {
     return this.userModel.find().select('-__v').exec();
+  }
+
+  async debugAllUsers(): Promise<void> {
+    console.log('🔍 DEBUG: All users in database:');
+    const users = await this.userModel.find().select('email googleId authProvider name').exec();
+    users.forEach((user, index) => {
+      console.log(`🔍 User ${index + 1}:`, {
+        id: user._id,
+        email: user.email,
+        googleId: user.googleId,
+        authProvider: user.authProvider,
+        name: user.name
+      });
+    });
+    console.log(`🔍 Total users: ${users.length}`);
   }
 
   async updateUserStatus(userId: string, status: UserStatus): Promise<UserDocument> {
