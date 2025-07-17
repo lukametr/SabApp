@@ -80,7 +80,7 @@ export class AuthService {
             code: authDto.code,
             client_id: this.configService.get<string>('GOOGLE_CLIENT_ID') || '',
             client_secret: this.configService.get<string>('GOOGLE_CLIENT_SECRET') || '',
-            redirect_uri: `${this.configService.get<string>('FRONTEND_URL') || 'https://saba-app-production.up.railway.app'}/auth/google/callback`,
+            redirect_uri: `${this.configService.get<string>('NEXT_PUBLIC_API_URL') || 'https://saba-app-production.up.railway.app/api'}/auth/google/callback`,
             grant_type: 'authorization_code',
           } as Record<string, string>),
         });
@@ -183,17 +183,16 @@ export class AuthService {
       
       const clientId = this.configService.get<string>('GOOGLE_CLIENT_ID') || '';
       const clientSecret = this.configService.get<string>('GOOGLE_CLIENT_SECRET') || '';
-      const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'https://saba-app-production.up.railway.app';
-      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://saba-app-production.up.railway.app/api';
+      const backendUrl = this.configService.get<string>('NEXT_PUBLIC_API_URL') || 'https://saba-app-production.up.railway.app/api';
       const redirectUri = `${backendUrl}/auth/google/callback`;
       
-      console.log('≡ƒöº OAuth Config Debug:', {
+      console.log('🔧 OAuth Config Debug:', {
         hasClientId: !!clientId,
         clientIdLength: clientId.length,
         hasClientSecret: !!clientSecret,
         clientSecretLength: clientSecret.length,
         redirectUri,
-        frontendUrl
+        backendUrl
       });
       
       // Exchange authorization code for tokens
