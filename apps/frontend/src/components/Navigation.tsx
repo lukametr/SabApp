@@ -223,7 +223,7 @@ export default function Navigation() {
           auto_select: false,
           cancel_on_tap_outside: true,
           prompt_parent_id: 'google-signin-container',
-          ux_mode: 'popup', // Use popup mode for better compatibility
+          ux_mode: 'redirect', // Use redirect mode for consistent session handling
           scope: 'openid email profile',
           locale: 'ka', // Georgian locale
           // Mobile-specific optimizations

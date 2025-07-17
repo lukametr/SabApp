@@ -72,21 +72,25 @@ export class UsersService {
     return this.userModel.findById(id).exec();
   }
 
+
   async createUser(
     googleUserInfo: GoogleUserInfo
   ): Promise<UserDocument> {
+    // მკაცრი ვალიდაცია
+    if (!googleUserInfo.email || !googleUserInfo.sub) {
+      console.error('Google user info missing email or sub:', googleUserInfo);
+      throw new ConflictException('Google account must have email and sub');
+    }
     // 🔍 კრიტიკული debug - ვამოწმებთ რა გადაცემული
     console.log('🚨 CRITICAL DEBUG - Received googleUserInfo:', JSON.stringify(googleUserInfo, null, 2));
     console.log('🚨 CRITICAL DEBUG - googleUserInfo.email:', googleUserInfo.email);
     console.log('🚨 CRITICAL DEBUG - googleUserInfo.sub:', googleUserInfo.sub);
     console.log('🚨 CRITICAL DEBUG - googleUserInfo.name:', googleUserInfo.name);
-    
     // Check if user already exists
     const existingUser = await this.findByGoogleId(googleUserInfo.sub);
     if (existingUser) {
       throw new ConflictException('User already exists');
     }
-
     // Check if email is already taken
     const existingEmail = await this.findByEmail(googleUserInfo.email);
     if (existingEmail) {
