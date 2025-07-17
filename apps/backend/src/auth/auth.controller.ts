@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, UseGuards, Request, Res, HttpStatus, BadRequestException } from '@nestjs/common';
+import { Controller, Post, Body, Get, UseGuards, Request, Res, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
@@ -57,8 +57,8 @@ export class AuthController {
       const result = await this.authService.handleGoogleCallback(code, state);
 
       // For Railway deployment - redirect to frontend with token
-      if (result.access_token) {
-        const successUrl = `/?auth=success&token=${result.access_token}&user=${encodeURIComponent(JSON.stringify(result.user))}`;
+      if (result.accessToken) {
+        const successUrl = `/?auth=success&token=${result.accessToken}&user=${encodeURIComponent(JSON.stringify(result.user))}`;
         return res.redirect(successUrl);
       } else {
         return res.redirect('/?error=Authentication failed');
