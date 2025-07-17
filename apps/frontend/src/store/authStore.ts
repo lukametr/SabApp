@@ -29,13 +29,16 @@ export const useAuthStore = create<AuthState>((set) => ({
     
     set({ user: data.user, token: data.accessToken, loading: false });
     
-    console.log('🗃️ Saving to localStorage:', { 
-      token: data.accessToken?.substring(0, 20) + '...',
-      user: data.user?.email 
-    });
-    
-    localStorage.setItem('token', data.accessToken);
-    localStorage.setItem('user', JSON.stringify(data.user));
+    // Only access localStorage on client side
+    if (typeof window !== 'undefined') {
+      console.log('🗃️ Saving to localStorage:', { 
+        token: data.accessToken?.substring(0, 20) + '...',
+        user: data.user?.email 
+      });
+      
+      localStorage.setItem('token', data.accessToken);
+      localStorage.setItem('user', JSON.stringify(data.user));
+    }
     
     console.log('🗃️ AuthStore state updated');
   },

@@ -21,9 +21,17 @@ export default function AppRouter() {
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
+
+  // Handle hydration
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
-    // Check for stored user data
+    if (!mounted) return;
+    
+    // Check for stored user data only after hydration
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       try {
@@ -34,25 +42,32 @@ export default function AppRouter() {
       }
     }
     setLoading(false);
-  }, []);
+  }, [mounted]);
 
   const handleLogin = (userData: User) => {
     setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('user', JSON.stringify(userData));
+    }
   };
 
   const handleRegister = (userData: User) => {
     setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('user', JSON.stringify(userData));
+    }
   };
 
   const handleLogout = () => {
     setUser(null);
-    localStorage.removeItem('user');
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('user');
+    }
     router.push('/');
   };
 
-  if (loading) {
+  // Show loading until mounted to prevent hydration mismatch
+  if (!mounted || loading) {
     return <div>Loading...</div>; // TODO: Add proper loading component
   }
 
