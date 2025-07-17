@@ -29,6 +29,7 @@ NEXT_PUBLIC_API_URL=https://saba-app-production.up.railway.app/api
    - Find your OAuth 2.0 Client ID
 
 2. **Authorized JavaScript Origins**:
+
    ```
    https://saba-app-production.up.railway.app
    http://localhost:3000
@@ -44,12 +45,15 @@ NEXT_PUBLIC_API_URL=https://saba-app-production.up.railway.app/api
 ### Troubleshooting Current Issues
 
 #### Issue 1: Google Client ID is undefined
+
 **Solution**: Add `NEXT_PUBLIC_GOOGLE_CLIENT_ID` to Railway Shared Variables
 
 #### Issue 2: API 404 errors
+
 **Solution**: Ensure `NEXT_PUBLIC_API_URL` is set to `https://saba-app-production.up.railway.app/api`
 
 #### Issue 3: Malformed API URLs
+
 **Solution**: The API configuration has been fixed to prevent URL concatenation issues
 
 ### Verification Steps
@@ -90,6 +94,7 @@ After setting environment variables:
 ### Railway Configuration Files
 
 The project uses these Railway configuration files:
+
 - `railway.toml` (root) - Main deployment configuration
 - `apps/backend/railway.toml` - Backend-specific configuration
 
@@ -116,4 +121,4 @@ The project uses these Railway configuration files:
 - Never commit sensitive environment variables to Git
 - Use Railway's environment variable system for secrets
 - Ensure Google OAuth credentials are properly configured
-- Check CORS settings for production domain 
+- Check CORS settings for production domain
