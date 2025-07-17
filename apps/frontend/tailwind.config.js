@@ -10,7 +10,7 @@ module.exports = {
       colors: {
         'warning-light': '#fff3cd',
         'warning-dark': '#856404',
-        'primary': {
+        primary: {
           50: '#eff6ff',
           100: '#dbeafe',
           200: '#bfdbfe',
@@ -27,4 +27,4 @@ module.exports = {
   },
   plugins: [],
   important: true,
-} 
+};
