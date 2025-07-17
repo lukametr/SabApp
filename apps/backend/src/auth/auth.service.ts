@@ -227,12 +227,25 @@ export class AuthService {
       let user = await this.usersService.findByGoogleId(googleUserInfo.sub);
 
       if (!user) {
-        // New user - this should trigger registration flow
-        throw new BadRequestException({
-          message: 'Additional registration information required',
-          code: 'REGISTRATION_REQUIRED',
-          userInfo: googleUserInfo
-        });
+        // Check if user exists by email (maybe registered with email/password)
+        user = await this.usersService.findByEmail(googleUserInfo.email);
+        
+        if (user) {
+          // Link existing user with Google account
+          console.log('🔗 Linking existing user with Google account:', googleUserInfo.email);
+          await this.usersService.linkGoogleId(String(user._id), googleUserInfo.sub);
+          // Refresh user data
+          user = await this.usersService.findById(String(user._id));
+        } else {
+          // Create new user with Google data
+          console.log('👤 Creating new user from Google OAuth:', googleUserInfo.email);
+          user = await this.usersService.createUser(googleUserInfo);
+          console.log('✅ New Google user created successfully:', user.email);
+        }
+      }
+
+      if (!user) {
+        throw new UnauthorizedException('Failed to create or find user');
       }
 
       // Existing user login
