@@ -25,8 +25,8 @@ export class AuthController {
   async initiateGoogleAuth(@Res() res: Response) {
     try {
       const googleClientId = process.env.GOOGLE_CLIENT_ID;
-      const frontendUrl = process.env.FRONTEND_URL || 'https://saba-app-production.up.railway.app';
-      const redirectUri = `${frontendUrl}/auth/google/callback`;
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://saba-app-production.up.railway.app/api';
+      const redirectUri = `${backendUrl}/auth/google/callback`;
       
       const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
         `client_id=${googleClientId}&` +
