@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { MigrationService } from './migration.service';
 import { InjectConnection } from '@nestjs/mongoose';
@@ -380,5 +380,72 @@ export class DebugController {
         clientId: googleClientId ? `${googleClientId.substring(0, 20)}...` : 'NOT_SET'
       }
     };
+  }
+
+  @Get('oauth-callback-debug')
+  async oauthCallbackDebug(@Query() query: any) {
+    console.log('🧪 Debug: OAuth callback received with query params:', query);
+    
+    const { code, state, error } = query;
+    
+    if (error) {
+      return {
+        status: 'error',
+        message: 'OAuth authorization failed',
+        error: error,
+        timestamp: new Date().toISOString()
+      };
+    }
+    
+    if (!code) {
+      return {
+        status: 'error',
+        message: 'No authorization code received',
+        query: query,
+        timestamp: new Date().toISOString()
+      };
+    }
+    
+    try {
+      // Test real OAuth flow
+      const result = await this.authService.handleGoogleCallback(code, state);
+      
+      return {
+        status: 'success',
+        message: 'OAuth callback successful!',
+        result: {
+          hasAccessToken: !!result.accessToken,
+          hasUser: !!result.user,
+          userEmail: result.user?.email,
+          userId: result.user?.id,
+          accessTokenLength: result.accessToken?.length || 0
+        },
+        debugInfo: {
+          codeLength: code.length,
+          state: state,
+          query: query
+        },
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('🧪 Debug: OAuth callback failed:', error);
+      
+      return {
+        status: 'error',
+        message: 'OAuth callback failed',
+        error: {
+          message: error.message,
+          code: error.code,
+          name: error.name,
+          details: error.response || null
+        },
+        debugInfo: {
+          codeLength: code.length,
+          state: state,
+          query: query
+        },
+        timestamp: new Date().toISOString()
+      };
+    }
   }
 }
