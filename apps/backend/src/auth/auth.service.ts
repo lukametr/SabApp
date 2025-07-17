@@ -184,7 +184,8 @@ export class AuthService {
       const clientId = this.configService.get<string>('GOOGLE_CLIENT_ID') || '';
       const clientSecret = this.configService.get<string>('GOOGLE_CLIENT_SECRET') || '';
       const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'https://saba-app-production.up.railway.app';
-      const redirectUri = `${frontendUrl}/auth/google/callback`;
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://saba-app-production.up.railway.app/api';
+      const redirectUri = `${backendUrl}/auth/google/callback`;
       
       console.log('≡ƒöº OAuth Config Debug:', {
         hasClientId: !!clientId,
