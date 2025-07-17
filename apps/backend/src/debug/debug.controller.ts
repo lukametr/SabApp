@@ -542,4 +542,57 @@ export class DebugController {
       };
     }
   }
+
+  @Post('fix-auth-provider')
+  async fixAuthProvider(@Body() body: { email: string, authProvider: string }) {
+    try {
+      const { email, authProvider } = body;
+      
+      if (!email || !authProvider) {
+        return {
+          status: 'error',
+          message: 'Email and authProvider are required'
+        };
+      }
+
+      const user = await this.usersService.findByEmail(email);
+      if (!user) {
+        return {
+          status: 'error',
+          message: 'User not found'
+        };
+      }
+
+      // Update authProvider manually
+      await this.connection.collection('users').updateOne(
+        { email: email },
+        { $set: { authProvider: authProvider } }
+      );
+
+      const updatedUser = await this.usersService.findByEmail(email);
+      
+      if (!updatedUser) {
+        return {
+          status: 'error',
+          message: 'Failed to retrieve updated user'
+        };
+      }
+
+      return {
+        status: 'success',
+        message: 'AuthProvider updated successfully',
+        user: {
+          email: updatedUser.email,
+          authProvider: updatedUser.authProvider,
+          googleId: !!updatedUser.googleId
+        }
+      };
+    } catch (error) {
+      return {
+        status: 'error',
+        message: 'Failed to update authProvider',
+        error: error.message
+      };
+    }
+  }
 }

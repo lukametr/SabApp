@@ -61,6 +61,7 @@ export class UsersService {
       email: googleUserInfo.email,
       googleId: googleUserInfo.sub,
       picture: googleUserInfo.picture || undefined,
+      authProvider: 'google',
       role: UserRole.USER,
       status: UserStatus.ACTIVE,
       isEmailVerified: googleUserInfo.email_verified,
@@ -162,8 +163,9 @@ export class UsersService {
     console.log('🔗 Linking Google ID to existing user:', userId);
     await this.userModel.findByIdAndUpdate(userId, {
       googleId: googleId,
+      authProvider: 'google',
     });
-    console.log('🔗 Google ID linked successfully');
+    console.log('🔗 Google ID linked successfully with authProvider set to google');
   }
 
   async findAll(): Promise<UserDocument[]> {
