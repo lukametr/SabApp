@@ -325,19 +325,6 @@ export class AuthService {
         emailVerificationTokenExpires,
       });
 
-      // Generate JWT token
-      const payload = {
-        sub: String(user._id),
-        email: user.email,
-        role: user.role,
-        status: user.status,
-      };
-
-      const accessToken = this.jwtService.sign(payload, {
-        secret: this.configService.get<string>('JWT_SECRET'),
-        expiresIn: this.configService.get<string>('JWT_EXPIRES_IN', '7d'),
-      });
-
       console.log('≡ƒöº Email Registration - Success:', user.email);
       // Send verification email
       await sendVerificationEmail(user.email, emailVerificationToken);
