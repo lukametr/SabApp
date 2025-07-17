@@ -5,7 +5,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 export default NextAuth({
   providers: [
     GoogleProvider({
-      clientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
+      clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
     CredentialsProvider({
@@ -34,19 +34,46 @@ export default NextAuth({
   ],
   callbacks: {
     async jwt({ token, user, account, profile }) {
+      if (account && account.provider === 'google' && profile) {
+        // For Google login, create/find user in backend
+        try {
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:10000/api'}/auth/google`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: profile.email,
+              name: profile.name,
+              picture: (profile as any).picture,
+              googleId: (profile as any).sub,
+            }),
+          });
+          
+          if (response.ok) {
+            const backendUser = await response.json();
+            token.id = backendUser.user.id || backendUser.user._id;
+            token.email = backendUser.user.email;
+            token.name = backendUser.user.name;
+            token.picture = backendUser.user.picture;
+            token.role = backendUser.user.role;
+          }
+        } catch (error) {
+          console.error('Error syncing Google user with backend:', error);
+        }
+      }
+      
       if (user) {
-        token.id = user.id || user._id;
+        token.id = (user as any).id || (user as any)._id;
         token.email = user.email;
         token.name = user.name;
-        token.picture = user.picture;
-        token.role = user.role;
+        token.picture = (user as any).picture;
+        token.role = (user as any).role;
       }
       return token;
     },
     async session({ session, token }) {
-      session.user.id = token.id;
-      session.user.role = token.role;
-      session.user.picture = token.picture;
+      (session.user as any).id = token.id;
+      (session.user as any).role = token.role;
+      (session.user as any).picture = token.picture;
       return session;
     },
   },

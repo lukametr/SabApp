@@ -92,22 +92,42 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
       return;
     }
     try {
-      // NextAuth credentials provider
+      // For NextAuth credentials, we need to register with the backend first, then sign in
+      const registrationResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          password: formData.password,
+          organization: formData.organization,
+          position: formData.position,
+        }),
+      });
+
+      if (!registrationResponse.ok) {
+        const errorData = await registrationResponse.json();
+        throw new Error(errorData.message || 'Registration failed');
+      }
+
+      // Now use NextAuth credentials provider to sign in
       const res = await signIn('credentials', {
         redirect: false,
         email: formData.email,
         password: formData.password,
       });
+      
       if (res?.error) {
         setError(res.error);
       } else {
-        setSuccess('შესვლა წარმატებით დასრულდა!');
+        setSuccess('რეგისტრაცია და შესვლა წარმატებით დასრულდა!');
         setTimeout(() => {
           router.push('/');
         }, 1000);
       }
     } catch (err: any) {
-      setError(err.message || 'შესვლისას დაფიქსირდა შეცდომა');
+      setError(err.message || 'რეგისტრაციისას დაფიქსირდა შეცდომა');
     } finally {
       setLoading(false);
     }
@@ -115,7 +135,7 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
 
   // Google რეგისტრაცია/შესვლა NextAuth-ით
   const handleGoogleRegister = () => {
-    signIn('google');
+    signIn('google', { callbackUrl: '/' });
   };
 
   return (
@@ -135,13 +155,8 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
               SabApp
             </Typography>
             <Typography variant="h6" color="text.secondary">
-              {isGoogleRegistration ? 'რეგისტრაციის დასრულება' : 'რეგისტრაცია'}
+              რეგისტრაცია
             </Typography>
-            {isGoogleRegistration && (
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                Google-ით ავტორიზაციისთვის საჭიროა დამატებითი ინფორმაცია
-              </Typography>
-            )}
           </Box>
 
 
@@ -171,7 +186,6 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
                 value={formData.firstName}
                 onChange={handleChange}
                 required
-                disabled={isGoogleRegistration}
                 autoComplete="given-name"
               />
               <TextField
@@ -181,7 +195,6 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
                 value={formData.lastName}
                 onChange={handleChange}
                 required
-                disabled={isGoogleRegistration}
                 autoComplete="family-name"
               />
             </Box>
@@ -194,7 +207,6 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
               value={formData.email}
               onChange={handleChange}
               required
-              disabled={isGoogleRegistration}
               sx={{ mb: 2 }}
               autoComplete="email"
             />
@@ -219,10 +231,9 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
               autoComplete="organization-title"
             />
             
-            
-            {!isGoogleRegistration && (
-              <>
-                <TextField
+            {/* Password fields - always shown for credentials registration */}
+            <>
+              <TextField
                   fullWidth
                   label="პაროლი"
                   type={showPassword ? 'text' : 'password'}
@@ -272,7 +283,6 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
                   }}
                 />
               </>
-            )}
             
             <FormControlLabel
               control={
@@ -301,7 +311,7 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
               disabled={loading}
               sx={{ mb: 2 }}
             >
-              {loading ? <CircularProgress size={24} /> : (isGoogleRegistration ? 'რეგისტრაციის დასრულება' : 'რეგისტრაცია')}
+              {loading ? <CircularProgress size={24} /> : 'რეგისტრაცია'}
             </Button>
           </Box>
 

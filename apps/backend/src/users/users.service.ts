@@ -158,6 +158,14 @@ export class UsersService {
     console.log('🔒 Password hash updated successfully');
   }
 
+  async linkGoogleId(userId: string, googleId: string): Promise<void> {
+    console.log('🔗 Linking Google ID to existing user:', userId);
+    await this.userModel.findByIdAndUpdate(userId, {
+      googleId: googleId,
+    });
+    console.log('🔗 Google ID linked successfully');
+  }
+
   async findAll(): Promise<UserDocument[]> {
     return this.userModel.find().select('-__v').exec();
   }

@@ -442,4 +442,69 @@ export class AuthService {
       throw error;
     }
   }
+
+  // NextAuth Google authentication handler
+  async handleNextAuthGoogle(userData: any): Promise<AuthResponseDto> {
+    try {
+      console.log('🔐 NextAuth Google - Starting authentication:', userData.email);
+      
+      // Check if user exists by Google ID
+      let user = await this.usersService.findByGoogleId(userData.googleId);
+
+      if (!user) {
+        // Check if user exists by email (migration case)
+        user = await this.usersService.findByEmail(userData.email);
+        
+        if (!user) {
+          console.log('🔐 NextAuth Google - Creating new user');
+          // Create new user
+          user = await this.usersService.createUser({
+            sub: userData.googleId,
+            email: userData.email,
+            name: userData.name,
+            picture: userData.picture,
+            email_verified: true,
+          });
+        } else {
+          console.log('🔐 NextAuth Google - Linking existing email user to Google');
+          // Link existing email user to Google ID
+          await this.usersService.linkGoogleId(String(user._id), userData.googleId);
+        }
+      } else {
+        console.log('🔐 NextAuth Google - Existing Google user login');
+        // Update last login
+        await this.usersService.updateLastLogin(String(user._id));
+      }
+
+      // Generate JWT token
+      const payload = {
+        sub: String(user._id),
+        email: user.email,
+        role: user.role,
+        status: user.status,
+      };
+
+      const accessToken = this.jwtService.sign(payload, {
+        secret: this.configService.get<string>('JWT_SECRET'),
+        expiresIn: this.configService.get<string>('JWT_EXPIRES_IN', '7d'),
+      });
+
+      console.log('🔐 NextAuth Google - Success for user:', user.email);
+
+      return {
+        accessToken,
+        user: {
+          id: String(user._id),
+          name: user.name,
+          email: user.email,
+          picture: user.picture,
+          role: user.role,
+          status: user.status,
+        },
+      };
+    } catch (error) {
+      console.error('🔐 NextAuth Google - Error:', error);
+      throw error;
+    }
+  }
 }

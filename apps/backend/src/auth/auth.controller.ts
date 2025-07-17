@@ -2,7 +2,7 @@ import { Controller, Post, Body, Get, UseGuards, Request, Res, HttpStatus, BadRe
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
-import { GoogleAuthDto, AuthResponseDto, CompleteRegistrationDto } from '../users/dto/google-auth.dto';
+import { AuthResponseDto, CompleteRegistrationDto } from '../users/dto/google-auth.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { Roles } from './decorators/roles.decorator';
@@ -22,7 +22,12 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Successfully authenticated', type: AuthResponseDto })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 409, description: 'User already exists or data conflict' })
-  async googleAuth(@Body() authDto: GoogleAuthDto): Promise<AuthResponseDto> {
+  async googleAuth(@Body() authDto: any): Promise<AuthResponseDto> {
+    // Handle NextAuth Google provider payload
+    if (authDto.googleId && authDto.email && authDto.name) {
+      return this.authService.handleNextAuthGoogle(authDto);
+    }
+    // Handle legacy Google auth
     return this.authService.googleAuth(authDto);
   }
 
