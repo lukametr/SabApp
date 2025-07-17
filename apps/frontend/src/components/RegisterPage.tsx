@@ -30,11 +30,11 @@ import {
 } from '@mui/material';
 import { Google, Shield, Visibility, VisibilityOff } from '@mui/icons-material';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { authService } from '../services/auth.service';
 
 // Get Google Client ID from env (runtime check)
 const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
 console.log('[Google OAuth] NEXT_PUBLIC_GOOGLE_CLIENT_ID:', clientId);
-import { signIn } from 'next-auth/react';
 
 interface RegisterPageProps {
   onRegister?: (user: any) => void;
@@ -92,40 +92,23 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
       return;
     }
     try {
-      // For NextAuth credentials, we need to register with the backend first, then sign in
-      const registrationResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          password: formData.password,
-          organization: formData.organization,
-          position: formData.position,
-        }),
-      });
-
-      if (!registrationResponse.ok) {
-        const errorData = await registrationResponse.json();
-        throw new Error(errorData.message || 'Registration failed');
-      }
-
-      // Now use NextAuth credentials provider to sign in
-      const res = await signIn('credentials', {
-        redirect: false,
+      // პირველ ეტაპზე registration backend-ზე
+      await authService.register({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
         email: formData.email,
         password: formData.password,
+        organization: formData.organization,
+        position: formData.position,
       });
+
+      // მეორე ეტაპზე login backend service-ით
+      await authService.signIn(formData.email, formData.password);
       
-      if (res?.error) {
-        setError(res.error);
-      } else {
-        setSuccess('რეგისტრაცია და შესვლა წარმატებით დასრულდა!');
-        setTimeout(() => {
-          router.push('/');
-        }, 1000);
-      }
+      setSuccess('რეგისტრაცია და შესვლა წარმატებით დასრულდა!');
+      setTimeout(() => {
+        router.push('/');
+      }, 1000);
     } catch (err: any) {
       setError(err.message || 'რეგისტრაციისას დაფიქსირდა შეცდომა');
     } finally {
@@ -133,9 +116,13 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
     }
   };
 
-  // Google რეგისტრაცია/შესვლა NextAuth-ით
+  // Google რეგისტრაცია/შესვლა უკაცრავად Backend-თან
   const handleGoogleRegister = () => {
-    signIn('google', { callbackUrl: '/' });
+    // Railway production URL detection
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || window.location.origin;
+    const googleOAuthUrl = `${baseUrl}/api/auth/google`;
+    console.log('[Google OAuth] Redirecting to:', googleOAuthUrl);
+    window.location.href = googleOAuthUrl;
   };
 
   return (

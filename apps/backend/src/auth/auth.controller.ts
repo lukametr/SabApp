@@ -50,22 +50,22 @@ export class AuthController {
       const { code, state } = req.query;
       
       if (!code) {
-        return res.status(HttpStatus.BAD_REQUEST).json({
-          message: 'Authorization code is required'
-        });
+        return res.redirect('/?error=Authorization code is required');
       }
 
       // Exchange code for tokens and get user info
       const result = await this.authService.handleGoogleCallback(code, state);
 
-      // Return JSON response instead of redirect for API consistency
-      return res.json(result);
+      // For Railway deployment - redirect to frontend with token
+      if (result.access_token) {
+        const successUrl = `/?auth=success&token=${result.access_token}&user=${encodeURIComponent(JSON.stringify(result.user))}`;
+        return res.redirect(successUrl);
+      } else {
+        return res.redirect('/?error=Authentication failed');
+      }
     } catch (error) {
       console.error('Google callback error:', error);
-      return res.status(HttpStatus.BAD_REQUEST).json({
-        message: 'Authentication failed',
-        error: error.message
-      });
+      return res.redirect(`/?error=${encodeURIComponent(error.message || 'Authentication failed')}`);
     }
   }
 

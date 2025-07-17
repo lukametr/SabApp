@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Box, 
   Container, 
@@ -11,7 +11,8 @@ import {
   CardContent,
   Stack,
   Chip,
-  useTheme
+  useTheme,
+  Alert
 } from '@mui/material';
 import { 
   Security, 
@@ -22,13 +23,28 @@ import {
   Phone, 
   ArrowForward
 } from '@mui/icons-material';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '../store/authStore';
 
 export default function LandingPage() {
   const theme = useTheme();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuthStore();
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Check for error parameter
+    const errorParam = searchParams.get('error');
+    if (errorParam) {
+      setError(decodeURIComponent(errorParam));
+      
+      // Clean URL after showing error
+      const url = new URL(window.location.href);
+      url.searchParams.delete('error');
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, [searchParams]);
 
   const handleGetStarted = () => {
     if (user) {
@@ -81,6 +97,15 @@ export default function LandingPage() {
 
   return (
     <Box sx={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
+      {/* Error Alert */}
+      {error && (
+        <Container maxWidth="lg" sx={{ pt: 2 }}>
+          <Alert severity="error" onClose={() => setError(null)}>
+            {error}
+          </Alert>
+        </Container>
+      )}
+      
       {/* Hero Section */}
       <Box sx={{ 
         backgroundColor: 'white', 
