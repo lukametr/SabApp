@@ -76,22 +76,34 @@ export class AuthController {
       // Handle Google OAuth callback
       const { code, state } = req.query;
       
+      console.log('🧪 OAuth Callback Debug:', {
+        hasCode: !!code,
+        codeLength: code?.length || 0,
+        state: state,
+        fullQuery: req.query
+      });
+      
       if (!code) {
+        console.log('❌ OAuth Error: No authorization code received');
         const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'https://saba-app-production.up.railway.app';
         return res.redirect(`${frontendUrl}/?error=Authorization code is required`);
       }
 
+      console.log('🔄 OAuth: Starting token exchange...');
       // Exchange code for tokens and get user info
       const result = await this.authService.handleGoogleCallback(code, state);
+      console.log('✅ OAuth: Token exchange successful');
 
       // Get frontend URL for redirect
       const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'https://saba-app-production.up.railway.app';
 
       // For Railway deployment - redirect to frontend with token
       if (result.accessToken) {
+        console.log('✅ OAuth: Redirecting to frontend with token');
         const successUrl = `${frontendUrl}/?auth=success&token=${result.accessToken}&user=${encodeURIComponent(JSON.stringify(result.user))}`;
         return res.redirect(successUrl);
       } else {
+        console.log('❌ OAuth Error: No access token received');
         return res.redirect(`${frontendUrl}/?error=Authentication failed`);
       }
     } catch (error) {
