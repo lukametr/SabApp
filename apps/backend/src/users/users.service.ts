@@ -31,6 +31,10 @@ export class UsersService {
 
   async findByEmail(email: string): Promise<UserDocument | null> {
     console.log('🔍 Looking up user by email:', email);
+    console.log('🚨 CRITICAL DEBUG - Email type:', typeof email);
+    console.log('🚨 CRITICAL DEBUG - Email length:', email?.length);
+    console.log('🚨 CRITICAL DEBUG - Email trimmed:', `"${email?.trim()}"`);
+    
     try {
       const user = await this.userModel.findOne({ email }).exec();
       console.log('🔍 User lookup result:', {
@@ -39,6 +43,24 @@ export class UsersService {
         hasPassword: !!user?.password,
         passwordPrefix: user?.password?.substring(0, 10) + '...'
       });
+      
+      // 🚨 დამატებითი debug თუ მომხმარებელი ვერ მოიძებნა
+      if (!user) {
+        console.log('🚨 CRITICAL DEBUG - User not found, checking all users with similar emails...');
+        const allUsers = await this.userModel.find({}).select('email googleId name').exec();
+        console.log('🚨 CRITICAL DEBUG - All users in database:', allUsers.map(u => ({
+          email: u.email,
+          googleId: u.googleId,
+          name: u.name
+        })));
+        
+        // ვეძებთ თუ რამე მსგავსი email არის
+        const similarEmails = allUsers.filter(u => 
+          u.email && u.email.toLowerCase().includes(email.toLowerCase())
+        );
+        console.log('🚨 CRITICAL DEBUG - Similar emails found:', similarEmails);
+      }
+      
       return user;
     } catch (error) {
       console.error('🔍 Error finding user by email:', error);
@@ -53,6 +75,12 @@ export class UsersService {
   async createUser(
     googleUserInfo: GoogleUserInfo
   ): Promise<UserDocument> {
+    // 🔍 კრიტიკული debug - ვამოწმებთ რა გადაცემული
+    console.log('🚨 CRITICAL DEBUG - Received googleUserInfo:', JSON.stringify(googleUserInfo, null, 2));
+    console.log('🚨 CRITICAL DEBUG - googleUserInfo.email:', googleUserInfo.email);
+    console.log('🚨 CRITICAL DEBUG - googleUserInfo.sub:', googleUserInfo.sub);
+    console.log('🚨 CRITICAL DEBUG - googleUserInfo.name:', googleUserInfo.name);
+    
     // Check if user already exists
     const existingUser = await this.findByGoogleId(googleUserInfo.sub);
     if (existingUser) {
@@ -70,7 +98,8 @@ export class UsersService {
     const now = new Date();
     const end = new Date(now.getTime() + 1000 * 60 * 60 * 24 * 14); // 14 დღე
     
-    const user = new this.userModel({
+    // 🔍 მონაცემები რომელსაც ვქმნით user object-ში
+    const userToCreate = {
       name: googleUserInfo.name,
       email: googleUserInfo.email,
       googleId: googleUserInfo.sub,
@@ -84,7 +113,11 @@ export class UsersService {
       subscriptionStartDate: now,
       subscriptionEndDate: end,
       subscriptionDays: 14,
-    });
+    };
+
+    console.log('🚨 CRITICAL DEBUG - User object being created:', JSON.stringify(userToCreate, null, 2));
+    
+    const user = new this.userModel(userToCreate);
 
     // დაამატე ლოგი დებაგისთვის
     console.log('🔍 Creating user with data:', {
@@ -96,6 +129,13 @@ export class UsersService {
     const savedUser = await user.save();
     
     console.log('✅ User saved with ID:', savedUser._id);
+    console.log('🚨 CRITICAL DEBUG - Saved user data:', {
+      id: savedUser._id,
+      email: savedUser.email,
+      googleId: savedUser.googleId,
+      name: savedUser.name,
+      authProvider: savedUser.authProvider
+    });
     
     return savedUser;
   }
