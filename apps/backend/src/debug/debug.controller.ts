@@ -301,4 +301,84 @@ export class DebugController {
       }
     };
   }
+
+  @Post('oauth-real-test')
+  async realOAuthTest(@Body() body: { code: string }) {
+    console.log('🧪 Debug: Real OAuth test initiated with code:', !!body.code);
+    
+    if (!body.code) {
+      return {
+        status: 'error',
+        message: 'Authorization code required',
+        timestamp: new Date().toISOString()
+      };
+    }
+
+    try {
+      // Call the real OAuth handler
+      const result = await this.authService.handleGoogleCallback(body.code, 'debug');
+      
+      return {
+        status: 'success',
+        message: 'OAuth token exchange successful',
+        result: {
+          hasAccessToken: !!result.accessToken,
+          hasUser: !!result.user,
+          userEmail: result.user?.email,
+          userId: result.user?.id
+        },
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('🧪 Debug: OAuth test failed:', error);
+      
+      return {
+        status: 'error',
+        message: 'OAuth token exchange failed',
+        error: {
+          message: error.message,
+          code: error.code,
+          name: error.name,
+          details: error.response || null
+        },
+        timestamp: new Date().toISOString()
+      };
+    }
+  }
+
+  @Get('oauth-manual-auth-url')
+  async getManualAuthUrl() {
+    const googleClientId = process.env.GOOGLE_CLIENT_ID;
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://saba-app-production.up.railway.app/api';
+    const redirectUri = `${backendUrl}/auth/google/callback`;
+    
+    // Create state parameter for tracking
+    const state = Math.random().toString(36).substring(2, 15);
+    
+    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+      `client_id=${googleClientId}&` +
+      `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+      `response_type=code&` +
+      `scope=email profile&` +
+      `access_type=offline&` +
+      `prompt=consent&` +
+      `state=${state}`;
+    
+    return {
+      status: 'success',
+      timestamp: new Date().toISOString(),
+      message: 'მანუალური OAuth URL დაგენერირდა. ბრაუზერში გახსენით და ავტორიზაციის კოდი მიიღეთ.',
+      authUrl: googleAuthUrl,
+      instructions: [
+        '1. გადახვიდეთ authUrl ლინკზე',
+        '2. Google-ში შედით და ნებართვა მიეცით',
+        '3. შედეგად მიღებული authorization code გამოიყენეთ POST /debug/oauth-real-test endpoint-ში'
+      ],
+      state: state,
+      debugInfo: {
+        redirectUri,
+        clientId: googleClientId ? `${googleClientId.substring(0, 20)}...` : 'NOT_SET'
+      }
+    };
+  }
 }
