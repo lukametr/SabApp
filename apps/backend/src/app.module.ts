@@ -16,6 +16,7 @@ import { SubscriptionModule } from './subscription/subscription.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: ['.env.local', '.env'],
     }),
     ScheduleModule.forRoot(), // For cron jobs
     MongooseModule.forRootAsync({
