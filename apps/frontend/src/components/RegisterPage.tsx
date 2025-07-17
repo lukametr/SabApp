@@ -30,9 +30,7 @@ import {
 } from '@mui/material';
 import { Google, Shield, Visibility, VisibilityOff } from '@mui/icons-material';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useGoogleLogin } from '@react-oauth/google';
 import { authService } from '../services/auth.service';
-import { authApi } from '../services/api';
 import { useAuthStore } from '../store/authStore';
 
 // Get Google Client ID from env (runtime check)
@@ -96,8 +94,8 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
       return;
     }
     try {
-      // რეგისტრაცია backend-ზე (ახლა არ იცემს JWT token)
-      const response = await authService.register({
+      // პირველ ეტაპზე registration backend-ზე
+      await authService.register({
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
@@ -106,18 +104,13 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
         position: formData.position,
       });
 
-      // თუ requiresEmailVerification არის true, მაშინ email verification საჭიროა
-      if (response.requiresEmailVerification) {
-        setSuccess('რეგისტრაცია წარმატებით დასრულდა! გთხოვთ, შეამოწმოთ ელ. ფოსტა ანგარიშის დასადასტურებლად.');
-        // არ ვასვლით სისტემაში, მომხმარებელმა email უნდა დაადასტუროს
-      } else {
-        // თუ email verification არ არის საჭირო (Google users), მაშინ შევდივართ
-        await authService.signIn(formData.email, formData.password);
-        setSuccess('რეგისტრაცია და შესვლა წარმატებით დასრულდა!');
-        setTimeout(() => {
-          router.push('/dashboard');
-        }, 1000);
-      }
+      // მეორე ეტაპზე login backend service-ით
+      await authService.signIn(formData.email, formData.password);
+
+      setSuccess('რეგისტრაცია და შესვლა წარმატებით დასრულდა!');
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 1000);
     } catch (err: any) {
       setError(err.message || 'რეგისტრაციისას დაფიქსირდა შეცდომა');
     } finally {
@@ -125,45 +118,14 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
     }
   };
 
-  // Google რეგისტრაცია useGoogleLogin hook-ით
-  const handleGoogleRegister = useGoogleLogin({
-    flow: 'auth-code',
-    onSuccess: async (codeResponse) => {
-      try {
-        setLoading(true);
-        console.log('🔧 Google Register - Auth code received:', !!codeResponse.code);
-        
-        // Send the authorization code to our backend
-        const response = await authApi.googleCallback({
-          code: codeResponse.code,
-          state: 'register'
-        });
-        
-        console.log('🔧 Google Register - Backend auth successful');
-        
-        // Store in auth store and redirect to dashboard
-        login(response);
-        
-        if (onRegister) {
-          onRegister(response.user);
-        }
-        
-        setSuccess('Google-ით რეგისტრაცია წარმატებით დასრულდა!');
-        setTimeout(() => {
-          router.push('/dashboard');
-        }, 1000);
-      } catch (error: any) {
-        console.error('Google register error:', error);
-        setError('Google-ით რეგისტრაციისას დაფიქსირდა შეცდომა');
-      } finally {
-        setLoading(false);
-      }
-    },
-    onError: (error) => {
-      console.error('Google OAuth error:', error);
-      setError('Google-ით რეგისტრაციისას დაფიქსირდა შეცდომა');
-    }
-  });
+  // Google რეგისტრაცია/შესვლა უკაცრავად Backend-თან
+  const handleGoogleRegister = () => {
+    // Railway production URL detection
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || window.location.origin;
+    const googleOAuthUrl = `${baseUrl}/api/auth/google`;
+    console.log('[Google OAuth] Redirecting to:', googleOAuthUrl);
+    window.location.href = googleOAuthUrl;
+  };
 
   return (
     <Box sx={{ 
@@ -203,33 +165,6 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
               {success}
             </Alert>
           )}
-
-          {/* Google Registration Button - moved to top */}
-          <Button
-            fullWidth
-            variant="outlined"
-            size="large"
-            startIcon={<Google />}
-            onClick={() => handleGoogleRegister()}
-            disabled={loading || !clientId}
-            sx={{ 
-              mb: 3,
-              color: '#4285f4',
-              borderColor: '#4285f4',
-              '&:hover': {
-                backgroundColor: 'rgba(66, 133, 244, 0.1)',
-                borderColor: '#4285f4',
-              },
-            }}
-          >
-            Google-ით რეგისტრაცია
-          </Button>
-
-          <Divider sx={{ my: 3 }}>
-            <Typography variant="body2" color="text.secondary">
-              ან ელ. ფოსტით
-            </Typography>
-          </Divider>
 
           <Box component="form" onSubmit={handleEmailRegister} sx={{ mb: 3 }}>
             <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
@@ -368,6 +303,38 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
               {loading ? <CircularProgress size={24} /> : 'რეგისტრაცია'}
             </Button>
           </Box>
+
+          <Divider sx={{ my: 3 }}>
+            <Typography variant="body2" color="text.secondary">
+              ან
+            </Typography>
+          </Divider>
+
+          {/* Google Registration Button - moved back to bottom */}
+          <Button
+            fullWidth
+            variant="outlined"
+            size="large"
+            startIcon={<Google />}
+            onClick={() => {
+              console.log('🔧 Google Register Button Clicked - Starting...');
+              console.log('🔧 Google Register Button Clicked - clientId:', clientId);
+              console.log('🔧 Google Register Button Clicked - loading:', loading);
+              handleGoogleRegister();
+            }}
+            disabled={loading || !clientId}
+            sx={{ 
+              mb: 3,
+              color: '#4285f4',
+              borderColor: '#4285f4',
+              '&:hover': {
+                backgroundColor: 'rgba(66, 133, 244, 0.1)',
+                borderColor: '#4285f4',
+              },
+            }}
+          >
+            Google-ით რეგისტრაცია
+          </Button>
 
           <Box sx={{ textAlign: 'center' }}>
             <Typography variant="body2" color="text.secondary">

@@ -96,6 +96,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
 
   const handleGoogleLogin = useGoogleLogin({
     flow: 'auth-code',
+    redirect_uri: typeof window !== 'undefined' ? window.location.origin : 'https://saba-app-production.up.railway.app',
     onSuccess: async (codeResponse) => {
       try {
         setLoading(true);

@@ -118,18 +118,33 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Successfully authenticated' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async googleCallbackPost(@Body() body: { code: string; state: string }) {
+    console.log('🔧 BACKEND Google Callback POST called with:', {
+      hasCode: !!body.code,
+      codeLength: body.code?.length || 0,
+      state: body.state,
+      bodyKeys: Object.keys(body || {})
+    });
+    
     try {
       const { code, state } = body;
+      console.log('🔧 BACKEND Calling handleGoogleCallback...');
       
-      if (!code) {
-        throw new BadRequestException('Authorization code is required');
-      }
-
-      // Exchange code for tokens and get user info
       const result = await this.authService.handleGoogleCallback(code, state);
+      
+      console.log('🔧 BACKEND Google callback result:', {
+        hasUser: !!result.user,
+        hasAccessToken: !!result.accessToken,
+        userEmail: result.user?.email,
+        userId: result.user?.id
+      });
+      
       return result;
     } catch (error) {
-      console.error('Google callback error:', error);
+      console.error('🔧 BACKEND Google callback error:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
       throw error;
     }
   }
