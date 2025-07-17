@@ -381,9 +381,22 @@ export class AuthService {
         id: user._id, 
         email: user.email, 
         hasPassword: !!user.password,
+        authProvider: user.authProvider,
+        googleId: !!user.googleId,
         status: user.status,
         lastLoginAt: user.lastLoginAt
       });
+
+      // Check if user is Google-only account
+      if (!user.password && user.googleId && user.authProvider === 'google') {
+        console.error('🔐 Email Login - Google-only account attempted email login');
+        throw new BadRequestException({
+          message: 'This account was created with Google. Please use "Sign in with Google" button instead.',
+          code: 'GOOGLE_ACCOUNT_ONLY',
+          email: user.email,
+          authProvider: 'google'
+        });
+      }
 
       // Verify password using bcrypt
       if (!user.password) {
