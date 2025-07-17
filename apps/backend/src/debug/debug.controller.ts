@@ -448,4 +448,98 @@ export class DebugController {
       };
     }
   }
+
+  @Post('oauth-direct-token-test')
+  async directTokenTest(@Body() body: { code: string }) {
+    if (!body.code) {
+      return {
+        status: 'error',
+        message: 'Authorization code required',
+        timestamp: new Date().toISOString()
+      };
+    }
+
+    const clientId = this.configService.get<string>('GOOGLE_CLIENT_ID') || '';
+    const clientSecret = this.configService.get<string>('GOOGLE_CLIENT_SECRET') || '';
+    const backendUrl = this.configService.get<string>('NEXT_PUBLIC_API_URL') || 'https://saba-app-production.up.railway.app/api';
+    const redirectUri = `${backendUrl}/auth/google/callback`;
+
+    console.log('🧪 Direct Token Test Debug:', {
+      hasClientId: !!clientId,
+      clientIdLength: clientId.length,
+      hasClientSecret: !!clientSecret,
+      clientSecretLength: clientSecret.length,
+      redirectUri,
+      codeLength: body.code.length,
+      backendUrl
+    });
+
+    try {
+      // Direct Google token exchange (same as auth.service.ts)
+      const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          code: body.code,
+          client_id: clientId,
+          client_secret: clientSecret,
+          redirect_uri: redirectUri,
+          grant_type: 'authorization_code',
+        } as Record<string, string>),
+      });
+
+      console.log('🧪 Google Token Response Status:', tokenResponse.status);
+      console.log('🧪 Google Token Response Headers:', Object.fromEntries(tokenResponse.headers.entries()));
+      
+      const responseText = await tokenResponse.text();
+      console.log('🧪 Google Token Response Body:', responseText);
+      
+      let responseJson;
+      try {
+        responseJson = JSON.parse(responseText);
+      } catch (parseError) {
+        responseJson = { raw: responseText };
+      }
+
+      return {
+        status: tokenResponse.ok ? 'success' : 'error',
+        timestamp: new Date().toISOString(),
+        googleResponse: {
+          status: tokenResponse.status,
+          statusText: tokenResponse.statusText,
+          headers: Object.fromEntries(tokenResponse.headers.entries()),
+          body: responseJson
+        },
+        requestParams: {
+          grant_type: 'authorization_code',
+          code: `${body.code.substring(0, 20)}...`,
+          redirect_uri: redirectUri,
+          client_id: `${clientId.substring(0, 20)}...`,
+          client_secret: clientSecret ? 'SET' : 'NOT_SET',
+          endpoint: 'https://oauth2.googleapis.com/token'
+        },
+        analysis: {
+          tokenExchangeSuccessful: tokenResponse.ok,
+          hasAccessToken: responseJson?.access_token ? true : false,
+          hasIdToken: responseJson?.id_token ? true : false,
+          errorType: responseJson?.error || null,
+          errorDescription: responseJson?.error_description || null
+        }
+      };
+    } catch (fetchError) {
+      console.error('🧪 Fetch Error:', fetchError);
+      
+      return {
+        status: 'error',
+        timestamp: new Date().toISOString(),
+        error: {
+          message: fetchError.message,
+          type: 'FETCH_ERROR',
+          details: fetchError
+        }
+      };
+    }
+  }
 }
