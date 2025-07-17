@@ -36,9 +36,9 @@ NEXT_PUBLIC_API_URL=https://saba-app-production.up.railway.app/api
 
 3. **Authorized Redirect URIs**:
    ```
-   https://saba-app-production.up.railway.app
-   https://saba-app-production.up.railway.app/
-   http://localhost:3000
+   https://saba-app-production.up.railway.app/auth/google/callback
+   http://localhost:3000/auth/google/callback
+   http://localhost:10000/api/auth/google/callback
    ```
 
 ### Troubleshooting Current Issues
