@@ -131,7 +131,6 @@ export class UsersService {
     });
 
     const savedUser = await user.save();
-    
     console.log('✅ User saved with ID:', savedUser._id);
     console.log('🚨 CRITICAL DEBUG - Saved user data:', {
       id: savedUser._id,
@@ -140,7 +139,6 @@ export class UsersService {
       name: savedUser.name,
       authProvider: savedUser.authProvider
     });
-    
     return savedUser;
   }
 
