@@ -387,14 +387,19 @@ export class AuthService {
         lastLoginAt: user.lastLoginAt
       });
 
-      // Check if user is Google-only account
-      if (!user.password && user.googleId && user.authProvider === 'google') {
-        console.error('🔐 Email Login - Google-only account attempted email login');
+      // Check if user has Google ID (Google account)
+      if (user.googleId) {
+        console.error('🔐 Email Login - Google account attempted email login:', {
+          email: user.email,
+          googleId: !!user.googleId,
+          hasPassword: !!user.password,
+          authProvider: user.authProvider
+        });
         throw new BadRequestException({
           message: 'This account was created with Google. Please use "Sign in with Google" button instead.',
           code: 'GOOGLE_ACCOUNT_ONLY',
           email: user.email,
-          authProvider: 'google'
+          authProvider: user.authProvider || 'google'
         });
       }
 
