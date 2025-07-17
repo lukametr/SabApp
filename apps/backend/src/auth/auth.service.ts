@@ -237,6 +237,7 @@ export class AuthService {
       let user = await this.usersService.findByGoogleId(googleUserInfo.sub);
 
       if (!user) {
+        console.log('🔍 User not found by Google ID, checking by email...');
         // Check if user exists by email (maybe registered with email/password)
         user = await this.usersService.findByEmail(googleUserInfo.email);
         
@@ -250,6 +251,12 @@ export class AuthService {
           // Create new user with Google data
           console.log('👤 Creating new user from Google OAuth:', googleUserInfo.email);
           user = await this.usersService.createUser(googleUserInfo);
+          
+          if (!user) {
+            console.error('❌ CRITICAL: createUser returned null/undefined!');
+            throw new Error('Failed to create user');
+          }
+          
           console.log('✅ New Google user created successfully:', user.email);
         }
       } else {
@@ -257,7 +264,8 @@ export class AuthService {
       }
 
       if (!user) {
-        throw new UnauthorizedException('Failed to create or find user');
+        console.error('❌ CRITICAL: No user object available for JWT generation!');
+        throw new Error('User not found or created');
       }
 
       // Existing user login

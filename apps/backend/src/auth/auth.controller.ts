@@ -84,32 +84,35 @@ export class AuthController {
       });
       
       if (!code) {
-        console.log('❌ OAuth Error: No authorization code received');
+        console.error('❌ No authorization code received');
         const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'https://saba-app-production.up.railway.app';
-        return res.redirect(`${frontendUrl}/?error=Authorization code is required`);
+        return res.redirect(`${frontendUrl}/login?error=no_code`);
       }
 
       console.log('🔄 OAuth: Starting token exchange...');
-      // Exchange code for tokens and get user info
-      const result = await this.authService.handleGoogleCallback(code, state);
+      const authResponse = await this.authService.handleGoogleCallback(code, state);
       console.log('✅ OAuth: Token exchange successful');
+      console.log('✅ OAuth: Auth response received:', {
+        hasToken: !!authResponse.accessToken,
+        userEmail: authResponse.user?.email
+      });
 
-      // Get frontend URL for redirect
+      // Redirect with token
       const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'https://saba-app-production.up.railway.app';
-
-      // For Railway deployment - redirect to frontend with token
-      if (result.accessToken) {
-        console.log('✅ OAuth: Redirecting to frontend with token');
-        const successUrl = `${frontendUrl}/?auth=success&token=${result.accessToken}&user=${encodeURIComponent(JSON.stringify(result.user))}`;
-        return res.redirect(successUrl);
-      } else {
-        console.log('❌ OAuth Error: No access token received');
-        return res.redirect(`${frontendUrl}/?error=Authentication failed`);
-      }
+      const redirectUrl = `${frontendUrl}/auth/callback?token=${authResponse.accessToken}`;
+      
+      console.log('✅ OAuth: Redirecting to frontend with token');
+      console.log('✅ OAuth: Redirect URL:', redirectUrl);
+      
+      return res.redirect(redirectUrl);
     } catch (error) {
-      console.error('Google callback error:', error);
+      console.error('❌ OAuth callback error:', error);
+      console.error('❌ Error message:', error.message);
+      console.error('❌ Error stack:', error.stack);
+      
       const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'https://saba-app-production.up.railway.app';
-      return res.redirect(`${frontendUrl}/?error=${encodeURIComponent(error.message || 'Authentication failed')}`);
+      const errorMessage = encodeURIComponent(error.message || 'oauth_error');
+      return res.redirect(`${frontendUrl}/login?error=${errorMessage}`);
     }
   }
 
