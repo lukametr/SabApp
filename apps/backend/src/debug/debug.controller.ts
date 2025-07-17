@@ -149,4 +149,23 @@ export class DebugController {
       };
     }
   }
+
+  @Get('oauth-config')
+  async getOAuthConfig() {
+    return {
+      status: 'success',
+      timestamp: new Date().toISOString(),
+      config: {
+        GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ? `${process.env.GOOGLE_CLIENT_ID.substring(0, 20)}...` : 'NOT_SET',
+        GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET ? 'SET' : 'NOT_SET',
+        FRONTEND_URL: process.env.FRONTEND_URL || 'NOT_SET',
+        CORS_ORIGIN: process.env.CORS_ORIGIN || 'NOT_SET',
+        NODE_ENV: process.env.NODE_ENV || 'NOT_SET',
+        hasGoogleClientId: !!process.env.GOOGLE_CLIENT_ID,
+        hasGoogleClientSecret: !!process.env.GOOGLE_CLIENT_SECRET,
+        googleClientIdLength: process.env.GOOGLE_CLIENT_ID?.length || 0,
+        googleClientSecretLength: process.env.GOOGLE_CLIENT_SECRET?.length || 0
+      }
+    };
+  }
 }

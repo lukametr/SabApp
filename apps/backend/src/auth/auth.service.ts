@@ -181,6 +181,20 @@ export class AuthService {
     try {
       console.log('≡ƒöº Handling Google OAuth callback with code:', !!code);
       
+      const clientId = this.configService.get<string>('GOOGLE_CLIENT_ID') || '';
+      const clientSecret = this.configService.get<string>('GOOGLE_CLIENT_SECRET') || '';
+      const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'https://saba-app-production.up.railway.app';
+      const redirectUri = `${frontendUrl}/auth/google/callback`;
+      
+      console.log('≡ƒöº OAuth Config Debug:', {
+        hasClientId: !!clientId,
+        clientIdLength: clientId.length,
+        hasClientSecret: !!clientSecret,
+        clientSecretLength: clientSecret.length,
+        redirectUri,
+        frontendUrl
+      });
+      
       // Exchange authorization code for tokens
       const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
@@ -189,14 +203,18 @@ export class AuthService {
         },
         body: new URLSearchParams({
           code,
-          client_id: this.configService.get<string>('GOOGLE_CLIENT_ID') || '',
-          client_secret: this.configService.get<string>('GOOGLE_CLIENT_SECRET') || '',
-          redirect_uri: `${this.configService.get<string>('FRONTEND_URL') || 'https://saba-app-production.up.railway.app'}/auth/google/callback`,
+          client_id: clientId,
+          client_secret: clientSecret,
+          redirect_uri: redirectUri,
           grant_type: 'authorization_code',
         } as Record<string, string>),
       });
 
+      console.log('≡ƒöº Token response status:', tokenResponse.status);
+      
       if (!tokenResponse.ok) {
+        const errorText = await tokenResponse.text();
+        console.log('≡ƒöº Token exchange error:', errorText);
         throw new UnauthorizedException('Failed to exchange authorization code');
       }
 
