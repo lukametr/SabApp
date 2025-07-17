@@ -33,11 +33,13 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isGoogleAccount, setIsGoogleAccount] = useState(false);
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setIsGoogleAccount(false);
 
     try {
       console.log('🔐 Login attempt:', { email, passwordLength: password.length });
@@ -78,7 +80,15 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
         stack: err.stack,
         response: err.response 
       });
-      setError(err.message || 'შესვლისას დაფიქსირდა შეცდომა');
+      
+      // Check if this is a Google-only account
+      if (err.response?.data?.code === 'GOOGLE_ACCOUNT_ONLY') {
+        setIsGoogleAccount(true);
+        setError('ეს ანგარიში შექმნილია Google-ით. გთხოვთ, გამოიყენოთ "Google-ით შესვლა" ღილაკი.');
+      } else {
+        setIsGoogleAccount(false);
+        setError(err.message || 'შესვლისას დაფიქსირდა შეცდომა');
+      }
     } finally {
       setLoading(false);
     }
@@ -149,6 +159,26 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
           {error && (
             <Alert severity="error" sx={{ mb: 3 }}>
               {error}
+              {isGoogleAccount && (
+                <Box sx={{ mt: 2 }}>
+                  <Button
+                    fullWidth
+                    variant="outlined"
+                    startIcon={<Google />}
+                    onClick={handleGoogleLogin}
+                    sx={{
+                      color: '#4285f4',
+                      borderColor: '#4285f4',
+                      '&:hover': {
+                        backgroundColor: 'rgba(66, 133, 244, 0.1)',
+                        borderColor: '#4285f4',
+                      },
+                    }}
+                  >
+                    Google-ით შესვლა
+                  </Button>
+                </Box>
+              )}
             </Alert>
           )}
 
