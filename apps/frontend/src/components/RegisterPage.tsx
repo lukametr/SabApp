@@ -30,7 +30,10 @@ import {
 } from '@mui/material';
 import { Google, Shield, Visibility, VisibilityOff } from '@mui/icons-material';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useGoogleLogin } from '@react-oauth/google';
 import { authService } from '../services/auth.service';
+import { authApi } from '../services/api';
+import { useAuthStore } from '../store/authStore';
 
 // Get Google Client ID from env (runtime check)
 const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
@@ -44,6 +47,7 @@ interface RegisterPageProps {
 export default function RegisterPage({ onRegister }: RegisterPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { login } = useAuthStore();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -121,14 +125,45 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
     }
   };
 
-  // Google რეგისტრაცია/შესვლა უკაცრავად Backend-თან
-  const handleGoogleRegister = () => {
-    // Railway production URL detection
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || window.location.origin;
-    const googleOAuthUrl = `${baseUrl}/api/auth/google`;
-    console.log('[Google OAuth] Redirecting to:', googleOAuthUrl);
-    window.location.href = googleOAuthUrl;
-  };
+  // Google რეგისტრაცია useGoogleLogin hook-ით
+  const handleGoogleRegister = useGoogleLogin({
+    flow: 'auth-code',
+    onSuccess: async (codeResponse) => {
+      try {
+        setLoading(true);
+        console.log('🔧 Google Register - Auth code received:', !!codeResponse.code);
+        
+        // Send the authorization code to our backend
+        const response = await authApi.googleCallback({
+          code: codeResponse.code,
+          state: 'register'
+        });
+        
+        console.log('🔧 Google Register - Backend auth successful');
+        
+        // Store in auth store and redirect to dashboard
+        login(response);
+        
+        if (onRegister) {
+          onRegister(response.user);
+        }
+        
+        setSuccess('Google-ით რეგისტრაცია წარმატებით დასრულდა!');
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 1000);
+      } catch (error: any) {
+        console.error('Google register error:', error);
+        setError('Google-ით რეგისტრაციისას დაფიქსირდა შეცდომა');
+      } finally {
+        setLoading(false);
+      }
+    },
+    onError: (error) => {
+      console.error('Google OAuth error:', error);
+      setError('Google-ით რეგისტრაციისას დაფიქსირდა შეცდომა');
+    }
+  });
 
   return (
     <Box sx={{ 
@@ -175,7 +210,7 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
             variant="outlined"
             size="large"
             startIcon={<Google />}
-            onClick={handleGoogleRegister}
+            onClick={() => handleGoogleRegister()}
             disabled={loading || !clientId}
             sx={{ 
               mb: 3,

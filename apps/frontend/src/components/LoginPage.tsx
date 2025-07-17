@@ -110,6 +110,9 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
           
           console.log('🔧 Google Login - Backend auth successful');
           
+          // Store in auth store
+          login(response);
+          
           if (onLogin) {
             onLogin(response.user);
           }
