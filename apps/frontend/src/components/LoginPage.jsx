@@ -75,7 +75,6 @@ var react_1 = __importStar(require("react"));
 var material_1 = require("@mui/material");
 var icons_material_1 = require("@mui/icons-material");
 var navigation_1 = require("next/navigation");
-var google_1 = require("@react-oauth/google");
 var api_1 = require("../services/api");
 var authStore_1 = require("../store/authStore");
 function LoginPage(_a) {
@@ -88,18 +87,20 @@ function LoginPage(_a) {
     var _d = (0, react_1.useState)(false), showPassword = _d[0], setShowPassword = _d[1];
     var _e = (0, react_1.useState)(false), loading = _e[0], setLoading = _e[1];
     var _f = (0, react_1.useState)(''), error = _f[0], setError = _f[1];
+    var _g = (0, react_1.useState)(false), isGoogleAccount = _g[0], setIsGoogleAccount = _g[1];
     var handleEmailLogin = function (e) { return __awaiter(_this, void 0, void 0, function () {
         var response, err_1;
-        var _a;
-        return __generator(this, function (_b) {
-            switch (_b.label) {
+        var _a, _b, _c;
+        return __generator(this, function (_d) {
+            switch (_d.label) {
                 case 0:
                     e.preventDefault();
                     setLoading(true);
                     setError('');
-                    _b.label = 1;
+                    setIsGoogleAccount(false);
+                    _d.label = 1;
                 case 1:
-                    _b.trys.push([1, 3, 4, 5]);
+                    _d.trys.push([1, 3, 4, 5]);
                     console.log('🔐 Login attempt:', { email: email, passwordLength: password.length });
                     console.log('🔐 API URL:', process.env.NEXT_PUBLIC_API_URL);
                     return [4 /*yield*/, api_1.authApi.login({
@@ -107,7 +108,12 @@ function LoginPage(_a) {
                             password: password,
                         })];
                 case 2:
-                    response = _b.sent();
+                    response = _d.sent();
+                    if ((response === null || response === void 0 ? void 0 : response.user) && response.user.isEmailVerified === false) {
+                        setError('გთხოვთ, დაადასტურეთ ელფოსტა ანგარიშის გასააქტიურებლად');
+                        setLoading(false);
+                        return [2 /*return*/];
+                    }
                     console.log('🔐 Login response received:', {
                         hasUser: !!(response === null || response === void 0 ? void 0 : response.user),
                         hasToken: !!(response === null || response === void 0 ? void 0 : response.accessToken),
@@ -123,14 +129,22 @@ function LoginPage(_a) {
                     router.push('/dashboard');
                     return [3 /*break*/, 5];
                 case 3:
-                    err_1 = _b.sent();
+                    err_1 = _d.sent();
                     console.error('🔐 Login error:', err_1);
                     console.error('🔐 Error details:', {
                         message: err_1.message,
                         stack: err_1.stack,
                         response: err_1.response
                     });
-                    setError(err_1.message || 'შესვლისას დაფიქსირდა შეცდომა');
+                    // Check if this is a Google-only account
+                    if (((_c = (_b = err_1.response) === null || _b === void 0 ? void 0 : _b.data) === null || _c === void 0 ? void 0 : _c.code) === 'GOOGLE_ACCOUNT_ONLY') {
+                        setIsGoogleAccount(true);
+                        setError('ეს ანგარიში შექმნილია Google-ით. გთხოვთ, გამოიყენოთ "Google-ით შესვლა" ღილაკი.');
+                    }
+                    else {
+                        setIsGoogleAccount(false);
+                        setError(err_1.message || 'შესვლისას დაფიქსირდა შეცდომა');
+                    }
                     return [3 /*break*/, 5];
                 case 4:
                     setLoading(false);
@@ -139,60 +153,20 @@ function LoginPage(_a) {
             }
         });
     }); };
-    var handleGoogleLogin = (0, google_1.useGoogleLogin)({
-        flow: 'auth-code',
-        onSuccess: function (codeResponse) { return __awaiter(_this, void 0, void 0, function () {
-            var response, backendError_1, error_1;
-            var _a, _b;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
-                    case 0:
-                        _c.trys.push([0, 5, 6, 7]);
-                        setLoading(true);
-                        console.log('🔧 Google Login - Auth code received:', !!codeResponse.code);
-                        _c.label = 1;
-                    case 1:
-                        _c.trys.push([1, 3, , 4]);
-                        return [4 /*yield*/, api_1.authApi.googleCallback({
-                                code: codeResponse.code,
-                                state: 'login'
-                            })];
-                    case 2:
-                        response = _c.sent();
-                        console.log('🔧 Google Login - Backend auth successful');
-                        if (onLogin) {
-                            onLogin(response.user);
-                        }
-                        router.push('/dashboard');
-                        return [3 /*break*/, 4];
-                    case 3:
-                        backendError_1 = _c.sent();
-                        console.error('🔧 Google Login - Backend error:', backendError_1);
-                        if (((_b = (_a = backendError_1.response) === null || _a === void 0 ? void 0 : _a.data) === null || _b === void 0 ? void 0 : _b.code) === 'REGISTRATION_REQUIRED') {
-                            // User needs to complete registration
-                            setError('Google ანგარიშით რეგისტრაცია საჭიროებს დამატებით ინფორმაციას. გთხოვთ, გადახვიდეთ რეგისტრაციის გვერდზე.');
-                        }
-                        else {
-                            setError('Google-ით შესვლისას დაფიქსირდა შეცდომა');
-                        }
-                        return [3 /*break*/, 4];
-                    case 4: return [3 /*break*/, 7];
-                    case 5:
-                        error_1 = _c.sent();
-                        console.error('Google login error:', error_1);
-                        setError('Google-ით შესვლისას დაფიქსირდა შეცდომა');
-                        return [3 /*break*/, 7];
-                    case 6:
-                        setLoading(false);
-                        return [7 /*endfinally*/];
-                    case 7: return [2 /*return*/];
-                }
-            });
-        }); },
-        onError: function () {
+    var handleGoogleLogin = function () {
+        try {
+            console.log('🔧 Google Login - Starting redirect flow...');
+            // Use same redirect flow as RegisterPage
+            var baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://saba-app-production.up.railway.app/api';
+            var googleOAuthUrl = "".concat(baseUrl, "/auth/google");
+            console.log('🔧 Google Login - Redirecting to:', googleOAuthUrl);
+            window.location.href = googleOAuthUrl;
+        }
+        catch (error) {
+            console.error('Google login redirect error:', error);
             setError('Google-ით შესვლისას დაფიქსირდა შეცდომა');
         }
-    });
+    };
     return (<material_1.Box sx={{
             minHeight: '100vh',
             backgroundColor: '#f5f5f5',
@@ -214,11 +188,42 @@ function LoginPage(_a) {
 
           {error && (<material_1.Alert severity="error" sx={{ mb: 3 }}>
               {error}
+              {isGoogleAccount && (<material_1.Box sx={{ mt: 2 }}>
+                  <material_1.Button fullWidth variant="outlined" startIcon={<icons_material_1.Google />} onClick={handleGoogleLogin} sx={{
+                    color: '#4285f4',
+                    borderColor: '#4285f4',
+                    '&:hover': {
+                        backgroundColor: 'rgba(66, 133, 244, 0.1)',
+                        borderColor: '#4285f4',
+                    },
+                }}>
+                    Google-ით შესვლა
+                  </material_1.Button>
+                </material_1.Box>)}
             </material_1.Alert>)}
 
+          {/* Google Login Button - moved to top */}
+          <material_1.Button fullWidth variant="outlined" size="large" startIcon={<icons_material_1.Google />} onClick={function () { return handleGoogleLogin(); }} disabled={loading} sx={{
+            mb: 3,
+            color: '#4285f4',
+            borderColor: '#4285f4',
+            '&:hover': {
+                backgroundColor: 'rgba(66, 133, 244, 0.1)',
+                borderColor: '#4285f4',
+            },
+        }}>
+            Google-ით შესვლა
+          </material_1.Button>
+
+          <material_1.Divider sx={{ my: 3 }}>
+            <material_1.Typography variant="body2" color="text.secondary">
+              ან ელ. ფოსტით
+            </material_1.Typography>
+          </material_1.Divider>
+
           <material_1.Box component="form" onSubmit={handleEmailLogin} sx={{ mb: 3 }}>
-            <material_1.TextField fullWidth label="ელ. ფოსტა" type="email" value={email} onChange={function (e) { return setEmail(e.target.value); }} required sx={{ mb: 2 }}/>
-            <material_1.TextField fullWidth label="პაროლი" type={showPassword ? 'text' : 'password'} value={password} onChange={function (e) { return setPassword(e.target.value); }} required sx={{ mb: 3 }} InputProps={{
+            <material_1.TextField fullWidth label={email ? "" : "ელ. ფოსტა"} type="email" value={email} onChange={function (e) { return setEmail(e.target.value); }} required sx={{ mb: 2 }}/>
+            <material_1.TextField fullWidth label={password ? "" : "პაროლი"} type={showPassword ? 'text' : 'password'} value={password} onChange={function (e) { return setPassword(e.target.value); }} required sx={{ mb: 3 }} InputProps={{
             endAdornment: (<material_1.InputAdornment position="end">
                     <material_1.IconButton aria-label="toggle password visibility" onClick={function () { return setShowPassword(!showPassword); }} onMouseDown={function (e) { return e.preventDefault(); }} edge="end">
                       {showPassword ? <icons_material_1.VisibilityOff /> : <icons_material_1.Visibility />}
@@ -229,16 +234,6 @@ function LoginPage(_a) {
               {loading ? <material_1.CircularProgress size={24}/> : 'შესვლა'}
             </material_1.Button>
           </material_1.Box>
-
-          <material_1.Divider sx={{ my: 3 }}>
-            <material_1.Typography variant="body2" color="text.secondary">
-              ან
-            </material_1.Typography>
-          </material_1.Divider>
-
-          <material_1.Button fullWidth variant="outlined" size="large" startIcon={<icons_material_1.Google />} onClick={function () { return handleGoogleLogin(); }} disabled={loading} sx={{ mb: 3 }}>
-            Google-ით შესვლა
-          </material_1.Button>
 
           <material_1.Box sx={{ textAlign: 'center' }}>
             <material_1.Typography variant="body2" color="text.secondary">

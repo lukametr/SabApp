@@ -100,6 +100,9 @@ exports.authApi = {
                             hasToken: !!(result === null || result === void 0 ? void 0 : result.accessToken),
                             userEmail: (_b = result === null || result === void 0 ? void 0 : result.user) === null || _b === void 0 ? void 0 : _b.email
                         });
+                        if ((result === null || result === void 0 ? void 0 : result.user) && result.user.isEmailVerified === false) {
+                            throw new Error('გთხოვთ, დაადასტურეთ ელფოსტა ანგარიშის გასააქტიურებლად');
+                        }
                         return [2 /*return*/, result];
                 }
             });
@@ -107,16 +110,24 @@ exports.authApi = {
     },
     googleAuth: function (data) {
         return __awaiter(this, void 0, void 0, function () {
-            var response, error;
+            var body, response, error;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, fetch("".concat(API_BASE_URL, "/auth/google"), {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify(data),
-                        })];
+                    case 0:
+                        body = {};
+                        if (data.code) {
+                            body.code = data.code;
+                        }
+                        if (data.accessToken) {
+                            body.accessToken = data.accessToken;
+                        }
+                        return [4 /*yield*/, fetch("".concat(API_BASE_URL, "/auth/google"), {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify(body),
+                            })];
                     case 1:
                         response = _a.sent();
                         if (!!response.ok) return [3 /*break*/, 3];
@@ -131,24 +142,43 @@ exports.authApi = {
     },
     googleCallback: function (data) {
         return __awaiter(this, void 0, void 0, function () {
-            var response, error;
+            var response, responseBody, e_1;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, fetch("".concat(API_BASE_URL, "/auth/google/callback"), {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify(data),
-                        })];
+                    case 0:
+                        console.log('🌐 [authApi] Google Callback API გამოძახება:', {
+                            apiUrl: "".concat(API_BASE_URL, "/auth/google/callback"),
+                            data: data
+                        });
+                        return [4 /*yield*/, fetch("".concat(API_BASE_URL, "/auth/google/callback"), {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify(data),
+                            })];
                     case 1:
                         response = _a.sent();
-                        if (!!response.ok) return [3 /*break*/, 3];
-                        return [4 /*yield*/, response.json()];
+                        console.log('🌐 [authApi] Google Callback API პასუხის სტატუსი:', response.status);
+                        _a.label = 2;
                     case 2:
-                        error = _a.sent();
-                        throw new Error(error.message || 'Google callback failed');
-                    case 3: return [2 /*return*/, response.json()];
+                        _a.trys.push([2, 4, , 5]);
+                        return [4 /*yield*/, response.clone().json()];
+                    case 3:
+                        responseBody = _a.sent();
+                        console.log('🌐 [authApi] Google Callback API პასუხი:', responseBody);
+                        return [3 /*break*/, 5];
+                    case 4:
+                        e_1 = _a.sent();
+                        responseBody = null;
+                        console.error('🌐 [authApi] Google Callback API პასუხის წაკითხვის შეცდომა:', e_1);
+                        return [3 /*break*/, 5];
+                    case 5:
+                        if (!response.ok) {
+                            console.error('🌐 [authApi] Google Callback API შეცდომა:', responseBody);
+                            throw new Error((responseBody && responseBody.message) || 'Google callback failed');
+                        }
+                        return [2 /*return*/, responseBody];
                 }
             });
         });
@@ -172,6 +202,29 @@ exports.authApi = {
                     case 2:
                         error = _a.sent();
                         throw new Error(error.message || 'Failed to get profile');
+                    case 3: return [2 /*return*/, response.json()];
+                }
+            });
+        });
+    },
+    verifyEmail: function (token) {
+        return __awaiter(this, void 0, void 0, function () {
+            var response, error;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, fetch("".concat(API_BASE_URL, "/auth/verify-email?token=").concat(encodeURIComponent(token)), {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                        })];
+                    case 1:
+                        response = _a.sent();
+                        if (!!response.ok) return [3 /*break*/, 3];
+                        return [4 /*yield*/, response.json()];
+                    case 2:
+                        error = _a.sent();
+                        throw new Error(error.message || 'Email verification failed');
                     case 3: return [2 /*return*/, response.json()];
                 }
             });

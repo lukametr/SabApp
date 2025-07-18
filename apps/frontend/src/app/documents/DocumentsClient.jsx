@@ -120,8 +120,7 @@ function DocumentsClient() {
                     return [4 /*yield*/, updateDocument(__assign(__assign({}, data), { id: selectedDocument.id }))];
                 case 1:
                     _a.sent();
-                    setSelectedDocument(null);
-                    setIsFormOpen(false);
+                    setIsFormOpen(false); // Just close the form, don't clear selectedDocument yet
                     _a.label = 2;
                 case 2: return [2 /*return*/];
             }
@@ -173,11 +172,13 @@ function DocumentsClient() {
         };
     };
     // უნივერსალური onSubmit ფუნქცია
-    var handleFormSubmit = function (data) { return __awaiter(_this, void 0, void 0, function () {
-        var updateData;
+    // hazardsFix: always get hazards from DocumentForm local state, not from data.hazards
+    var handleFormSubmit = function (data, hazardsOverride) { return __awaiter(_this, void 0, void 0, function () {
+        var hazardsToSend, updateData;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
+                    hazardsToSend = Array.isArray(hazardsOverride) ? hazardsOverride : data.hazards;
                     if (!selectedDocument) return [3 /*break*/, 2];
                     updateData = {
                         id: selectedDocument.id,
@@ -187,7 +188,7 @@ function DocumentsClient() {
                         workDescription: data.workDescription,
                         date: data.date,
                         time: data.time,
-                        hazards: data.hazards,
+                        hazards: hazardsToSend,
                         photos: [] // UpdateDocumentDto-ში photos არის string[]
                     };
                     return [4 /*yield*/, handleUpdate(updateData)];
@@ -196,7 +197,7 @@ function DocumentsClient() {
                     return [3 /*break*/, 4];
                 case 2: 
                 // შექმნის რეჟიმი
-                return [4 /*yield*/, handleCreate(data)];
+                return [4 /*yield*/, handleCreate(__assign(__assign({}, data), { hazards: hazardsToSend }))];
                 case 3:
                     // შექმნის რეჟიმი
                     _a.sent();
@@ -220,7 +221,7 @@ function DocumentsClient() {
 
       <DocumentForm_1.default open={isFormOpen} onClose={function () {
             setIsFormOpen(false);
-            setSelectedDocument(null);
+            setSelectedDocument(null); // Now clear selectedDocument only when dialog is fully closed
         }} defaultValues={selectedDocument ? convertDocumentToCreateDto(selectedDocument) : undefined} onSubmit={handleFormSubmit}/>
 
       <material_1.Dialog open={isDeleteDialogOpen} onClose={function () {

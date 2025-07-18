@@ -92,6 +92,12 @@ api.interceptors.response.use(
 // Auth API functions
 export const authApi = {
   me: () => api.get('/auth/me'),
+  login: (credentials: { email: string; password: string }) => 
+    api.post('/auth/login', credentials),
+  register: (userData: any) => 
+    api.post('/auth/register', userData),
+  googleCallback: (data: { code: string; state?: string }) =>
+    api.post('/auth/google/callback', data),
 };
 
 export default api;

@@ -36,42 +36,38 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.GET = GET;
-var server_1 = require("next/server");
-var BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
-// Note: This API route uses headers() which makes it dynamic by default
-// export const dynamic = 'force-dynamic'; // Not needed with output: 'export'
-function GET(request) {
+exports.default = handler;
+var react_1 = require("next-auth/react");
+function handler(req, res) {
     return __awaiter(this, void 0, void 0, function () {
-        var authHeader, response, data, error_1;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
+        var session, _a, organization, position, apiRes;
+        var _b;
+        return __generator(this, function (_c) {
+            switch (_c.label) {
                 case 0:
-                    _a.trys.push([0, 3, , 4]);
-                    authHeader = request.headers.get('authorization');
-                    if (!authHeader) {
-                        return [2 /*return*/, server_1.NextResponse.json({ error: 'No authorization header' }, { status: 401 })];
-                    }
-                    return [4 /*yield*/, fetch("".concat(BACKEND_URL, "/api/subscription/users"), {
-                            headers: {
-                                'Authorization': authHeader,
-                                'Content-Type': 'application/json',
-                            },
-                        })];
+                    if (req.method !== 'POST')
+                        return [2 /*return*/, res.status(405).end()];
+                    return [4 /*yield*/, (0, react_1.getSession)({ req: req })];
                 case 1:
-                    response = _a.sent();
-                    return [4 /*yield*/, response.json()];
+                    session = _c.sent();
+                    if (!session || !((_b = session.user) === null || _b === void 0 ? void 0 : _b.email))
+                        return [2 /*return*/, res.status(401).json({ error: 'Not authenticated' })];
+                    _a = req.body, organization = _a.organization, position = _a.position;
+                    return [4 /*yield*/, fetch("".concat(process.env.NEXT_PUBLIC_API_URL || '', "/users/profile"), {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                email: session.user.email,
+                                organization: organization,
+                                position: position,
+                            }),
+                        })];
                 case 2:
-                    data = _a.sent();
-                    if (!response.ok) {
-                        return [2 /*return*/, server_1.NextResponse.json(data, { status: response.status })];
+                    apiRes = _c.sent();
+                    if (!apiRes.ok) {
+                        return [2 /*return*/, res.status(500).json({ error: 'Profile update failed' })];
                     }
-                    return [2 /*return*/, server_1.NextResponse.json(data)];
-                case 3:
-                    error_1 = _a.sent();
-                    console.error('Error fetching users:', error_1);
-                    return [2 /*return*/, server_1.NextResponse.json({ error: 'Internal server error' }, { status: 500 })];
-                case 4: return [2 /*return*/];
+                    return [2 /*return*/, res.status(200).json({ success: true })];
             }
         });
     });

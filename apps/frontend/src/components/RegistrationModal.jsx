@@ -46,9 +46,8 @@ var material_1 = require("@mui/material");
 var react_hook_form_1 = require("react-hook-form");
 function RegistrationModal(_a) {
     var _this = this;
-    var _b, _c;
-    var open = _a.open, onClose = _a.onClose, onSubmit = _a.onSubmit, userInfo = _a.userInfo, _d = _a.loading, loading = _d === void 0 ? false : _d, error = _a.error;
-    var _e = (0, react_hook_form_1.useForm)(), register = _e.register, handleSubmit = _e.handleSubmit, errors = _e.formState.errors, reset = _e.reset;
+    var open = _a.open, onClose = _a.onClose, onSubmit = _a.onSubmit, userInfo = _a.userInfo, _b = _a.loading, loading = _b === void 0 ? false : _b, error = _a.error;
+    var _c = (0, react_hook_form_1.useForm)(), register = _c.register, handleSubmit = _c.handleSubmit, errors = _c.formState.errors, reset = _c.reset;
     var handleFormSubmit = function (data) { return __awaiter(_this, void 0, void 0, function () {
         var err_1;
         return __generator(this, function (_a) {
@@ -87,21 +86,9 @@ function RegistrationModal(_a) {
               {error}
             </material_1.Alert>)}
           
-          <material_1.TextField fullWidth label="პირადი ნომერი" margin="normal" {...register('personalNumber', {
-        required: 'პირადი ნომერი აუცილებელია',
-        pattern: {
-            value: /^\d{11}$/,
-            message: 'პირადი ნომერი უნდა შეიცავდეს 11 ციფრს',
-        },
-    })} error={!!errors.personalNumber} helperText={(_b = errors.personalNumber) === null || _b === void 0 ? void 0 : _b.message} placeholder="01234567890"/>
+          // Removed personalNumber TextField
           
-          <material_1.TextField fullWidth label="ტელეფონის ნომერი" margin="normal" {...register('phoneNumber', {
-        required: 'ტელეფონის ნომერი აუცილებელია',
-        pattern: {
-            value: /^5\d{8}$/,
-            message: 'ტელეფონის ნომერი უნდა იყოს 9 ციფრისა და იწყებოდეს 5-ით',
-        },
-    })} error={!!errors.phoneNumber} helperText={(_c = errors.phoneNumber) === null || _c === void 0 ? void 0 : _c.message} placeholder="591234567"/>
+          // Removed phoneNumber TextField
           
           <material_1.Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mt: 3 }}>
             <material_1.Button onClick={handleClose} disabled={loading}>

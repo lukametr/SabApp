@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.authApi = void 0;
 var axios_1 = __importDefault(require("axios"));
 // Use relative URL when served from backend, external URL for development
 var getApiUrl = function () {
@@ -79,4 +80,17 @@ api.interceptors.response.use(function (response) {
     }
     return Promise.reject(error);
 });
+// Auth API functions
+exports.authApi = {
+    me: function () { return api.get('/auth/me'); },
+    login: function (credentials) {
+        return api.post('/auth/login', credentials);
+    },
+    register: function (userData) {
+        return api.post('/auth/register', userData);
+    },
+    googleCallback: function (data) {
+        return api.post('/auth/google/callback', data);
+    },
+};
 exports.default = api;

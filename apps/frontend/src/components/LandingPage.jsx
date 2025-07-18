@@ -1,11 +1,41 @@
 "use strict";
 'use client';
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = LandingPage;
-var react_1 = __importDefault(require("react"));
+var react_1 = __importStar(require("react"));
 var material_1 = require("@mui/material");
 var icons_material_1 = require("@mui/icons-material");
 var navigation_1 = require("next/navigation");
@@ -13,7 +43,20 @@ var authStore_1 = require("../store/authStore");
 function LandingPage() {
     var theme = (0, material_1.useTheme)();
     var router = (0, navigation_1.useRouter)();
+    var searchParams = (0, navigation_1.useSearchParams)();
     var user = (0, authStore_1.useAuthStore)().user;
+    var _a = (0, react_1.useState)(null), error = _a[0], setError = _a[1];
+    (0, react_1.useEffect)(function () {
+        // Check for error parameter
+        var errorParam = searchParams.get('error');
+        if (errorParam) {
+            setError(decodeURIComponent(errorParam));
+            // Clean URL after showing error
+            var url = new URL(window.location.href);
+            url.searchParams.delete('error');
+            window.history.replaceState({}, '', url.toString());
+        }
+    }, [searchParams]);
     var handleGetStarted = function () {
         if (user) {
             router.push('/dashboard');
@@ -62,6 +105,13 @@ function LandingPage() {
         }
     ];
     return (<material_1.Box sx={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
+      {/* Error Alert */}
+      {error && (<material_1.Container maxWidth="lg" sx={{ pt: 2 }}>
+          <material_1.Alert severity="error" onClose={function () { return setError(null); }}>
+            {error}
+          </material_1.Alert>
+        </material_1.Container>)}
+      
       {/* Hero Section */}
       <material_1.Box sx={{
             backgroundColor: 'white',

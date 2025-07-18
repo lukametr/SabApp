@@ -39,6 +39,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PUT = PUT;
 var server_1 = require("next/server");
 var BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+// Note: This API route uses headers() which makes it dynamic by default
+// export const dynamic = 'force-dynamic'; // Not needed with output: 'export'
 function PUT(request) {
     return __awaiter(this, void 0, void 0, function () {
         var authHeader, body, response, data, error_1;

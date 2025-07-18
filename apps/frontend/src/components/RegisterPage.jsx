@@ -82,13 +82,16 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = RegisterPage;
+// minor: trigger redeploy
 var react_1 = __importStar(require("react"));
 var material_1 = require("@mui/material");
 var icons_material_1 = require("@mui/icons-material");
 var navigation_1 = require("next/navigation");
-var google_1 = require("@react-oauth/google");
-var api_1 = require("../services/api");
+var auth_service_1 = require("../services/auth.service");
 var authStore_1 = require("../store/authStore");
+// Get Google Client ID from env (runtime check)
+var clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
+console.log('[Google OAuth] NEXT_PUBLIC_GOOGLE_CLIENT_ID:', clientId);
 function RegisterPage(_a) {
     var _this = this;
     var onRegister = _a.onRegister;
@@ -103,157 +106,86 @@ function RegisterPage(_a) {
         confirmPassword: '',
         organization: '',
         position: '',
-        personalNumber: '',
-        phoneNumber: ''
     }), formData = _b[0], setFormData = _b[1];
     var _c = (0, react_1.useState)(false), loading = _c[0], setLoading = _c[1];
     var _d = (0, react_1.useState)(''), error = _d[0], setError = _d[1];
-    var _e = (0, react_1.useState)(false), acceptTerms = _e[0], setAcceptTerms = _e[1];
-    var _f = (0, react_1.useState)(false), isGoogleRegistration = _f[0], setIsGoogleRegistration = _f[1];
-    var _g = (0, react_1.useState)(null), googleUserInfo = _g[0], setGoogleUserInfo = _g[1];
-    var _h = (0, react_1.useState)(false), showPassword = _h[0], setShowPassword = _h[1];
-    var _j = (0, react_1.useState)(false), showConfirmPassword = _j[0], setShowConfirmPassword = _j[1];
-    // Check if this is a Google registration completion
-    (0, react_1.useEffect)(function () {
-        var fromGoogle = searchParams.get('from') === 'google';
-        var userInfo = searchParams.get('userInfo');
-        if (fromGoogle && userInfo) {
-            try {
-                var parsedUserInfo_1 = JSON.parse(decodeURIComponent(userInfo));
-                setIsGoogleRegistration(true);
-                setGoogleUserInfo(parsedUserInfo_1);
-                setFormData(function (prev) { return (__assign(__assign({}, prev), { firstName: parsedUserInfo_1.given_name || '', lastName: parsedUserInfo_1.family_name || '', email: parsedUserInfo_1.email || '' })); });
-            }
-            catch (error) {
-                console.error('Error parsing Google user info:', error);
-            }
-        }
-    }, [searchParams]);
+    var _e = (0, react_1.useState)(''), success = _e[0], setSuccess = _e[1];
+    var _f = (0, react_1.useState)(false), acceptTerms = _f[0], setAcceptTerms = _f[1];
+    var _g = (0, react_1.useState)(false), showPassword = _g[0], setShowPassword = _g[1];
+    var _h = (0, react_1.useState)(false), showConfirmPassword = _h[0], setShowConfirmPassword = _h[1];
+    // No Google registration completion logic needed with NextAuth
     var handleChange = function (e) {
         var _a;
         setFormData(__assign(__assign({}, formData), (_a = {}, _a[e.target.name] = e.target.value, _a)));
     };
     var handleEmailRegister = function (e) { return __awaiter(_this, void 0, void 0, function () {
-        var response, err_1;
+        var err_1;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     e.preventDefault();
                     setLoading(true);
                     setError('');
-                    // For Google registration, password is not required
-                    if (!isGoogleRegistration) {
-                        if (formData.password !== formData.confirmPassword) {
-                            setError('პაროლები არ ემთხვევა');
-                            setLoading(false);
-                            return [2 /*return*/];
-                        }
-                        if (!formData.password) {
-                            setError('პაროლი აუცილებელია');
-                            setLoading(false);
-                            return [2 /*return*/];
-                        }
-                    }
                     if (!acceptTerms) {
                         setError('საჭიროა წესებისა და პირობების მიღება');
                         setLoading(false);
                         return [2 /*return*/];
                     }
-                    if (!formData.personalNumber) {
-                        setError('პირადი ნომერი აუცილებელია');
+                    if (formData.password !== formData.confirmPassword) {
+                        setError('პაროლები არ ემთხვევა');
                         setLoading(false);
                         return [2 /*return*/];
                     }
-                    if (!formData.phoneNumber) {
-                        setError('ტელეფონის ნომერი აუცილებელია');
-                        setLoading(false);
-                        return [2 /*return*/];
-                    }
-                    // Basic validation for personal number (11 digits)
-                    if (!/^\d{11}$/.test(formData.personalNumber)) {
-                        setError('პირადი ნომერი უნდა შეიცავდეს 11 ციფრს');
-                        setLoading(false);
-                        return [2 /*return*/];
-                    }
-                    // Basic validation for phone number
-                    if (!/^\d{9,15}$/.test(formData.phoneNumber)) {
-                        setError('ტელეფონის ნომერი უნდა შეიცავდეს 9-15 ციფრს');
+                    if (!formData.password) {
+                        setError('პაროლი აუცილებელია');
                         setLoading(false);
                         return [2 /*return*/];
                     }
                     _a.label = 1;
                 case 1:
-                    _a.trys.push([1, 3, 4, 5]);
-                    return [4 /*yield*/, api_1.authApi.register({
+                    _a.trys.push([1, 4, 5, 6]);
+                    // პირველ ეტაპზე registration backend-ზე
+                    return [4 /*yield*/, auth_service_1.authService.register({
                             firstName: formData.firstName,
                             lastName: formData.lastName,
                             email: formData.email,
                             password: formData.password,
-                            personalNumber: formData.personalNumber,
-                            phoneNumber: formData.phoneNumber,
                             organization: formData.organization,
                             position: formData.position,
                         })];
                 case 2:
-                    response = _a.sent();
-                    // Store in auth store
-                    login(response);
-                    if (onRegister) {
-                        onRegister(response.user);
-                    }
-                    router.push('/dashboard');
-                    return [3 /*break*/, 5];
+                    // პირველ ეტაპზე registration backend-ზე
+                    _a.sent();
+                    // მეორე ეტაპზე login backend service-ით
+                    return [4 /*yield*/, auth_service_1.authService.signIn(formData.email, formData.password)];
                 case 3:
+                    // მეორე ეტაპზე login backend service-ით
+                    _a.sent();
+                    setSuccess('რეგისტრაცია და შესვლა წარმატებით დასრულდა!');
+                    setTimeout(function () {
+                        router.push('/dashboard');
+                    }, 1000);
+                    return [3 /*break*/, 6];
+                case 4:
                     err_1 = _a.sent();
                     setError(err_1.message || 'რეგისტრაციისას დაფიქსირდა შეცდომა');
-                    return [3 /*break*/, 5];
-                case 4:
+                    return [3 /*break*/, 6];
+                case 5:
                     setLoading(false);
                     return [7 /*endfinally*/];
-                case 5: return [2 /*return*/];
+                case 6: return [2 /*return*/];
             }
         });
     }); };
-    var handleGoogleRegister = (0, google_1.useGoogleLogin)({
-        onSuccess: function (tokenResponse) { return __awaiter(_this, void 0, void 0, function () {
-            var userInfoResponse, userInfo, userInfoParam, error_1;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        _a.trys.push([0, 4, 5, 6]);
-                        setLoading(true);
-                        return [4 /*yield*/, fetch("https://www.googleapis.com/oauth2/v2/userinfo?access_token=".concat(tokenResponse.access_token), {
-                                headers: {
-                                    Authorization: "Bearer ".concat(tokenResponse.access_token),
-                                    Accept: 'application/json'
-                                }
-                            })];
-                    case 1:
-                        userInfoResponse = _a.sent();
-                        if (!userInfoResponse.ok) return [3 /*break*/, 3];
-                        return [4 /*yield*/, userInfoResponse.json()];
-                    case 2:
-                        userInfo = _a.sent();
-                        userInfoParam = encodeURIComponent(JSON.stringify(userInfo));
-                        router.push("/auth/register?from=google&userInfo=".concat(userInfoParam));
-                        _a.label = 3;
-                    case 3: return [3 /*break*/, 6];
-                    case 4:
-                        error_1 = _a.sent();
-                        console.error('Google registration error:', error_1);
-                        setError('Google-ით რეგისტრაციისას დაფიქსირდა შეცდომა');
-                        return [3 /*break*/, 6];
-                    case 5:
-                        setLoading(false);
-                        return [7 /*endfinally*/];
-                    case 6: return [2 /*return*/];
-                }
-            });
-        }); },
-        onError: function () {
-            setError('Google-ით რეგისტრაციისას დაფიქსირდა შეცდომა');
-        }
-    });
+    // Google რეგისტრაცია/შესვლა უკაცრავად Backend-თან
+    var handleGoogleRegister = function () {
+        var _a;
+        // Railway production URL detection
+        var baseUrl = ((_a = process.env.NEXT_PUBLIC_API_URL) === null || _a === void 0 ? void 0 : _a.replace('/api', '')) || window.location.origin;
+        var googleOAuthUrl = "".concat(baseUrl, "/api/auth/google");
+        console.log('[Google OAuth] Redirecting to:', googleOAuthUrl);
+        window.location.href = googleOAuthUrl;
+    };
     return (<material_1.Box sx={{
             minHeight: '100vh',
             backgroundColor: '#f5f5f5',
@@ -270,50 +202,52 @@ function RegisterPage(_a) {
               SabApp
             </material_1.Typography>
             <material_1.Typography variant="h6" color="text.secondary">
-              {isGoogleRegistration ? 'რეგისტრაციის დასრულება' : 'რეგისტრაცია'}
+              რეგისტრაცია
             </material_1.Typography>
-            {isGoogleRegistration && (<material_1.Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                Google-ით ავტორიზაციისთვის საჭიროა დამატებითი ინფორმაცია
-              </material_1.Typography>)}
           </material_1.Box>
+
 
           {error && (<material_1.Alert severity="error" sx={{ mb: 3 }}>
               {error}
             </material_1.Alert>)}
+          {!clientId && (<material_1.Alert severity="error" sx={{ mb: 3 }}>
+              Google რეგისტრაცია მიუწვდომელია: NEXT_PUBLIC_GOOGLE_CLIENT_ID არ არის ხელმისაწვდომი გარემოში!<br />
+              გთხოვ შეამოწმე გარემოს ცვლადი deployment settings-ში.
+            </material_1.Alert>)}
+          {success && (<material_1.Alert severity="success" sx={{ mb: 3 }}>
+              {success}
+            </material_1.Alert>)}
 
           <material_1.Box component="form" onSubmit={handleEmailRegister} sx={{ mb: 3 }}>
             <material_1.Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-              <material_1.TextField fullWidth label="სახელი" name="firstName" value={formData.firstName} onChange={handleChange} required disabled={isGoogleRegistration}/>
-              <material_1.TextField fullWidth label="გვარი" name="lastName" value={formData.lastName} onChange={handleChange} required disabled={isGoogleRegistration}/>
+              <material_1.TextField fullWidth label={formData.firstName ? "" : "სახელი"} name="firstName" value={formData.firstName} onChange={handleChange} required autoComplete="given-name"/>
+              <material_1.TextField fullWidth label={formData.lastName ? "" : "გვარი"} name="lastName" value={formData.lastName} onChange={handleChange} required autoComplete="family-name"/>
             </material_1.Box>
             
-            <material_1.TextField fullWidth label="ელ. ფოსტა" type="email" name="email" value={formData.email} onChange={handleChange} required disabled={isGoogleRegistration} sx={{ mb: 2 }}/>
+            <material_1.TextField fullWidth label={formData.email ? "" : "ელ. ფოსტა"} type="email" name="email" value={formData.email} onChange={handleChange} required sx={{ mb: 2 }} autoComplete="email"/>
             
-            <material_1.TextField fullWidth label="ორგანიზაცია" name="organization" value={formData.organization} onChange={handleChange} sx={{ mb: 2 }}/>
+            <material_1.TextField fullWidth label={formData.organization ? "" : "ორგანიზაცია"} name="organization" value={formData.organization} onChange={handleChange} sx={{ mb: 2 }} autoComplete="organization"/>
             
-            <material_1.TextField fullWidth label="პოზიცია" name="position" value={formData.position} onChange={handleChange} sx={{ mb: 2 }}/>
+            <material_1.TextField fullWidth label={formData.position ? "" : "პოზიცია"} name="position" value={formData.position} onChange={handleChange} sx={{ mb: 2 }} autoComplete="organization-title"/>
             
-            <material_1.TextField fullWidth label="პირადი ნომერი" name="personalNumber" value={formData.personalNumber} onChange={handleChange} required sx={{ mb: 2 }} helperText="11 ციფრი" inputProps={{ maxLength: 11, pattern: '[0-9]*' }}/>
-            
-            <material_1.TextField fullWidth label="ტელეფონის ნომერი" name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} required sx={{ mb: 2 }} helperText="მაგ: 555123456" inputProps={{ maxLength: 15 }}/>
-            
-            {!isGoogleRegistration && (<>
-                <material_1.TextField fullWidth label="პაროლი" type={showPassword ? 'text' : 'password'} name="password" value={formData.password} onChange={handleChange} required sx={{ mb: 2 }} InputProps={{
-                endAdornment: (<material_1.InputAdornment position="end">
+            {/* Password fields - always shown for credentials registration */}
+            <>
+              <material_1.TextField fullWidth label={formData.password ? "" : "პაროლი"} type={showPassword ? 'text' : 'password'} name="password" value={formData.password} onChange={handleChange} required sx={{ mb: 2 }} autoComplete="new-password" InputProps={{
+            endAdornment: (<material_1.InputAdornment position="end">
                         <material_1.IconButton aria-label="toggle password visibility" onClick={function () { return setShowPassword(!showPassword); }} edge="end">
                           {showPassword ? <icons_material_1.VisibilityOff /> : <icons_material_1.Visibility />}
                         </material_1.IconButton>
                       </material_1.InputAdornment>),
-            }}/>
+        }}/>
                 
-                <material_1.TextField fullWidth label="პაროლის დადასტურება" type={showConfirmPassword ? 'text' : 'password'} name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required sx={{ mb: 2 }} InputProps={{
-                endAdornment: (<material_1.InputAdornment position="end">
+                <material_1.TextField fullWidth label={formData.confirmPassword ? "" : "პაროლის დადასტურება"} type={showConfirmPassword ? 'text' : 'password'} name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required sx={{ mb: 2 }} autoComplete="new-password" InputProps={{
+            endAdornment: (<material_1.InputAdornment position="end">
                         <material_1.IconButton aria-label="toggle confirm password visibility" onClick={function () { return setShowConfirmPassword(!showConfirmPassword); }} edge="end">
                           {showConfirmPassword ? <icons_material_1.VisibilityOff /> : <icons_material_1.Visibility />}
                         </material_1.IconButton>
                       </material_1.InputAdornment>),
-            }}/>
-              </>)}
+        }}/>
+              </>
             
             <material_1.FormControlLabel control={<material_1.Checkbox checked={acceptTerms} onChange={function (e) { return setAcceptTerms(e.target.checked); }} color="primary"/>} label={<material_1.Typography variant="body2">
                   ვეთანხმები{' '}
@@ -323,21 +257,33 @@ function RegisterPage(_a) {
                 </material_1.Typography>} sx={{ mb: 3 }}/>
             
             <material_1.Button type="submit" fullWidth variant="contained" size="large" disabled={loading} sx={{ mb: 2 }}>
-              {loading ? <material_1.CircularProgress size={24}/> : (isGoogleRegistration ? 'რეგისტრაციის დასრულება' : 'რეგისტრაცია')}
+              {loading ? <material_1.CircularProgress size={24}/> : 'რეგისტრაცია'}
             </material_1.Button>
           </material_1.Box>
 
-          {!isGoogleRegistration && (<>
-              <material_1.Divider sx={{ my: 3 }}>
-                <material_1.Typography variant="body2" color="text.secondary">
-                  ან
-                </material_1.Typography>
-              </material_1.Divider>
+          <material_1.Divider sx={{ my: 3 }}>
+            <material_1.Typography variant="body2" color="text.secondary">
+              ან
+            </material_1.Typography>
+          </material_1.Divider>
 
-              <material_1.Button fullWidth variant="outlined" size="large" startIcon={<icons_material_1.Google />} onClick={function () { return handleGoogleRegister(); }} disabled={loading} sx={{ mb: 3 }}>
-                Google-ით რეგისტრაცია
-              </material_1.Button>
-            </>)}
+          {/* Google Registration Button - moved back to bottom */}
+          <material_1.Button fullWidth variant="outlined" size="large" startIcon={<icons_material_1.Google />} onClick={function () {
+            console.log('🔧 Google Register Button Clicked - Starting...');
+            console.log('🔧 Google Register Button Clicked - clientId:', clientId);
+            console.log('🔧 Google Register Button Clicked - loading:', loading);
+            handleGoogleRegister();
+        }} disabled={loading || !clientId} sx={{
+            mb: 3,
+            color: '#4285f4',
+            borderColor: '#4285f4',
+            '&:hover': {
+                backgroundColor: 'rgba(66, 133, 244, 0.1)',
+                borderColor: '#4285f4',
+            },
+        }}>
+            Google-ით რეგისტრაცია
+          </material_1.Button>
 
           <material_1.Box sx={{ textAlign: 'center' }}>
             <material_1.Typography variant="body2" color="text.secondary">

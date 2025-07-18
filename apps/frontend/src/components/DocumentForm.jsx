@@ -142,7 +142,9 @@ function HazardSection(_a) {
         onHazardsChange(hazards.filter(function (h) { return h.id !== id; }));
     };
     var updateHazard = function (id, updates) {
-        onHazardsChange(hazards.map(function (h) { return h.id === id ? __assign(__assign({}, h), updates) : h; }));
+        var updatedHazards = hazards.map(function (h) { return h.id === id ? __assign(__assign({}, h), updates) : h; });
+        console.log('[HazardSection] updateHazard', { id: id, updates: updates, result: updatedHazards.find(function (h) { return h.id === id; }) });
+        onHazardsChange(updatedHazards);
     };
     var handleCamera = function (hazardId) { return __awaiter(_this, void 0, void 0, function () {
         var mediaStream, _a;
@@ -186,7 +188,6 @@ function HazardSection(_a) {
             (_a = canvas.getContext('2d')) === null || _a === void 0 ? void 0 : _a.drawImage(videoRef.current, 0, 0);
             canvas.toBlob(function (blob) {
                 if (blob) {
-                    // Convert blob to base64 data URL instead of blob URL
                     var reader_1 = new FileReader();
                     reader_1.onloadend = function () {
                         var base64DataUrl = reader_1.result;
@@ -194,9 +195,12 @@ function HazardSection(_a) {
                         console.log('📸 Captured photo:', { base64DataUrl: base64DataUrl.substring(0, 50) + '...' });
                         var hazard = hazards.find(function (h) { return h.id === hazardId; });
                         if (hazard) {
+                            // Always add to photos array for persistence
+                            var newPhotos = __spreadArray(__spreadArray([], (hazard.photos || []), true), [base64DataUrl], false);
                             updateHazard(hazardId, {
                                 mediaFile: capturedFile,
-                                mediaPreview: base64DataUrl // Use base64 data URL instead of blob URL
+                                mediaPreview: undefined, // remove preview after save
+                                photos: newPhotos
                             });
                         }
                     };
@@ -216,16 +220,18 @@ function HazardSection(_a) {
         var _a;
         var f = (_a = e.target.files) === null || _a === void 0 ? void 0 : _a[0];
         if (f) {
-            var hazard = hazards.find(function (h) { return h.id === hazardId; });
-            if (hazard) {
-                // Convert file to base64 data URL for preview
+            var hazard_1 = hazards.find(function (h) { return h.id === hazardId; });
+            if (hazard_1) {
                 var reader_2 = new FileReader();
                 reader_2.onloadend = function () {
                     var base64DataUrl = reader_2.result;
                     console.log('📁 File uploaded:', { fileName: f.name, base64DataUrl: base64DataUrl.substring(0, 50) + '...' });
+                    // Always add to photos array for persistence
+                    var newPhotos = __spreadArray(__spreadArray([], (hazard_1.photos || []), true), [base64DataUrl], false);
                     updateHazard(hazardId, {
                         mediaFile: f,
-                        mediaPreview: base64DataUrl // Use base64 data URL instead of blob URL
+                        mediaPreview: undefined, // remove preview after save
+                        photos: newPhotos
                     });
                 };
                 reader_2.onerror = function (error) {
@@ -293,7 +299,10 @@ function HazardSection(_a) {
           <material_1.AccordionDetails>
             <material_1.Grid container spacing={2}>
               <material_1.Grid item xs={12}>
-                <material_1.TextField label="საფრთხის იდენტიფიკაცია" fullWidth multiline rows={2} value={hazard.hazardIdentification} onChange={function (e) { return updateHazard(hazard.id, { hazardIdentification: e.target.value }); }}/>
+                <material_1.TextField label="საფრთხის იდენტიფიკაცია" fullWidth multiline rows={2} value={hazard.hazardIdentification} onChange={function (e) {
+                console.log('[HazardSection] hazardIdentification change', { id: hazard.id, value: e.target.value });
+                updateHazard(hazard.id, { hazardIdentification: e.target.value });
+            }}/>
               </material_1.Grid>
 
               <material_1.Grid item xs={12}>
@@ -314,11 +323,7 @@ function HazardSection(_a) {
                       გადაღება
                     </material_1.Button>
                   </material_1.Box>)}
-                {hazard.mediaPreview && cameraActive !== hazard.id && (<material_1.Box mt={2}>
-                    <image_1.default src={hazard.mediaPreview} alt="preview" width={200} height={150} unoptimized style={{ maxWidth: 200, borderRadius: 8, objectFit: 'cover' }} onLoad={function () { return console.log('✅ Preview image loaded for hazard:', hazard.id); }} onError={function (e) { return console.error('❌ Preview image failed to load:', e); }}/>
-                  </material_1.Box>)}
-                {/* Show existing saved photos (base64) */}
-                {hazard.photos && hazard.photos.length > 0 && !hazard.mediaPreview && (<material_1.Box mt={2}>
+                {hazard.photos && hazard.photos.length > 0 && (<material_1.Box mt={2}>
                     <material_1.Typography variant="body2" mb={1}>შენახული ფოტოები:</material_1.Typography>
                     <material_1.Box display="flex" flexWrap="wrap" gap={1}>
                       {hazard.photos.map(function (base64Photo, index) { return (<material_1.Box key={index} position="relative">
@@ -349,11 +354,17 @@ function HazardSection(_a) {
               </material_1.Grid>
 
               <material_1.Grid item xs={12}>
-                <material_1.TextField label="დაშავებულის დაზიანება" fullWidth multiline rows={2} value={hazard.injuryDescription} onChange={function (e) { return updateHazard(hazard.id, { injuryDescription: e.target.value }); }}/>
+                <material_1.TextField label="დაშავებულის დაზიანება" fullWidth multiline rows={2} value={hazard.injuryDescription} onChange={function (e) {
+                console.log('[HazardSection] injuryDescription change', { id: hazard.id, value: e.target.value });
+                updateHazard(hazard.id, { injuryDescription: e.target.value });
+            }}/>
               </material_1.Grid>
 
               <material_1.Grid item xs={12}>
-                <material_1.TextField label="არსებული კონტროლის ზომები" fullWidth multiline rows={2} value={hazard.existingControlMeasures} onChange={function (e) { return updateHazard(hazard.id, { existingControlMeasures: e.target.value }); }}/>
+                <material_1.TextField label="არსებული კონტროლის ზომები" fullWidth multiline rows={2} value={hazard.existingControlMeasures} onChange={function (e) {
+                console.log('[HazardSection] existingControlMeasures change', { id: hazard.id, value: e.target.value });
+                updateHazard(hazard.id, { existingControlMeasures: e.target.value });
+            }}/>
               </material_1.Grid>
 
               <material_1.Grid item xs={12}>
@@ -382,7 +393,10 @@ function HazardSection(_a) {
               </material_1.Grid>
 
               <material_1.Grid item xs={12}>
-                <material_1.TextField label="დამატებითი კონტროლის ზომები" fullWidth multiline rows={2} value={hazard.additionalControlMeasures} onChange={function (e) { return updateHazard(hazard.id, { additionalControlMeasures: e.target.value }); }}/>
+                <material_1.TextField label="დამატებითი კონტროლის ზომები" fullWidth multiline rows={2} value={hazard.additionalControlMeasures} onChange={function (e) {
+                console.log('[HazardSection] additionalControlMeasures change', { id: hazard.id, value: e.target.value });
+                updateHazard(hazard.id, { additionalControlMeasures: e.target.value });
+            }}/>
               </material_1.Grid>
 
               <material_1.Grid item xs={12}>
@@ -414,11 +428,17 @@ function HazardSection(_a) {
               </material_1.Grid>
 
               <material_1.Grid item xs={12}>
-                <material_1.TextField label="გასატარებელი ზომები/რეაგირება" fullWidth multiline rows={2} value={hazard.requiredMeasures} onChange={function (e) { return updateHazard(hazard.id, { requiredMeasures: e.target.value }); }}/>
+                <material_1.TextField label="გასატარებელი ზომები/რეაგირება" fullWidth multiline rows={2} value={hazard.requiredMeasures} onChange={function (e) {
+                console.log('[HazardSection] requiredMeasures change', { id: hazard.id, value: e.target.value });
+                updateHazard(hazard.id, { requiredMeasures: e.target.value });
+            }}/>
               </material_1.Grid>
 
               <material_1.Grid item xs={12}>
-                <material_1.TextField label="შესრულებაზე პასუხისმგებელი" fullWidth value={hazard.responsiblePerson} onChange={function (e) { return updateHazard(hazard.id, { responsiblePerson: e.target.value }); }}/>
+                <material_1.TextField label="შესრულებაზე პასუხისმგებელი" fullWidth value={hazard.responsiblePerson} onChange={function (e) {
+                console.log('[HazardSection] responsiblePerson change', { id: hazard.id, value: e.target.value });
+                updateHazard(hazard.id, { responsiblePerson: e.target.value });
+            }}/>
               </material_1.Grid>
 
               <material_1.Grid item xs={12}>
@@ -480,7 +500,7 @@ function DocumentForm(_a) {
                     };
                 });
                 setHazards(formattedHazards);
-                // Reset form with new values
+                // Reset form with new values, but do NOT set hazards in reset (let state manage it)
                 reset({
                     evaluatorName: defaultValues.evaluatorName || '',
                     evaluatorLastName: defaultValues.evaluatorLastName || '',
@@ -488,7 +508,6 @@ function DocumentForm(_a) {
                     workDescription: defaultValues.workDescription || '',
                     date: defaultValues.date ? new Date(defaultValues.date) : new Date(),
                     time: defaultValues.time ? new Date(defaultValues.time) : new Date(),
-                    hazards: formattedHazards,
                     photos: defaultValues.photos || []
                 });
                 console.log('✅ Form reset with values:', {
@@ -508,7 +527,6 @@ function DocumentForm(_a) {
                     workDescription: '',
                     date: new Date(),
                     time: new Date(),
-                    hazards: [],
                     photos: []
                 });
             }
@@ -547,8 +565,10 @@ function DocumentForm(_a) {
                     _e.label = 1;
                 case 1:
                     _e.trys.push([1, 3, , 4]);
-                    return [4 /*yield*/, handleFormSubmit(formattedData)];
+                    // Pass hazards as second argument so parent always gets correct data
+                    return [4 /*yield*/, handleFormSubmit(formattedData, hazards)];
                 case 2:
+                    // Pass hazards as second argument so parent always gets correct data
                     _e.sent();
                     // Don't clean state on successful submit - just close dialog
                     handleDialogClose();

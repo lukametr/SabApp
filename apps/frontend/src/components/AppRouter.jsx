@@ -49,8 +49,15 @@ function AppRouter() {
     var pathname = (0, navigation_1.usePathname)();
     var _a = (0, react_1.useState)(null), user = _a[0], setUser = _a[1];
     var _b = (0, react_1.useState)(true), loading = _b[0], setLoading = _b[1];
+    var _c = (0, react_1.useState)(false), mounted = _c[0], setMounted = _c[1];
+    // Handle hydration
     (0, react_1.useEffect)(function () {
-        // Check for stored user data
+        setMounted(true);
+    }, []);
+    (0, react_1.useEffect)(function () {
+        if (!mounted)
+            return;
+        // Check for stored user data only after hydration
         var storedUser = localStorage.getItem('user');
         if (storedUser) {
             try {
@@ -62,21 +69,28 @@ function AppRouter() {
             }
         }
         setLoading(false);
-    }, []);
+    }, [mounted]);
     var handleLogin = function (userData) {
         setUser(userData);
-        localStorage.setItem('user', JSON.stringify(userData));
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('user', JSON.stringify(userData));
+        }
     };
     var handleRegister = function (userData) {
         setUser(userData);
-        localStorage.setItem('user', JSON.stringify(userData));
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('user', JSON.stringify(userData));
+        }
     };
     var handleLogout = function () {
         setUser(null);
-        localStorage.removeItem('user');
+        if (typeof window !== 'undefined') {
+            localStorage.removeItem('user');
+        }
         router.push('/');
     };
-    if (loading) {
+    // Show loading until mounted to prevent hydration mismatch
+    if (!mounted || loading) {
         return <div>Loading...</div>; // TODO: Add proper loading component
     }
     // Route handling
