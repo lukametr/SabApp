@@ -64,6 +64,7 @@ export class AuthResponseDto {
     picture?: string;
     role: string;
     status: string;
+    googleId?: string;
     // Removed personalNumber and phoneNumber
   };
 }
