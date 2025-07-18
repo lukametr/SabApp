@@ -125,13 +125,26 @@ export class AuthService {
       const organization = authDto['organization'] || undefined;
       const position = authDto['position'] || undefined;
 
-      console.log('≡ƒöº Google Auth - Token validated successfully for:', googleUserInfo.email);
+      console.log('🔐 Processing Google login for:', googleUserInfo.email);
 
-      // Check if user exists
+      // Improved user lookup logic
       let user = await this.usersService.findByGoogleId(googleUserInfo.sub);
 
       if (!user) {
-        console.log('≡ƒöº Google Auth - New user registration');
+        console.log('🔍 User not found by Google ID, checking by email...');
+        // Try by email
+        user = await this.usersService.findByEmail(googleUserInfo.email);
+        
+        if (user && !user.googleId) {
+          // Link Google ID to existing email user
+          console.log('🔗 Linking Google account to existing user');
+          await this.usersService.linkGoogleId(String(user._id), googleUserInfo.sub);
+          user = await this.usersService.findById(String(user._id));
+        }
+      }
+
+      if (!user) {
+        console.log('👤 Creating new user from Google OAuth:', googleUserInfo.email);
         // Create new user
         user = await this.usersService.createUser({
           ...googleUserInfo,
@@ -139,19 +152,24 @@ export class AuthService {
           organization,
           position,
         });
-        console.log('≡ƒöº Google Auth - New user created successfully');
+        console.log('✅ New Google user created successfully:', googleUserInfo.email);
       } else {
-        console.log('≡ƒöº Google Auth - Existing user login');
+        console.log('✅ Existing user login:', user.email);
         // Existing user login - update last login
         await this.usersService.updateLastLogin(String(user._id));
       }
 
-      // Generate JWT token
+      // Enhanced JWT payload with all necessary fields
       const payload = {
         sub: String(user._id),
         email: user.email,
+        name: user.name,
+        picture: user.picture,
         role: user.role,
-        status: user.status,
+        status: user.status || 'active',
+        googleId: user.googleId,
+        authProvider: user.authProvider || 'google',
+        isEmailVerified: user.isEmailVerified || true,
       };
 
       const accessToken = this.jwtService.sign(payload, {
@@ -159,7 +177,13 @@ export class AuthService {
         expiresIn: this.configService.get<string>('JWT_EXPIRES_IN', '7d'),
       });
 
-      console.log('≡ƒöº Google Auth - JWT token generated successfully');
+      console.log('≡ƒöº Google OAuth callback - JWT token generated successfully');
+      console.log('≡ƒöº JWT payload:', {
+        sub: payload.sub,
+        email: payload.email,
+        role: payload.role,
+        status: payload.status
+      });
 
       return {
         accessToken,
@@ -169,7 +193,10 @@ export class AuthService {
           email: user.email,
           picture: user.picture,
           role: user.role,
-          status: user.status,
+          status: user.status || 'active',
+          googleId: user.googleId,
+          authProvider: user.authProvider || 'google',
+          isEmailVerified: user.isEmailVerified || true,
         },
       };
     } catch (error) {

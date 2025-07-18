@@ -7,7 +7,7 @@ interface AuthState {
   token: string | null;
   loading: boolean;
   error: string | null;
-  login: (data: AuthResponse) => void;
+  login: (data: AuthResponse) => Promise<void>;
   logout: () => void;
   setUser: (user: User | null) => void;
   setToken: (token: string | null) => void;
@@ -15,7 +15,7 @@ interface AuthState {
   setLoading: (loading: boolean) => void;
   loadFromStorage: () => void;
   fetchUserData: () => Promise<boolean>;
-  isAuthenticated: boolean;
+  isAuthenticated: () => boolean;
 }
 
 // Initialize auth state from localStorage
@@ -63,36 +63,64 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   token: null,
   loading: true, // Start with loading true
   error: null,
-  get isAuthenticated() {
+  
+  isAuthenticated: () => {
     const state = get();
-    return !!(state.token && state.user);
+    if (!state.token || !state.user) return false;
+    
+    try {
+      // Check token expiration
+      const payload = JSON.parse(atob(state.token.split('.')[1]));
+      const exp = payload.exp * 1000;
+      return Date.now() < exp;
+    } catch {
+      return false;
+    }
   },
-  login: (data) => {
-    console.log('🗃️ AuthStore login:', { 
-      hasUser: !!data?.user, 
-      hasToken: !!data?.accessToken,
-      userEmail: data?.user?.email 
-    });
-    
-    set({ 
-      user: data.user, 
-      token: data.accessToken, 
-      loading: false,
-      error: null
-    });
-    
-    // Only access localStorage on client side
-    if (typeof window !== 'undefined') {
-      console.log('🗃️ Saving to localStorage:', { 
-        token: data.accessToken?.substring(0, 20) + '...',
-        user: data.user?.email 
+  
+  login: async (data) => {
+    try {
+      console.log('🗃️ AuthStore login:', { 
+        hasUser: !!data?.user, 
+        hasToken: !!data?.accessToken,
+        userEmail: data?.user?.email 
       });
       
-      localStorage.setItem('token', data.accessToken);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      if (!data.accessToken || !data.user) {
+        throw new Error('Invalid login data');
+      }
+      
+      // Validate token
+      const payload = JSON.parse(atob(data.accessToken.split('.')[1]));
+      if (payload.exp * 1000 < Date.now()) {
+        throw new Error('Token expired');
+      }
+      
+      // Save to localStorage first
+      if (typeof window !== 'undefined') {
+        console.log('🗃️ Saving to localStorage:', { 
+          token: data.accessToken?.substring(0, 20) + '...',
+          user: data.user?.email 
+        });
+        
+        localStorage.setItem('token', data.accessToken);
+        localStorage.setItem('user', JSON.stringify(data.user));
+      }
+      
+      // Then update state
+      set({ 
+        user: data.user, 
+        token: data.accessToken, 
+        loading: false,
+        error: null
+      });
+      
+      console.log('✅ AuthStore state updated successfully');
+    } catch (error) {
+      console.error('❌ Login failed:', error);
+      set({ error: error instanceof Error ? error.message : 'Login failed' });
+      throw error;
     }
-    
-    console.log('🗃️ AuthStore state updated');
   },
   logout: () => {
     console.log('� Logging out...');

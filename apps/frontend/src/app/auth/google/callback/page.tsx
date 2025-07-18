@@ -35,13 +35,13 @@ export default function GoogleCallbackPage() {
         });
 
         if (response.data.accessToken) {
-          login(response.data);
+          await login(response.data);
           setStatus('success');
           
-          // Redirect to home page after successful login
+          // Redirect to dashboard after successful login
           setTimeout(() => {
-            router.push('/');
-          }, 2000);
+            router.push('/dashboard');
+          }, 1500);
         } else {
           setError('Failed to authenticate with Google');
           setStatus('error');

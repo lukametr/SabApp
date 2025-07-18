@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -20,8 +20,9 @@ import { SubscriptionModule } from './subscription/subscription.module';
     }),
     ScheduleModule.forRoot(), // For cron jobs
     MongooseModule.forRootAsync({
-      useFactory: () => {
-        const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/sabap';
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => {
+        const mongoUri = configService.get<string>('MONGODB_URI') || 'mongodb://localhost:27017/sabap';
         console.log('🔧 MongoDB - Connecting to:', mongoUri.replace(/\/\/([^:]+):([^@]+)@/, '//<credentials>@'));
         
         return {
@@ -31,8 +32,28 @@ import { SubscriptionModule } from './subscription/subscription.module';
           maxPoolSize: 10,
           serverSelectionTimeoutMS: 5000,
           socketTimeoutMS: 45000,
+          // Enhanced retry options
+          retryAttempts: 5,
+          retryDelay: 3000,
+          // Connection event handlers for debugging
+          connectionFactory: (connection: any) => {
+            connection.on('connected', () => {
+              console.log('✅ MongoDB connected successfully');
+            });
+            connection.on('error', (error: any) => {
+              console.error('❌ MongoDB connection error:', error);
+            });
+            connection.on('disconnected', () => {
+              console.warn('⚠️ MongoDB disconnected');
+            });
+            connection.on('reconnected', () => {
+              console.log('🔄 MongoDB reconnected');
+            });
+            return connection;
+          },
         };
       },
+      inject: [ConfigService],
     }),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'),

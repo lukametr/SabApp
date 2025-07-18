@@ -65,6 +65,8 @@ export class AuthResponseDto {
     role: string;
     status: string;
     googleId?: string;
+    authProvider?: string;
+    isEmailVerified?: boolean;
     // Removed personalNumber and phoneNumber
   };
 }
