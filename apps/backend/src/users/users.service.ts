@@ -14,14 +14,8 @@ export class UsersService {
 
   async findByGoogleId(googleId: string): Promise<UserDocument | null> {
     console.log('🔍 Looking up user by Google ID:', googleId);
-    console.log('🔍 MongoDB Model:', this.userModel.modelName);
-    console.log('🔍 MongoDB Collection:', this.userModel.collection.name);
     
     try {
-      // დებაგი - ვნახავთ collection state (safe way)
-      const userCount = await this.userModel.countDocuments();
-      console.log('🔍 Collection document count:', userCount);
-      
       const user = await this.userModel.findOne({ googleId }).exec();
       console.log('🔍 Google ID lookup result:', {
         found: !!user,
@@ -29,18 +23,6 @@ export class UsersService {
         googleId: user?.googleId,
         authProvider: user?.authProvider
       });
-      
-      // თუ ვერ მოიძებნა, დავბეჭდოთ ყველა მომხმარებელი debug-ისთვის
-      if (!user) {
-        console.log('🔍 Google ID lookup failed, checking all users...');
-        const allUsers = await this.userModel.find({}).exec();
-        console.log('🔍 All users in collection:', allUsers.map(u => ({
-          id: u._id,
-          email: u.email,
-          googleId: u.googleId,
-          name: u.name
-        })));
-      }
       
       return user;
     } catch (error) {
@@ -51,45 +33,14 @@ export class UsersService {
 
   async findByEmail(email: string): Promise<UserDocument | null> {
     console.log('🔍 Looking up user by email:', email);
-    console.log('🚨 CRITICAL DEBUG - Email type:', typeof email);
-    console.log('🚨 CRITICAL DEBUG - Email length:', email?.length);
-    console.log('🚨 CRITICAL DEBUG - Email trimmed:', `"${email?.trim()}"`);
     
     try {
-      // Database connection state check
-      const dbState = this.userModel.db.readyState;
-      console.log('🔍 Database ready state:', dbState); // 1 = connected
-      
       const user = await this.userModel.findOne({ email }).exec();
       console.log('🔍 User lookup result:', {
         found: !!user,
         email: user?.email,
-        hasPassword: !!user?.password,
-        passwordPrefix: user?.password?.substring(0, 10) + '...'
+        hasPassword: !!user?.password
       });
-      
-      // 🚨 დამატებითი debug თუ მომხმარებელი ვერ მოიძებნა
-      if (!user) {
-        console.log('🚨 CRITICAL DEBUG - User not found, checking all users with similar emails...');
-        const allUsers = await this.userModel.find({}).select('email googleId name').exec();
-        console.log('🚨 CRITICAL DEBUG - All users in database:', allUsers.map(u => ({
-          email: u.email,
-          googleId: u.googleId,
-          name: u.name
-        })));
-        
-        // ვეძებთ თუ რამე მსგავსი email არის
-        const similarEmails = allUsers.filter(u => 
-          u.email && u.email.toLowerCase().includes(email.toLowerCase())
-        );
-        console.log('🚨 CRITICAL DEBUG - Similar emails found:', similarEmails);
-        
-        // Check exact match case-insensitive
-        const caseInsensitiveMatch = allUsers.find(u => 
-          u.email && u.email.toLowerCase() === email.toLowerCase()
-        );
-        console.log('🚨 CRITICAL DEBUG - Case insensitive match:', caseInsensitiveMatch);
-      }
       
       return user;
     } catch (error) {
@@ -106,58 +57,28 @@ export class UsersService {
   async createUser(
     googleUserInfo: GoogleUserInfo
   ): Promise<UserDocument> {
+    console.log('🔍 Creating user for:', googleUserInfo.email);
+    
     // მკაცრი ვალიდაცია
     if (!googleUserInfo.email || !googleUserInfo.sub) {
       console.error('Google user info missing email or sub:', googleUserInfo);
       throw new ConflictException('Google account must have email and sub');
     }
     
-    // 🔍 MongoDB Connection & Index Diagnostics
-    console.log('🔍 MongoDB Connection State:', this.userModel.db.readyState);
-    console.log('🔍 Collection Name:', this.userModel.collection.name);
-    
-    try {
-      // Check indexes (safe way)
-      const indexInfo = await this.userModel.collection.getIndexes();
-      console.log('🔍 MongoDB Indexes:', Object.keys(indexInfo));
-      
-      // Check collection document count instead of stats
-      const documentCount = await this.userModel.countDocuments();
-      console.log('🔍 Collection document count:', documentCount);
-    } catch (indexError) {
-      console.error('🔍 Error checking collection info:', indexError);
-    }
-    
-    // 🔍 კრიტიკული debug - ვამოწმებთ რა გადაცემული
-    console.log('🚨 CRITICAL DEBUG - Received googleUserInfo:', JSON.stringify(googleUserInfo, null, 2));
-    console.log('🚨 CRITICAL DEBUG - googleUserInfo.email:', googleUserInfo.email);
-    console.log('🚨 CRITICAL DEBUG - googleUserInfo.sub:', googleUserInfo.sub);
-    console.log('🚨 CRITICAL DEBUG - googleUserInfo.name:', googleUserInfo.name);
-    
-    // Check if user already exists with raw MongoDB query
-    console.log('🔍 RAW MongoDB Query Test...');
-    try {
-      const rawUserByGoogleId = await this.userModel.collection.findOne({ googleId: googleUserInfo.sub });
-      console.log('🔍 Raw MongoDB findOne by googleId result:', rawUserByGoogleId);
-      
-      const rawUserByEmail = await this.userModel.collection.findOne({ email: googleUserInfo.email });
-      console.log('🔍 Raw MongoDB findOne by email result:', rawUserByEmail);
-    } catch (rawError) {
-      console.error('🔍 Raw MongoDB query error:', rawError);
-    }
-    
     // Check if user already exists
     const existingUser = await this.findByGoogleId(googleUserInfo.sub);
     if (existingUser) {
-      throw new ConflictException('User already exists');
+      console.log('✅ User already exists, returning existing user');
+      return existingUser;
     }
+    
     // Check if email is already taken
     const existingEmail = await this.findByEmail(googleUserInfo.email);
     if (existingEmail) {
-      throw new ConflictException('Email already registered');
+      console.log('� Email exists, linking Google ID to existing user');
+      await this.linkGoogleId(String(existingEmail._id), googleUserInfo.sub);
+      return await this.findById(String(existingEmail._id)) as UserDocument;
     }
-
-    // Removed personalNumber and phoneNumber checks
 
     const now = new Date();
     const end = new Date(now.getTime() + 1000 * 60 * 60 * 24 * 14); // 14 დღე
@@ -179,46 +100,11 @@ export class UsersService {
       subscriptionDays: 14,
     };
 
-    console.log('🚨 CRITICAL DEBUG - User object being created:', JSON.stringify(userToCreate, null, 2));
-    
+    console.log('� Creating new user document...');
     const user = new this.userModel(userToCreate);
-
-    // დაამატე ლოგი დებაგისთვის
-    console.log('🔍 Creating user with data:', {
-      email: user.email,
-      googleId: user.googleId,
-      authProvider: user.authProvider
-    });
-
     const savedUser = await user.save();
+    
     console.log('✅ User saved with ID:', savedUser._id);
-    console.log('🚨 CRITICAL DEBUG - Saved user data:', {
-      id: savedUser._id,
-      email: savedUser.email,
-      googleId: savedUser.googleId,
-      name: savedUser.name,
-      authProvider: savedUser.authProvider
-    });
-    
-    // 🔍 Immediate verification after save
-    console.log('🔍 Immediate verification after save...');
-    try {
-      const verifyUser = await this.userModel.findById(savedUser._id).exec();
-      console.log('🔍 Verification lookup result:', {
-        found: !!verifyUser,
-        email: verifyUser?.email,
-        googleId: verifyUser?.googleId
-      });
-      
-      const verifyByGoogleId = await this.userModel.findOne({ googleId: googleUserInfo.sub }).exec();
-      console.log('🔍 Verification by googleId result:', {
-        found: !!verifyByGoogleId,
-        email: verifyByGoogleId?.email
-      });
-    } catch (verifyError) {
-      console.error('🔍 Verification error:', verifyError);
-    }
-    
     return savedUser;
   }
 

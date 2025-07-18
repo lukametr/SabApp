@@ -230,9 +230,6 @@ export class AuthService {
         name: googleUserInfo.name
       });
       
-      // Debug all users first
-      await this.usersService.debugAllUsers();
-      
       // Check if user exists
       let user = await this.usersService.findByGoogleId(googleUserInfo.sub);
 
