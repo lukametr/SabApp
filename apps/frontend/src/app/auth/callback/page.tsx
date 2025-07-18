@@ -8,14 +8,14 @@ import { CircularProgress, Box, Typography } from '@mui/material';
 export default function AuthCallbackPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { setToken, setUser } = useAuthStore();
+  const { login, logout } = useAuthStore();
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const handleCallback = async () => {
       if (!searchParams) {
         console.error('[Auth Callback] No search params available');
-        router.push('/login?error=invalid_callback');
+        router.push('/auth/login?error=invalid_callback');
         return;
       }
 
@@ -26,57 +26,56 @@ export default function AuthCallbackPage() {
 
       if (errorParam) {
         console.error('[Auth Callback] Error from backend:', errorParam);
-        router.push(`/login?error=${errorParam}`);
+        router.push(`/auth/login?error=${errorParam}`);
         return;
       }
 
       if (!token) {
         console.error('[Auth Callback] No token received');
-        router.push('/login?error=no_token');
+        router.push('/auth/login?error=no_token');
         return;
       }
 
       try {
-        // Store token
-        console.log('[Auth Callback] Storing token...');
-        setToken(token);
-        localStorage.setItem('token', token);
-
         // Decode JWT to get user info without an API call
-        try {
-          const payload = JSON.parse(atob(token.split('.')[1]));
-          console.log('[Auth Callback] Decoded token payload:', payload);
+        console.log('[Auth Callback] Decoding token...');
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        console.log('[Auth Callback] Decoded token payload:', payload);
 
-          // Create user object from JWT payload
-          const userData = {
-            id: payload.sub,
-            email: payload.email,
-            role: payload.role,
-            googleId: payload.googleId,
-            name: payload.name || payload.email?.split('@')[0] || 'User',
-            picture: payload.picture || null,
-          };
+        // Create user object from JWT payload
+        const userData = {
+          id: payload.sub,
+          email: payload.email,
+          role: payload.role,
+          status: payload.status,
+          googleId: payload.googleId,
+          name: payload.name || payload.email?.split('@')[0] || 'User',
+          picture: payload.picture || null,
+        };
 
-          console.log('[Auth Callback] Setting user data:', userData);
-          setUser(userData);
-          localStorage.setItem('user', JSON.stringify(userData));
+        console.log('[Auth Callback] Setting user data:', userData);
+        
+        // Use the login method to properly set auth state
+        login({
+          accessToken: token,
+          user: userData
+        });
 
-          // Redirect to dashboard
-          console.log('[Auth Callback] Redirecting to dashboard...');
-          router.push('/dashboard');
-        } catch (decodeError) {
-          console.error('[Auth Callback] Error decoding token:', decodeError);
-          // Still try to redirect - the auth guard will handle validation
-          router.push('/dashboard');
-        }
+        // Small delay to ensure auth state is set
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // Redirect to dashboard
+        console.log('[Auth Callback] Redirecting to dashboard...');
+        router.push('/dashboard');
       } catch (error) {
-        console.error('[Auth Callback] Unexpected error:', error);
-        router.push('/login?error=callback_failed');
+        console.error('[Auth Callback] Error processing callback:', error);
+        logout(); // Clear any partial auth state
+        router.push('/auth/login?error=callback_failed');
       }
     };
 
     handleCallback();
-  }, [searchParams, router, setToken, setUser]);
+  }, [searchParams, router, login, logout]);
 
   if (error) {
     return (

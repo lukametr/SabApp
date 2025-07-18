@@ -57,12 +57,16 @@ const initializeAuth = () => {
   return { token: null, user: null, isAuthenticated: false };
 };
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   ...initializeAuth(),
   user: null,
   token: null,
   loading: true, // Start with loading true
   error: null,
+  get isAuthenticated() {
+    const state = get();
+    return !!(state.token && state.user);
+  },
   login: (data) => {
     console.log('🗃️ AuthStore login:', { 
       hasUser: !!data?.user, 
@@ -70,7 +74,12 @@ export const useAuthStore = create<AuthState>((set) => ({
       userEmail: data?.user?.email 
     });
     
-    set({ user: data.user, token: data.accessToken, loading: false });
+    set({ 
+      user: data.user, 
+      token: data.accessToken, 
+      loading: false,
+      error: null
+    });
     
     // Only access localStorage on client side
     if (typeof window !== 'undefined') {
@@ -114,7 +123,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     
     console.log('✅ Logout complete');
   },
-  setUser: (user) => set({ user, isAuthenticated: !!user }),
+  setUser: (user) => set({ user }),
   setToken: (token) => set({ token }),
   setError: (error) => set({ error }),
   setLoading: (loading) => set({ loading }),
@@ -163,6 +172,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         }
         
         set({ token, user: parsedUser, loading: false });
+        console.log('🗃️ Auth state restored successfully');
       } else {
         console.log('🗃️ No valid storage data found');
         set({ loading: false });
