@@ -761,6 +761,7 @@ export class DebugController {
           name: user.name,
           authProvider: user.authProvider,
           googleId: !!user.googleId,
+          role: user.role,
           isEmailVerified: user.isEmailVerified,
           status: user.status,
           createdAt: user.createdAt,
@@ -772,6 +773,61 @@ export class DebugController {
       return {
         status: 'error',
         message: 'Failed to verify Google user',
+        error: error.message
+      };
+    }
+  }
+
+  @Post('make-user-admin')
+  async makeUserAdmin(@Body() body: { userId?: string, email?: string, googleId?: string }) {
+    try {
+      const { userId, email, googleId } = body;
+      
+      if (!userId && !email && !googleId) {
+        return {
+          status: 'error',
+          message: 'userId, email, or googleId is required'
+        };
+      }
+
+      let user = null;
+      
+      if (userId) {
+        user = await this.usersService.findById(userId);
+      } else if (email) {
+        user = await this.usersService.findByEmail(email);
+      } else if (googleId) {
+        user = await this.usersService.findByGoogleId(googleId);
+      }
+
+      if (!user) {
+        return {
+          status: 'error',
+          message: 'User not found'
+        };
+      }
+
+      console.log('🔧 Making user admin:', user.email);
+      
+      // Update role to ADMIN
+      const updatedUser = await this.usersService.updateUserRole(String(user._id), 'admin' as any);
+      
+      return {
+        status: 'success',
+        message: 'User role updated to ADMIN successfully',
+        user: {
+          id: updatedUser._id,
+          email: updatedUser.email,
+          name: updatedUser.name,
+          role: updatedUser.role,
+          authProvider: updatedUser.authProvider
+        }
+      };
+    } catch (error) {
+      console.error('❌ Error making user admin:', error);
+      return {
+        status: 'error',
+        message: 'Failed to update user role',
         error: error.message
       };
     }
