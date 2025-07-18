@@ -345,7 +345,12 @@ export class ReportService {
         });
         
         console.log('📝 Setting page content...');
-        await page.setContent(html, { 
+        
+        // Try simplified HTML first for better PDF compatibility
+        const isSimplified = true; // Toggle for testing
+        const htmlContent = isSimplified ? this.generateSimplifiedHTMLReport(document) : html;
+        
+        await page.setContent(htmlContent, { 
           waitUntil: 'networkidle0',
           timeout: 30000 
         });
@@ -355,20 +360,42 @@ export class ReportService {
         await new Promise(resolve => setTimeout(resolve, 2000));
         
         console.log('📄 Generating PDF...');
-        const pdfBuffer = await page.pdf({
-          format: 'A4',
-          landscape: true, // Excel-ის მსგავსი ფართო ფორმატი
-          printBackground: true,
-          margin: {
-            top: '10mm',
-            right: '10mm',
-            bottom: '10mm',
-            left: '10mm'
-          },
-          preferCSSPageSize: true,
-          displayHeaderFooter: false,
-          timeout: 30000
-        });
+        
+        // First try with standard options
+        let pdfBuffer;
+        try {
+          pdfBuffer = await page.pdf({
+            format: 'A4',
+            landscape: false, // Portrait ორიენტაცია stability-ისთვის
+            printBackground: true,
+            width: '297mm', // A4 width
+            height: '210mm', // A4 height landscape equivalent
+            margin: {
+              top: '5mm',
+              right: '5mm', 
+              bottom: '5mm',
+              left: '5mm'
+            },
+            displayHeaderFooter: false,
+            timeout: 60000, // 60 second timeout
+            scale: 0.8 // Scale down content to fit better
+          });
+        } catch (pdfError) {
+          console.log('⚠️ First PDF attempt failed, trying fallback options...');
+          
+          // Fallback with minimal options
+          pdfBuffer = await page.pdf({
+            format: 'A4',
+            printBackground: false, // Disable background printing
+            margin: {
+              top: '10mm',
+              right: '10mm',
+              bottom: '10mm', 
+              left: '10mm'
+            },
+            timeout: 90000
+          });
+        }
         
         console.log('✅ PDF generated successfully, size:', pdfBuffer.length, 'bytes');
         return Buffer.from(pdfBuffer);
@@ -453,106 +480,99 @@ export class ReportService {
             
             body { 
               font-family: 'Noto Sans Georgian', 'BPG Arial', 'DejaVu Sans', Arial, sans-serif; 
-              margin: 15px; 
-              font-size: 10px; 
-              line-height: 1.2;
+              margin: 10px; 
+              font-size: 8px; 
+              line-height: 1.1;
             }
             
             .header { 
               text-align: center; 
               background: #4472C4; 
               color: white; 
-              padding: 15px; 
-              margin-bottom: 20px; 
-              font-size: 14px;
+              padding: 10px; 
+              margin-bottom: 15px; 
+              font-size: 12px;
               font-weight: bold;
             }
             
             .info-section { 
-              margin-bottom: 20px; 
+              margin-bottom: 15px; 
             }
             
             .info-table { 
               width: 100%; 
               border-collapse: collapse; 
-              margin-bottom: 15px;
+              margin-bottom: 10px;
             }
             
             .info-table td { 
-              padding: 5px; 
+              padding: 3px; 
               border: 1px solid #ddd; 
-              font-size: 9px;
+              font-size: 7px;
             }
             
             .info-table td:first-child { 
               background: #f5f5f5; 
               font-weight: bold; 
-              width: 25%; 
+              width: 20%; 
             }
             
             .hazards-table { 
               width: 100%; 
               border-collapse: collapse; 
-              margin-top: 15px; 
-              font-size: 8px;
-              table-layout: fixed;
+              margin-top: 10px; 
+              font-size: 6px;
+              table-layout: auto;
             }
             
             .hazards-table th, .hazards-table td { 
-              padding: 4px; 
+              padding: 2px; 
               border: 1px solid #333; 
               text-align: center; 
-              vertical-align: middle;
+              vertical-align: top;
               word-wrap: break-word;
               overflow-wrap: break-word;
+              max-width: 60px;
             }
             
             .hazards-table th { 
               background: #E7E6E6; 
               font-weight: bold; 
-              font-size: 7px;
-              line-height: 1.1;
+              font-size: 5px;
+              line-height: 1.0;
             }
             
             .hazards-table td { 
               text-align: left; 
+              font-size: 5px;
             }
             
-            /* სვეტების სიგანე */
-            .hazards-table th:nth-child(1), .hazards-table td:nth-child(1) { width: 3%; } /* № */
-            .hazards-table th:nth-child(2), .hazards-table td:nth-child(2) { width: 10%; } /* საფრთხე */
-            .hazards-table th:nth-child(3), .hazards-table td:nth-child(3) { width: 8%; } /* ფოტო */
-            .hazards-table th:nth-child(4), .hazards-table td:nth-child(4) { width: 8%; } /* პირები */
-            .hazards-table th:nth-child(5), .hazards-table td:nth-child(5) { width: 8%; } /* ტრავმა */
-            .hazards-table th:nth-child(6), .hazards-table td:nth-child(6) { width: 10%; } /* მიმდინარე */
-            .hazards-table th:nth-child(7), .hazards-table td:nth-child(7) { width: 6%; } /* საწყისი რისკი */
-            .hazards-table th:nth-child(8), .hazards-table td:nth-child(8) { width: 5%; } /* ალბათობა */
-            .hazards-table th:nth-child(9), .hazards-table td:nth-child(9) { width: 5%; } /* სიმძიმე */
-            .hazards-table th:nth-child(10), .hazards-table td:nth-child(10) { width: 5%; } /* ნამრავლი */
-            .hazards-table th:nth-child(11), .hazards-table td:nth-child(11) { width: 10%; } /* დამატებითი */
-            .hazards-table th:nth-child(12), .hazards-table td:nth-child(12) { width: 6%; } /* ნარჩენი რისკი */
-            .hazards-table th:nth-child(13), .hazards-table td:nth-child(13) { width: 5%; } /* ალბათობა */
-            .hazards-table th:nth-child(14), .hazards-table td:nth-child(14) { width: 5%; } /* სიმძიმე */
-            .hazards-table th:nth-child(15), .hazards-table td:nth-child(15) { width: 5%; } /* ნამრავლი */
-            .hazards-table th:nth-child(16), .hazards-table td:nth-child(16) { width: 8%; } /* საჭირო */
-            .hazards-table th:nth-child(17), .hazards-table td:nth-child(17) { width: 8%; } /* პასუხისმგებელი */
-            .hazards-table th:nth-child(18), .hazards-table td:nth-child(18) { width: 6%; } /* თარიღი */
-            
             .section-title { 
-              font-size: 12px; 
+              font-size: 10px; 
               font-weight: bold; 
-              margin: 15px 0 8px 0; 
+              margin: 10px 0 5px 0; 
             }
             
             @page {
-              size: A4 landscape;
-              margin: 10mm;
+              size: A4 portrait;
+              margin: 5mm;
             }
             
             @media print {
-              body { font-size: 8px; }
-              .hazards-table { font-size: 7px; }
-              .hazards-table th { font-size: 6px; }
+              body { 
+                font-size: 6px; 
+                margin: 0;
+              }
+              .hazards-table { 
+                font-size: 5px; 
+              }
+              .hazards-table th { 
+                font-size: 4px; 
+              }
+              .header {
+                font-size: 10px;
+                padding: 5px;
+              }
             }
           </style>
         </head>
@@ -613,6 +633,167 @@ export class ReportService {
           </div>
           
           <div style="margin-top: 30px; text-align: center; font-size: 8px; color: #666;">
+            გენერირებულია: ${new Date().toLocaleDateString('ka-GE')} ${new Date().toLocaleTimeString('ka-GE')}
+          </div>
+        </body>
+      </html>
+    `;
+  }
+
+  /**
+   * გამარტივებული HTML რეპორტის შექმნა (PDF-ისთვის უკეთესი თავსებადობა)
+   */
+  private generateSimplifiedHTMLReport(document: any): string {
+    // ძირითადი ინფორმაცია
+    const evaluatorName = `${document.evaluatorName || ''} ${document.evaluatorLastName || ''}`.trim();
+    const objectName = document.objectName || '';
+    const workDescription = document.workDescription || '';
+    const date = document.date ? new Date(document.date).toLocaleDateString('ka-GE') : '';
+    const time = document.time ? new Date(document.time).toLocaleTimeString('ka-GE') : '';
+
+    // საფრთხეების მონაცემები
+    const hazards = Array.isArray(document.hazards) ? document.hazards : [];
+    const hazardsHTML = hazards.length > 0
+      ? hazards.map((hazard: any, index: number) => `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${hazard.hazardIdentification || ''}</td>
+            <td>${hazard.initialRisk?.probability || ''}</td>
+            <td>${hazard.initialRisk?.severity || ''}</td>
+            <td>${hazard.initialRisk?.total || ''}</td>
+            <td>${hazard.residualRisk?.probability || ''}</td>
+            <td>${hazard.residualRisk?.severity || ''}</td>
+            <td>${hazard.residualRisk?.total || ''}</td>
+            <td>${hazard.requiredMeasures || ''}</td>
+            <td>${hazard.responsiblePerson || ''}</td>
+          </tr>
+        `).join('')
+      : '<tr><td colspan="10">საფრთხეები არ იქნა იდენტიფიცირებული</td></tr>';
+
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>რისკის შეფასების ფორმა</title>
+          <style>
+            * {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+            }
+            
+            body { 
+              font-family: Arial, sans-serif; 
+              font-size: 10px; 
+              line-height: 1.2;
+              margin: 10px;
+            }
+            
+            .header { 
+              text-align: center; 
+              background: #4472C4; 
+              color: white; 
+              padding: 8px; 
+              margin-bottom: 15px; 
+              font-size: 14px;
+              font-weight: bold;
+            }
+            
+            .info-table { 
+              width: 100%; 
+              border-collapse: collapse; 
+              margin-bottom: 15px;
+              font-size: 9px;
+            }
+            
+            .info-table td { 
+              padding: 4px; 
+              border: 1px solid #333; 
+            }
+            
+            .info-table td:first-child { 
+              background: #f0f0f0; 
+              font-weight: bold; 
+              width: 25%; 
+            }
+            
+            .hazards-table { 
+              width: 100%; 
+              border-collapse: collapse; 
+              font-size: 8px;
+            }
+            
+            .hazards-table th, .hazards-table td { 
+              padding: 3px; 
+              border: 1px solid #333; 
+              text-align: center; 
+              vertical-align: top;
+            }
+            
+            .hazards-table th { 
+              background: #e0e0e0; 
+              font-weight: bold; 
+              font-size: 7px;
+            }
+            
+            .hazards-table td { 
+              text-align: left; 
+              font-size: 7px;
+            }
+            
+            @media print {
+              body { font-size: 8px; }
+              .hazards-table { font-size: 6px; }
+              .hazards-table th { font-size: 5px; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            რისკის შეფასების ფორმა №1
+          </div>
+          
+          <table class="info-table">
+            <tr>
+              <td>შეფასებლის სახელი და გვარი:</td>
+              <td>${evaluatorName}</td>
+              <td>თარიღი:</td>
+              <td>${date}</td>
+            </tr>
+            <tr>
+              <td>სამუშაო ობიექტის დასახელება:</td>
+              <td>${objectName}</td>
+              <td>დრო:</td>
+              <td>${time}</td>
+            </tr>
+            <tr>
+              <td>სამუშაოს აღწერა:</td>
+              <td colspan="3">${workDescription}</td>
+            </tr>
+          </table>
+          
+          <table class="hazards-table">
+            <thead>
+              <tr>
+                <th>№</th>
+                <th>საფრთხე</th>
+                <th>საწყისი ალბათობა</th>
+                <th>საწყისი სიმძიმე</th>
+                <th>საწყისი რისკი</th>
+                <th>ნარჩენი ალბათობა</th>
+                <th>ნარჩენი სიმძიმე</th>
+                <th>ნარჩენი რისკი</th>
+                <th>საჭირო ღონისძიებები</th>
+                <th>პასუხისმგებელი</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${hazardsHTML}
+            </tbody>
+          </table>
+          
+          <div style="margin-top: 20px; text-align: center; font-size: 8px; color: #666;">
             გენერირებულია: ${new Date().toLocaleDateString('ka-GE')} ${new Date().toLocaleTimeString('ka-GE')}
           </div>
         </body>
