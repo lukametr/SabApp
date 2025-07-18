@@ -10,6 +10,8 @@ export class ReportService {
    * დოკუმენტის Excel ფაილის შექმნა
    */
   async generateExcelReport(document: any): Promise<Buffer> {
+    // --- ძველი ვარიანტი ---
+    /*
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('უსაფრთხოების შეფასება');
 
@@ -92,6 +94,111 @@ export class ReportService {
     worksheet.getColumn(7).width = 30; // ღონისძიება უფრო ფართო
 
     // ფაილის გენერაცია
+    const buffer = await workbook.xlsx.writeBuffer();
+    return Buffer.from(buffer);
+    */
+
+    // --- ახალი ვარიანტი ---
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('ფორმა №1');
+
+    // 1. Header Data (ზედა ნაწილი)
+    const evaluatorName = `${document.evaluatorName || ''} ${document.evaluatorLastName || ''}`.trim();
+    const objectName = document.objectName || '';
+    const workDescription = document.workDescription || '';
+    const date = document.date ? new Date(document.date).toLocaleDateString('ka-GE') : '';
+    const time = document.time ? new Date(document.time).toLocaleTimeString('ka-GE') : '';
+
+    const headerData = [
+      ['რისკის შეფასების ფორმა №1', '', '', '', '', '', '', '', '', '', '', '', ''],
+      ['შეფასებლის სახელი და გვარი:', evaluatorName, '', '', '', '', '', '', 'თარიღი:', date, '', '', ''],
+      ['სამუშაო ობიექტის დასახელება:', objectName, '', '', '', '', '', '', 'დრო:', time, '', '', ''],
+      ['სამუშაოს დაწყების თარიღი:', workDescription, '', '', '', '', '', '', '', '', '', '', '']
+    ];
+
+    // 2. ცხრილის სათაურები
+    const tableHeaders = [
+      [
+        'საფრთხე და იდენტიფიკაცია',
+        'არსებული ფოტო/ვიდეო მასალა',
+        'პირის სახელი',
+        'დამატებით ს / სტატუსი',
+        'არსებული კონტროლის ზომები',
+        'საშიშროების რისკი',
+        'დამატებითი კონტროლის ზომები',
+        'ნიშნული რისკი',
+        'ბსაჰთრო ბელტ/ზომები/რეკომენდაცია 1',
+        'შესრულების პირი/პასუხიმგებელი',
+        'ბოლდებული უსაფრთხოების ობიექტი'
+      ]
+    ];
+
+    // 3. ცხრილის მონაცემები (hazards)
+    const hazards = Array.isArray(document.hazards) ? document.hazards : [];
+    const tableRows = hazards.length > 0
+      ? hazards.map((hazard: any) => [
+          hazard.hazard || '',
+          hazard.media || '',
+          hazard.personName || '',
+          hazard.status || '',
+          hazard.existingMeasures || '',
+          hazard.risk || '',
+          hazard.additionalMeasures || '',
+          hazard.markedRisk || '',
+          hazard.recommendation || '',
+          hazard.responsiblePerson || '',
+          hazard.boldObject || ''
+        ])
+      : Array(5).fill(null).map(() => Array(tableHeaders[0].length).fill(''));
+
+    // 4. ყველა ერთად
+    const fullSheetData = [
+      ...headerData,
+      [],
+      ...tableHeaders,
+      ...tableRows
+    ];
+
+    // 5. Worksheet-ში ჩასმა
+    worksheet.addRows(fullSheetData);
+
+    // 6. Merge-ები
+    worksheet.mergeCells('A1:M1'); // სათაური
+    worksheet.mergeCells('B2:H2'); // შეფასებლის სახელი
+    worksheet.mergeCells('J2:J2'); // თარიღი
+    worksheet.mergeCells('B3:H3'); // ობიექტი
+    worksheet.mergeCells('J3:J3'); // დრო
+    worksheet.mergeCells('B4:M4'); // სამუშაოს აღწერა
+
+    // 7. სვეტების სიგრძე
+    worksheet.columns = Array(tableHeaders[0].length).fill({ width: 25 });
+
+    // 8. სტილები (სათაური და table header)
+    // სათაური
+    const titleCell = worksheet.getCell('A1');
+    titleCell.font = { size: 16, bold: true };
+    titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+    titleCell.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: '4472C4' }
+    };
+    titleCell.font = { color: { argb: 'FFFFFF' }, size: 16, bold: true };
+
+    // Table Header სტილი
+    const headerRowIdx = headerData.length + 2; // e.g. 4+2=6
+    const headerRow = worksheet.getRow(headerRowIdx);
+    headerRow.eachCell(cell => {
+      cell.font = { bold: true };
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'E7E6E6' }
+      };
+      cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+    });
+
+    // 9. ფაილის გენერაცია
     const buffer = await workbook.xlsx.writeBuffer();
     return Buffer.from(buffer);
   }
