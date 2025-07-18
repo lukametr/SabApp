@@ -110,44 +110,56 @@ export class ReportService {
     const time = document.time ? new Date(document.time).toLocaleTimeString('ka-GE') : '';
 
     const headerData = [
-      ['რისკის შეფასების ფორმა №1', '', '', '', '', '', '', '', '', '', '', '', ''],
-      ['შეფასებლის სახელი და გვარი:', evaluatorName, '', '', '', '', '', '', 'თარიღი:', date, '', '', ''],
-      ['სამუშაო ობიექტის დასახელება:', objectName, '', '', '', '', '', '', 'დრო:', time, '', '', ''],
-      ['სამუშაოს დაწყების თარიღი:', workDescription, '', '', '', '', '', '', '', '', '', '', '']
+      ['რისკის შეფასების ფორმა №1', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
+      ['შეფასებლის სახელი და გვარი:', evaluatorName, '', '', '', '', '', '', '', '', 'თარიღი:', date, '', '', '', '', ''],
+      ['სამუშაო ობიექტის დასახელება:', objectName, '', '', '', '', '', '', '', '', 'დრო:', time, '', '', '', '', ''],
+      ['სამუშაოს დაწყების თარიღი:', workDescription, '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']
     ];
 
-    // 2. ცხრილის სათაურები
+    // 2. ცხრილის სათაურები - 13 მთავარი ჰედერი + 4 დამატებითი = 17 სვეტი
     const tableHeaders = [
       [
         'საფრთხე და იდენტიფიკაცია',
         'არსებული ფოტო/ვიდეო მასალა',
-        'პირის სახელი',
-        'დამატებით ს / სტატუსი',
-        'არსებული კონტროლის ზომები',
-        'საშიშროების რისკი',
-        'დამატებითი კონტროლის ზომები',
-        'ნიშნული რისკი',
-        'ბსაჰთრო ბელტ/ზომები/რეკომენდაცია 1',
-        'შესრულების პირი/პასუხიმგებელი',
-        'ბოლდებული უსაფრთხოების ობიექტი'
+        'პოტენციურად დაზარალებული პირები',
+        'ტრავმის ხასიათი',
+        'მიმდინარე კონტროლის ღონისძიებები',
+        'საწყისი რისკი',
+        'ალბათობა',
+        'სიმძიმე',
+        'ნამრავლი',
+        'დამატებითი კონტროლის ღონისძიებები',
+        'ნარჩენი რისკი',
+        'ალბათობა',
+        'სიმძიმე',
+        'ნამრავლი',
+        'საჭირო ღონისძიებები',
+        'შესრულებაზე პასუხისმგებელი პირი',
+        'გადახედვის სავარაუდო თარიღი',
       ]
     ];
 
-    // 3. ცხრილის მონაცემები (hazards) - სწორი mapping რეალური schema-სთან
+    // 3. ცხრილის მონაცემები (hazards) - 17 სვეტი
     const hazards = Array.isArray(document.hazards) ? document.hazards : [];
     const tableRows = hazards.length > 0
       ? hazards.map((hazard: any) => [
           hazard.hazardIdentification || '',  // სწორი ველი
           hazard.photos?.join(', ') || '',    // photos array
           hazard.affectedPersons?.join(', ') || '',  // persons array
-          hazard.injuryDescription || '',     // injury description როგორც status
+          hazard.injuryDescription || '',     // injury description
           hazard.existingControlMeasures || '',  // სწორი ველი
-          hazard.initialRisk?.total || '',    // risk object-ის total
+          hazard.initialRisk?.total || '',    // საწყისი რისკი (მთავარი)
+          hazard.initialRisk?.probability || '',    // ალბათობა
+          hazard.initialRisk?.severity || '',       // სიმძიმე
+          hazard.initialRisk?.total || '',          // ნამრავლი (გამეორება მთავარისა)
           hazard.additionalControlMeasures || '',  // სწორი ველი
-          hazard.residualRisk?.total || '',   // residual risk total
+          hazard.residualRisk?.total || '',   // ნარჩენი რისკი (მთავარი)
+          hazard.residualRisk?.probability || '',   // ალბათობა
+          hazard.residualRisk?.severity || '',      // სიმძიმე
+          hazard.residualRisk?.total || '',         // ნამრავლი (გამეორება მთავარისა)
           hazard.requiredMeasures || '',      // სწორი ველი
           hazard.responsiblePerson || '',     // ეს სწორია
-          hazard.reviewDate ? new Date(hazard.reviewDate).toLocaleDateString('ka-GE') : ''  // review date როგორც "bold object"
+          hazard.reviewDate ? new Date(hazard.reviewDate).toLocaleDateString('ka-GE') : ''  // review date
         ])
       : Array(5).fill(null).map(() => Array(tableHeaders[0].length).fill(''));
 
@@ -163,15 +175,36 @@ export class ReportService {
     worksheet.addRows(fullSheetData);
 
     // 6. Merge-ები
-    worksheet.mergeCells('A1:M1'); // სათაური
-    worksheet.mergeCells('B2:H2'); // შეფასებლის სახელი
-    worksheet.mergeCells('J2:J2'); // თარიღი
-    worksheet.mergeCells('B3:H3'); // ობიექტი
-    worksheet.mergeCells('J3:J3'); // დრო
-    worksheet.mergeCells('B4:M4'); // სამუშაოს აღწერა
+    worksheet.mergeCells('A1:Q1'); // სათაური spans all 17 columns
+    worksheet.mergeCells('B2:J2'); // შეფასებლის სახელი
+    worksheet.mergeCells('K2:K2'); // თარიღი
+    worksheet.mergeCells('B3:J3'); // ობიექტი
+    worksheet.mergeCells('K3:K3'); // დრო
+    worksheet.mergeCells('B4:Q4'); // სამუშაოს აღწერა spans all columns
+    
+    // Table header merges - ყველა სვეტი ცალკეა, merge არ არის საჭირო
+    const tableHeaderStartRow = headerData.length + 2;
 
-    // 7. სვეტების სიგრძე
-    worksheet.columns = Array(tableHeaders[0].length).fill({ width: 25 });
+    // სვეტების სიგანის მორგება - 17 სვეტი
+    worksheet.columns = [
+      { width: 25 }, // A - საფრთხე და იდენტიფიკაცია
+      { width: 20 }, // B - ფოტო
+      { width: 25 }, // C - პოტენციურად დაზარალებული პირები
+      { width: 20 }, // D - ტრავმის ხასიათი
+      { width: 25 }, // E - მიმდინარე კონტროლის ღონისძიებები
+      { width: 15 }, // F - საწყისი რისკი (მთავარი)
+      { width: 12 }, // G - ალბათობა
+      { width: 12 }, // H - სიმძიმე
+      { width: 12 }, // I - ნამრავლი
+      { width: 25 }, // J - დამატებითი კონტროლის ღონისძიებები
+      { width: 15 }, // K - ნარჩენი რისკი (მთავარი)
+      { width: 12 }, // L - ალბათობა
+      { width: 12 }, // M - სიმძიმე
+      { width: 12 }, // N - ნამრავლი
+      { width: 25 }, // O - საჭირო ღონისძიებები
+      { width: 25 }, // P - შესრულებაზე პასუხისმგებელი პირი
+      { width: 20 }, // Q - გადახედვის სავარაუდო თარიღი
+    ];
 
     // 8. სტილები (სათაური და table header)
     // სათაური
@@ -197,6 +230,21 @@ export class ReportService {
       };
       cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
     });
+
+    // ცხრილის სხეულის სტილი
+    const dataStartRow = headerRowIdx + 1;
+    for (let i = dataStartRow; i <= dataStartRow + tableRows.length; i++) {
+      const row = worksheet.getRow(i);
+      row.eachCell(cell => {
+        cell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: true };
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
+        };
+      });
+    }
 
     // 9. ფაილის გენერაცია
     const buffer = await workbook.xlsx.writeBuffer();
