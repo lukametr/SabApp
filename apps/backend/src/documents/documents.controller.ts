@@ -367,30 +367,78 @@ export class DocumentsController {
       const possiblePaths = [
         process.env.PUPPETEER_EXECUTABLE_PATH,
         process.env.CHROME_BIN,
+        '/usr/bin/google-chrome-stable',
+        '/usr/bin/google-chrome',
         '/usr/bin/chromium-browser',
         '/usr/bin/chromium',
-        '/usr/bin/google-chrome-stable',
-        '/usr/bin/google-chrome'
+        '/opt/render/project/src/.chrome/chrome',
+        '/app/.apt/usr/bin/google-chrome-stable'
       ].filter(Boolean);
       
-      const diagnostics = {
+      const diagnostics: any = {
+        timestamp: new Date().toISOString(),
         environment: {
           NODE_ENV: process.env.NODE_ENV,
+          RAILWAY_ENVIRONMENT: process.env.RAILWAY_ENVIRONMENT,
+          RAILWAY_PROJECT_ID: process.env.RAILWAY_PROJECT_ID,
           PUPPETEER_EXECUTABLE_PATH: process.env.PUPPETEER_EXECUTABLE_PATH,
           CHROME_BIN: process.env.CHROME_BIN,
           platform: process.platform,
-          arch: process.arch
+          arch: process.arch,
+          nodeVersion: process.version,
+          memory: process.memoryUsage()
         },
         possiblePaths,
         existingPaths: possiblePaths.filter(path => path && existsSync(path)),
-        systemInfo: {}
+        systemInfo: {},
+        puppeteerTest: null
       };
       
+      // System chromium detection
       try {
         const { stdout } = await execAsync('which chromium-browser || which chromium || which google-chrome');
-        diagnostics.systemInfo = { chromiumLocation: stdout.trim() };
+        diagnostics.systemInfo.chromiumLocation = stdout.trim();
       } catch (error) {
-        diagnostics.systemInfo = { error: 'Chromium not found in PATH' };
+        diagnostics.systemInfo.error = 'Chromium not found in PATH';
+      }
+      
+      // Test puppeteer launch
+      try {
+        console.log('🧪 Testing puppeteer launch...');
+        const puppeteer = require('puppeteer');
+        
+        const browserOptions: any = { 
+          headless: 'new',
+          timeout: 10000,
+          args: [
+            '--no-sandbox', 
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage'
+          ]
+        };
+        
+        if (diagnostics.existingPaths.length > 0) {
+          browserOptions.executablePath = diagnostics.existingPaths[0];
+        }
+        
+        const browser = await puppeteer.launch(browserOptions);
+        const version = await browser.version();
+        await browser.close();
+        
+        diagnostics.puppeteerTest = {
+          success: true,
+          browserVersion: version,
+          executableUsed: browserOptions.executablePath || 'bundled'
+        };
+        
+        console.log('✅ Puppeteer test successful');
+      } catch (puppeteerError) {
+        console.error('❌ Puppeteer test failed:', puppeteerError);
+        diagnostics.puppeteerTest = {
+          success: false,
+          error: puppeteerError.message,
+          stack: puppeteerError.stack
+        };
       }
       
       res.json(diagnostics);
