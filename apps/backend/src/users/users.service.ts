@@ -13,20 +13,29 @@ export class UsersService {
   ) {}
 
   async findByGoogleId(googleId: string): Promise<UserDocument | null> {
-    console.log('🔍 Looking up user by Google ID:', googleId);
+    console.log('Looking up user by Google ID:', googleId);
+    console.log('Google ID type:', typeof googleId);
     
     try {
       const user = await this.userModel.findOne({ googleId }).exec();
-      console.log('🔍 Google ID lookup result:', {
+      console.log('Google ID lookup result:', {
         found: !!user,
         email: user?.email,
         googleId: user?.googleId,
         authProvider: user?.authProvider
       });
       
+      // Debug: Let's also try to find all Google users
+      const allGoogleUsers = await this.userModel.find({ authProvider: 'google' }).exec();
+      console.log('All Google users in DB:', allGoogleUsers.map(u => ({
+        email: u.email,
+        googleId: u.googleId,
+        googleIdType: typeof u.googleId
+      })));
+      
       return user;
     } catch (error) {
-      console.error('🔍 Error finding user by Google ID:', error);
+      console.error('Error finding user by Google ID:', error);
       throw error;
     }
   }
@@ -104,7 +113,8 @@ export class UsersService {
     const user = new this.userModel(userToCreate);
     const savedUser = await user.save();
     
-    console.log('✅ User saved with ID:', savedUser._id);
+    console.log('User saved with ID:', savedUser._id);
+    console.log('User googleId after save:', savedUser.googleId);
     return savedUser;
   }
 
