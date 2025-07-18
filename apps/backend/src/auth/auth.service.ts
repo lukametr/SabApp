@@ -295,12 +295,17 @@ export class AuthService {
       // Existing user login
       await this.usersService.updateLastLogin(String(user._id));
 
-      // Generate JWT token
+      // Generate JWT token with comprehensive user data
       const payload = {
         sub: String(user._id),
         email: user.email,
         role: user.role,
         status: user.status,
+        name: user.name,
+        picture: user.picture,
+        googleId: user.googleId,
+        authProvider: user.authProvider,
+        isEmailVerified: user.isEmailVerified,
       };
 
       const access_token = this.jwtService.sign(payload);
@@ -488,12 +493,16 @@ export class AuthService {
       console.log('🔐 Email Login - Updating last login time...');
       await this.usersService.updateLastLogin(String(user._id));
 
-      // Generate JWT token
+      // Generate JWT token with comprehensive user data
       const payload = {
         sub: String(user._id),
         email: user.email,
         role: user.role,
         status: user.status,
+        name: user.name,
+        picture: user.picture,
+        authProvider: user.authProvider,
+        isEmailVerified: user.isEmailVerified,
       };
 
       console.log('🔐 Email Login - Generating JWT token...');
@@ -555,12 +564,17 @@ export class AuthService {
         await this.usersService.updateLastLogin(String(user._id));
       }
 
-      // Generate JWT token
+      // Generate JWT token with comprehensive user data
       const payload = {
         sub: String(user._id),
         email: user.email,
         role: user.role,
         status: user.status,
+        name: user.name,
+        picture: user.picture,
+        googleId: user.googleId,
+        authProvider: user.authProvider,
+        isEmailVerified: user.isEmailVerified,
       };
 
       const accessToken = this.jwtService.sign(payload, {
