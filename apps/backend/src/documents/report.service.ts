@@ -254,13 +254,21 @@ export class ReportService {
    * დოკუმენტის PDF ფაილის შექმნა
    */
   async generatePDFReport(document: any): Promise<Buffer> {
+    let browser = null;
+    
     try {
+      console.log('📄 Starting PDF generation for document:', document._id || 'unknown');
       const html = this.generateHTMLReport(document);
       
       // Production-ისთვის Chrome executable path და arguments
       const isProduction = process.env.NODE_ENV === 'production';
+      const isRailway = process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_PROJECT_ID;
+      
+      console.log('🔍 Environment check:', { isProduction, isRailway, nodeEnv: process.env.NODE_ENV });
+      
       const browserOptions: any = { 
-        headless: true,
+        headless: 'new',
+        timeout: 60000, // 60 seconds timeout
         args: [
           '--no-sandbox', 
           '--disable-setuid-sandbox',
@@ -268,44 +276,63 @@ export class ReportService {
           '--disable-accelerated-2d-canvas',
           '--no-first-run',
           '--no-zygote',
-          '--single-process', // For Railway/Render
-          '--disable-gpu'
+          '--disable-gpu',
+          '--disable-background-timer-throttling',
+          '--disable-backgrounding-occluded-windows',
+          '--disable-renderer-backgrounding',
+          '--disable-features=TranslateUI',
+          '--disable-ipc-flooding-protection',
+          '--memory-pressure-off'
         ]
       };
 
-      // Production-ში executablePath-ის მითითება
-      if (isProduction) {
-        // Production-ზე Google Chrome-ის პოვნა
+      // Production environment-ისთვის additional args
+      if (isProduction || isRailway) {
+        browserOptions.args.push('--single-process');
+        browserOptions.args.push('--max_old_space_size=512');
+        
+        // Railway/Render-ისთვის Chrome path
         const possiblePaths = [
           process.env.PUPPETEER_EXECUTABLE_PATH,
           process.env.CHROME_BIN,
           '/usr/bin/google-chrome-stable',
           '/usr/bin/google-chrome',
           '/usr/bin/chromium-browser',
-          '/usr/bin/chromium'
+          '/usr/bin/chromium',
+          '/opt/render/project/src/.chrome/chrome', // Render specific
+          '/app/.apt/usr/bin/google-chrome-stable'  // Heroku/Railway
         ].filter(Boolean);
         
         console.log('🔍 Checking possible Chrome paths:', possiblePaths);
         
         // რეალური ფაილის არსებობის შემოწმება
-        let chromiumPath = possiblePaths[0] || '/usr/bin/google-chrome-stable';
+        let chromiumPath = null;
         for (const path of possiblePaths) {
           if (path && existsSync(path)) {
             chromiumPath = path;
             console.log('✅ Found Chrome at:', path);
             break;
+          } else if (path) {
+            console.log('❌ Chrome not found at:', path);
           }
         }
         
-        browserOptions.executablePath = chromiumPath;
-        console.log('🔧 Using Chrome path:', chromiumPath);
+        if (chromiumPath) {
+          browserOptions.executablePath = chromiumPath;
+        } else {
+          console.log('⚠️ No Chrome executable found, using default Puppeteer');
+        }
       }
       
       console.log('🚀 Launching Puppeteer with options:', JSON.stringify(browserOptions, null, 2));
-      const browser = await puppeteer.launch(browserOptions);
+      browser = await puppeteer.launch(browserOptions);
       
       try {
+        console.log('🌐 Creating new page...');
         const page = await browser.newPage();
+        
+        // Set viewport for consistent rendering
+        await page.setViewport({ width: 1200, height: 800 });
         
         // ქართული ფონტების მხარდაჭერისთვის
         await page.evaluateOnNewDocument(() => {
@@ -317,11 +344,17 @@ export class ReportService {
           document.head.appendChild(style);
         });
         
-        await page.setContent(html, { waitUntil: 'networkidle0' });
+        console.log('📝 Setting page content...');
+        await page.setContent(html, { 
+          waitUntil: 'networkidle0',
+          timeout: 30000 
+        });
         
         // ფონტების ჩატვირთვის მოლოდინი
+        console.log('⏳ Waiting for fonts to load...');
         await new Promise(resolve => setTimeout(resolve, 2000));
         
+        console.log('📄 Generating PDF...');
         const pdfBuffer = await page.pdf({
           format: 'A4',
           landscape: true, // Excel-ის მსგავსი ფართო ფორმატი
@@ -333,22 +366,41 @@ export class ReportService {
             left: '10mm'
           },
           preferCSSPageSize: true,
-          displayHeaderFooter: false
+          displayHeaderFooter: false,
+          timeout: 30000
         });
         
         console.log('✅ PDF generated successfully, size:', pdfBuffer.length, 'bytes');
         return Buffer.from(pdfBuffer);
+        
+      } catch (pageError) {
+        console.error('❌ Page/PDF Generation Error:', pageError);
+        throw pageError;
       } finally {
-        await browser.close();
+        if (browser) {
+          console.log('🔄 Closing browser...');
+          await browser.close();
+        }
       }
+      
     } catch (error) {
       console.error('❌ PDF Generation Error:', error);
+      console.error('🔍 Error stack:', error.stack);
       console.error('🔍 Environment details:', {
         NODE_ENV: process.env.NODE_ENV,
+        RAILWAY_ENVIRONMENT: process.env.RAILWAY_ENVIRONMENT,
         PUPPETEER_EXECUTABLE_PATH: process.env.PUPPETEER_EXECUTABLE_PATH,
-        platform: process.platform
+        CHROME_BIN: process.env.CHROME_BIN,
+        platform: process.platform,
+        arch: process.arch
       });
-      throw new Error(`PDF გენერაცია ვერ მოხერხდა: ${error.message}`);
+      
+      // Fallback error message
+      const errorMessage = error.message?.includes('Error: Failed to launch')
+        ? 'PDF სერვისი დროებით მიუწვდომელია. გთხოვთ, სცადოთ მოგვიანებით.'
+        : `PDF გენერაცია ვერ მოხერხდა: ${error.message}`;
+        
+      throw new Error(errorMessage);
     }
   }
 
