@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, Param } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { MigrationService } from './migration.service';
 import { InjectConnection } from '@nestjs/mongoose';
@@ -591,6 +591,187 @@ export class DebugController {
       return {
         status: 'error',
         message: 'Failed to update authProvider',
+        error: error.message
+      };
+    }
+  }
+
+  // Google OAuth specific debug endpoints
+  @Get('search-user/:email')
+  async searchUserByEmail(@Param('email') email: string) {
+    try {
+      // Validate and clean the email input
+      const cleanEmail = email?.trim()?.toLowerCase();
+      if (!cleanEmail) {
+        return {
+          status: 'error',
+          message: 'Email parameter is required'
+        };
+      }
+
+      console.log('🔍 Debug: Searching for user with email:', cleanEmail);
+
+      // Search by email using UsersService
+      const userByEmail = await this.usersService.findByEmail(cleanEmail);
+      console.log('🔍 Debug: User found by email:', !!userByEmail);
+
+      // Also try to find by googleId if the email looks like it might be from Google
+      let userByGoogleId = null;
+      try {
+        userByGoogleId = await this.usersService.findByGoogleId(cleanEmail);
+        console.log('🔍 Debug: User found by googleId:', !!userByGoogleId);
+      } catch (error) {
+        console.log('🔍 Debug: GoogleId search failed (expected if not a Google user):', error.message);
+      }
+
+      return {
+        status: 'success',
+        searchEmail: cleanEmail,
+        results: {
+          byEmail: userByEmail ? {
+            id: userByEmail._id,
+            email: userByEmail.email,
+            name: userByEmail.name,
+            authProvider: userByEmail.authProvider,
+            googleId: !!userByEmail.googleId,
+            createdAt: userByEmail.createdAt,
+            status: userByEmail.status
+          } : null,
+          byGoogleId: userByGoogleId ? {
+            id: userByGoogleId._id,
+            email: userByGoogleId.email,
+            name: userByGoogleId.name,
+            authProvider: userByGoogleId.authProvider,
+            googleId: !!userByGoogleId.googleId,
+            createdAt: userByGoogleId.createdAt,
+            status: userByGoogleId.status
+          } : null
+        }
+      };
+    } catch (error) {
+      console.error('🔍 Debug: Search user error:', error);
+      return {
+        status: 'error',
+        message: 'Failed to search for user',
+        error: error.message
+      };
+    }
+  }
+
+  @Post('test-google-login')
+  async testGoogleLogin(@Body() googleData: any) {
+    try {
+      console.log('🧪 Debug: Testing Google login with data:', {
+        email: googleData.email,
+        hasGoogleId: !!googleData.googleId,
+        hasName: !!googleData.name
+      });
+
+      // Validate required fields
+      if (!googleData.email || !googleData.googleId) {
+        return {
+          status: 'error',
+          message: 'Email and googleId are required for Google login test'
+        };
+      }
+
+      // Step 1: Try to find existing user
+      const existingUser = await this.usersService.findByGoogleId(googleData.googleId);
+      console.log('🧪 Debug: Existing user found:', !!existingUser);
+
+      if (existingUser) {
+        // User exists, simulate login
+        return {
+          status: 'success',
+          action: 'login',
+          message: 'User found - would proceed with login',
+          user: {
+            id: existingUser._id,
+            email: existingUser.email,
+            name: existingUser.name,
+            authProvider: existingUser.authProvider,
+            googleId: !!existingUser.googleId,
+            status: existingUser.status
+          }
+        };
+      } else {
+        // User doesn't exist, simulate registration
+        console.log('🧪 Debug: User not found, would create new user');
+        
+        // Check if email already exists with different provider
+        const emailUser = await this.usersService.findByEmail(googleData.email);
+        if (emailUser) {
+          return {
+            status: 'conflict',
+            action: 'email_exists',
+            message: 'Email already exists with different authentication provider',
+            existingUser: {
+              id: emailUser._id,
+              email: emailUser.email,
+              authProvider: emailUser.authProvider,
+              googleId: !!emailUser.googleId
+            }
+          };
+        }
+
+        return {
+          status: 'success',
+          action: 'register',
+          message: 'New user - would proceed with registration',
+          userData: {
+            email: googleData.email,
+            name: googleData.name,
+            googleId: googleData.googleId,
+            authProvider: 'google'
+          }
+        };
+      }
+    } catch (error) {
+      console.error('🧪 Debug: Test Google login error:', error);
+      return {
+        status: 'error',
+        message: 'Failed to test Google login',
+        error: error.message
+      };
+    }
+  }
+
+  @Get('verify-google-user/:googleId')
+  async verifyGoogleUser(@Param('googleId') googleId: string) {
+    try {
+      const cleanGoogleId = googleId?.trim();
+      if (!cleanGoogleId) {
+        return {
+          status: 'error',
+          message: 'GoogleId parameter is required'
+        };
+      }
+
+      console.log('✅ Debug: Verifying Google user with ID:', cleanGoogleId);
+
+      const user = await this.usersService.findByGoogleId(cleanGoogleId);
+      
+      return {
+        status: 'success',
+        googleId: cleanGoogleId,
+        userExists: !!user,
+        user: user ? {
+          id: user._id,
+          email: user.email,
+          name: user.name,
+          authProvider: user.authProvider,
+          googleId: !!user.googleId,
+          isEmailVerified: user.isEmailVerified,
+          status: user.status,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt
+        } : null
+      };
+    } catch (error) {
+      console.error('✅ Debug: Verify Google user error:', error);
+      return {
+        status: 'error',
+        message: 'Failed to verify Google user',
         error: error.message
       };
     }
