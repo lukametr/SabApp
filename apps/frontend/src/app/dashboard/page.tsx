@@ -1,31 +1,49 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '../../store/authStore';
 import Dashboard from '../../components/Dashboard';
+import { Box, CircularProgress } from '@mui/material';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { user, loading } = useAuthStore();
-
-  // No need to call loadFromStorage here - handled by AuthProvider
+  const { user, isAuthenticated, token } = useAuthStore();
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Only redirect if not loading and no user
-    if (!loading && !user) {
-      router.push('/auth/login');
+    // Check authentication
+    if (!isAuthenticated || !token) {
+      console.log('❌ Not authenticated, redirecting to login');
+      router.push('/login');
+      return;
     }
-  }, [user, loading, router]);
 
-  // Show loading while checking auth state
-  if (loading) {
-    return <div>Loading...</div>; // or loading spinner
-  }
+    // Validate token
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const exp = payload.exp * 1000;
 
-  // Show nothing if no user (will redirect)
-  if (!user) {
-    return null;
+      if (Date.now() >= exp) {
+        console.log('❌ Token expired, redirecting to login');
+        router.push('/login');
+        return;
+      }
+
+      console.log('✅ Authentication valid');
+      setIsLoading(false);
+    } catch (error) {
+      console.error('❌ Invalid token:', error);
+      router.push('/login');
+    }
+  }, [isAuthenticated, token, router]);
+
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
   }
 
   return <Dashboard />;

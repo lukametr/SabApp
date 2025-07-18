@@ -279,22 +279,20 @@ export class AuthService {
         status: user.status,
       };
 
-      const accessToken = this.jwtService.sign(payload, {
-        secret: this.configService.get<string>('JWT_SECRET'),
-        expiresIn: this.configService.get<string>('JWT_EXPIRES_IN', '7d'),
-      });
+      const access_token = this.jwtService.sign(payload);
 
       console.log('≡ƒöº Google OAuth callback - JWT token generated successfully');
+      console.log('≡ƒöº JWT payload:', payload);
 
       return {
-        accessToken,
+        access_token,
         user: {
           id: String(user._id),
-          name: user.name,
           email: user.email,
+          name: user.name,
           picture: user.picture,
           role: user.role,
-          status: user.status,
+          googleId: user.googleId,
         },
       };
     } catch (error) {

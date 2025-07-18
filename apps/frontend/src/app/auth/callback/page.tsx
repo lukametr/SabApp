@@ -8,7 +8,7 @@ import { CircularProgress, Box, Typography } from '@mui/material';
 export default function AuthCallbackPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { setToken, setUser, fetchUserData } = useAuthStore();
+  const { setToken, setUser } = useAuthStore();
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -37,34 +37,46 @@ export default function AuthCallbackPage() {
       }
 
       try {
-        // Store token first
+        // Store token
+        console.log('[Auth Callback] Storing token...');
         setToken(token);
         localStorage.setItem('token', token);
-        console.log('[Auth Callback] Token stored');
 
-        // Try to fetch user data using the new authStore method
-        const success = await fetchUserData();
-        
-        if (success) {
-          console.log('[Auth Callback] User data fetched successfully');
-        } else {
-          console.warn('[Auth Callback] fetchUserData failed, but continuing');
-        }
-        
-        // Always redirect to dashboard - the app will handle auth validation there
-        setTimeout(() => {
+        // Decode JWT to get user info without an API call
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          console.log('[Auth Callback] Decoded token payload:', payload);
+
+          // Create user object from JWT payload
+          const userData = {
+            id: payload.sub,
+            email: payload.email,
+            role: payload.role,
+            googleId: payload.googleId,
+            name: payload.name || payload.email?.split('@')[0] || 'User',
+            picture: payload.picture || null,
+          };
+
+          console.log('[Auth Callback] Setting user data:', userData);
+          setUser(userData);
+          localStorage.setItem('user', JSON.stringify(userData));
+
+          // Redirect to dashboard
+          console.log('[Auth Callback] Redirecting to dashboard...');
           router.push('/dashboard');
-        }, 100);
-
+        } catch (decodeError) {
+          console.error('[Auth Callback] Error decoding token:', decodeError);
+          // Still try to redirect - the auth guard will handle validation
+          router.push('/dashboard');
+        }
       } catch (error) {
-        console.error('[Auth Callback] Error:', error);
-        // Don't fail completely, try to proceed
-        router.push('/dashboard');
+        console.error('[Auth Callback] Unexpected error:', error);
+        router.push('/login?error=callback_failed');
       }
     };
 
     handleCallback();
-  }, [searchParams, router, setToken, setUser, fetchUserData]);
+  }, [searchParams, router, setToken, setUser]);
 
   if (error) {
     return (

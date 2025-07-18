@@ -15,9 +15,50 @@ interface AuthState {
   setLoading: (loading: boolean) => void;
   loadFromStorage: () => void;
   fetchUserData: () => Promise<boolean>;
+  isAuthenticated: boolean;
 }
 
+// Initialize auth state from localStorage
+const initializeAuth = () => {
+  if (typeof window === 'undefined') {
+    return { token: null, user: null, isAuthenticated: false };
+  }
+
+  try {
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+
+    if (token && userStr) {
+      // Validate token expiration
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const exp = payload.exp * 1000; // Convert to milliseconds
+
+        if (Date.now() < exp) {
+          console.log('🗃️ Valid token found in storage');
+          return {
+            token,
+            user: JSON.parse(userStr),
+            isAuthenticated: true,
+          };
+        } else {
+          console.log('🗃️ Token expired, clearing storage');
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+        }
+      } catch (e) {
+        console.error('🗃️ Error validating stored token:', e);
+      }
+    }
+  } catch (error) {
+    console.error('🗃️ Error initializing auth:', error);
+  }
+
+  return { token: null, user: null, isAuthenticated: false };
+};
+
 export const useAuthStore = create<AuthState>((set) => ({
+  ...initializeAuth(),
   user: null,
   token: null,
   loading: true, // Start with loading true
@@ -73,7 +114,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     
     console.log('✅ Logout complete');
   },
-  setUser: (user) => set({ user }),
+  setUser: (user) => set({ user, isAuthenticated: !!user }),
   setToken: (token) => set({ token }),
   setError: (error) => set({ error }),
   setLoading: (loading) => set({ loading }),
