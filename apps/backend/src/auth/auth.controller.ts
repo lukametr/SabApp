@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, UseGuards, Request, Res, BadRequestException, Query, Req, NotFoundException } from '@nestjs/common';
+import { Controller, Post, Body, Get, UseGuards, Request, Res, BadRequestException, Query, NotFoundException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
