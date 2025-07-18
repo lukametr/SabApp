@@ -75,6 +75,11 @@ export class UsersService {
   ): Promise<UserDocument> {
     console.log('🔍 Creating user for:', googleUserInfo.email);
     
+    // CRITICAL DEBUG: Check total user count before creating
+    const totalUsers = await this.userModel.countDocuments({}).exec();
+    const googleUsers = await this.userModel.countDocuments({ authProvider: 'google' }).exec();
+    console.log('BEFORE CREATE - Total users:', totalUsers, 'Google users:', googleUsers);
+    
     // მკაცრი ვალიდაცია
     if (!googleUserInfo.email || !googleUserInfo.sub) {
       console.error('Google user info missing email or sub:', googleUserInfo);
@@ -122,6 +127,23 @@ export class UsersService {
     
     console.log('User saved with ID:', savedUser._id);
     console.log('User googleId after save:', savedUser.googleId);
+    
+    // CRITICAL DEBUG: Immediately verify the user was saved correctly
+    const immediateCheck = await this.userModel.findById(savedUser._id).exec();
+    console.log('IMMEDIATE CHECK after save:', {
+      found: !!immediateCheck,
+      googleId: immediateCheck?.googleId,
+      email: immediateCheck?.email,
+      authProvider: immediateCheck?.authProvider
+    });
+    
+    // Also check if we can find it by googleId immediately
+    const immediateGoogleCheck = await this.userModel.findOne({ googleId: savedUser.googleId }).exec();
+    console.log('IMMEDIATE GOOGLE ID CHECK:', {
+      found: !!immediateGoogleCheck,
+      googleId: immediateGoogleCheck?.googleId
+    });
+    
     return savedUser;
   }
 
