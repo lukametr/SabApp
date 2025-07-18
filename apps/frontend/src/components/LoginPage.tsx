@@ -17,7 +17,6 @@ import {
 } from '@mui/material';
 import { Google, Shield, Visibility, VisibilityOff } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
-import { useGoogleLogin } from '@react-oauth/google';
 import { authApi } from '../services/api';
 import { useAuthStore } from '../store/authStore';
 
@@ -94,51 +93,21 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
     }
   };
 
-  const handleGoogleLogin = useGoogleLogin({
-    flow: 'auth-code',
-    redirect_uri: typeof window !== 'undefined' ? window.location.origin : 'https://saba-app-production.up.railway.app',
-    onSuccess: async (codeResponse) => {
-      try {
-        setLoading(true);
-        console.log('🔧 Google Login - Auth code received:', !!codeResponse.code);
-        
-        // Send the authorization code to our backend
-        try {
-          const response = await authApi.googleCallback({
-            code: codeResponse.code,
-            state: 'login'
-          });
-          
-          console.log('🔧 Google Login - Backend auth successful');
-          
-          // Store in auth store
-          login(response);
-          
-          if (onLogin) {
-            onLogin(response.user);
-          }
-          
-          router.push('/dashboard');
-        } catch (backendError: any) {
-          console.error('🔧 Google Login - Backend error:', backendError);
-          if (backendError.response?.data?.code === 'REGISTRATION_REQUIRED') {
-            // User needs to complete registration
-            setError('Google ანგარიშით რეგისტრაცია საჭიროებს დამატებით ინფორმაციას. გთხოვთ, გადახვიდეთ რეგისტრაციის გვერდზე.');
-          } else {
-            setError('Google-ით შესვლისას დაფიქსირდა შეცდომა');
-          }
-        }
-      } catch (error) {
-        console.error('Google login error:', error);
-        setError('Google-ით შესვლისას დაფიქსირდა შეცდომა');
-      } finally {
-        setLoading(false);
-      }
-    },
-    onError: () => {
+  const handleGoogleLogin = () => {
+    try {
+      console.log('🔧 Google Login - Starting redirect flow...');
+      
+      // Use same redirect flow as RegisterPage
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://saba-app-production.up.railway.app/api';
+      const googleOAuthUrl = `${baseUrl}/auth/google`;
+      
+      console.log('🔧 Google Login - Redirecting to:', googleOAuthUrl);
+      window.location.href = googleOAuthUrl;
+    } catch (error) {
+      console.error('Google login redirect error:', error);
       setError('Google-ით შესვლისას დაფიქსირდა შეცდომა');
     }
-  });
+  };
 
   return (
     <Box sx={{ 
