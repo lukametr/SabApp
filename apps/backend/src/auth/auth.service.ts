@@ -285,13 +285,14 @@ export class AuthService {
       console.log('≡ƒöº JWT payload:', payload);
 
       return {
-        access_token,
+        accessToken: access_token,
         user: {
           id: String(user._id),
           email: user.email,
           name: user.name,
           picture: user.picture,
           role: user.role,
+          status: user.status,
           googleId: user.googleId,
         },
       };
