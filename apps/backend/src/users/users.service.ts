@@ -33,6 +33,13 @@ export class UsersService {
         googleIdType: typeof u.googleId
       })));
       
+      // Additional debug: Try to find any user with this exact googleId using different query methods
+      const directLookup = await this.userModel.findOne({ googleId: googleId }).lean().exec();
+      console.log('Direct lean lookup result:', directLookup);
+      
+      const regexLookup = await this.userModel.findOne({ googleId: { $regex: new RegExp(`^${googleId}$`) } }).exec();
+      console.log('Regex lookup result:', regexLookup ? 'FOUND' : 'NOT FOUND');
+      
       return user;
     } catch (error) {
       console.error('Error finding user by Google ID:', error);
