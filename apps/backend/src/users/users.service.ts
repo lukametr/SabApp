@@ -18,12 +18,9 @@ export class UsersService {
     console.log('🔍 MongoDB Collection:', this.userModel.collection.name);
     
     try {
-      // დებაგი - ვნახავთ collection state
-      const collectionStats = await this.userModel.collection.stats();
-      console.log('🔍 Collection stats:', {
-        count: collectionStats.count,
-        size: collectionStats.size
-      });
+      // დებაგი - ვნახავთ collection state (safe way)
+      const userCount = await this.userModel.countDocuments();
+      console.log('🔍 Collection document count:', userCount);
       
       const user = await this.userModel.findOne({ googleId }).exec();
       console.log('🔍 Google ID lookup result:', {
@@ -120,19 +117,15 @@ export class UsersService {
     console.log('🔍 Collection Name:', this.userModel.collection.name);
     
     try {
-      // Check indexes
-      const indexes = await this.userModel.collection.getIndexes();
-      console.log('🔍 MongoDB Indexes:', Object.keys(indexes));
+      // Check indexes (safe way)
+      const indexInfo = await this.userModel.collection.getIndexes();
+      console.log('🔍 MongoDB Indexes:', Object.keys(indexInfo));
       
-      // Check collection stats
-      const stats = await this.userModel.collection.stats();
-      console.log('🔍 Collection Stats:', {
-        count: stats.count,
-        size: stats.size,
-        indexSizes: stats.indexSizes
-      });
+      // Check collection document count instead of stats
+      const documentCount = await this.userModel.countDocuments();
+      console.log('🔍 Collection document count:', documentCount);
     } catch (indexError) {
-      console.error('🔍 Error checking indexes:', indexError);
+      console.error('🔍 Error checking collection info:', indexError);
     }
     
     // 🔍 კრიტიკული debug - ვამოწმებთ რა გადაცემული
