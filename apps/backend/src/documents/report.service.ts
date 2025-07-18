@@ -133,21 +133,21 @@ export class ReportService {
       ]
     ];
 
-    // 3. ცხრილის მონაცემები (hazards)
+    // 3. ცხრილის მონაცემები (hazards) - სწორი mapping რეალური schema-სთან
     const hazards = Array.isArray(document.hazards) ? document.hazards : [];
     const tableRows = hazards.length > 0
       ? hazards.map((hazard: any) => [
-          hazard.hazard || '',
-          hazard.media || '',
-          hazard.personName || '',
-          hazard.status || '',
-          hazard.existingMeasures || '',
-          hazard.risk || '',
-          hazard.additionalMeasures || '',
-          hazard.markedRisk || '',
-          hazard.recommendation || '',
-          hazard.responsiblePerson || '',
-          hazard.boldObject || ''
+          hazard.hazardIdentification || '',  // სწორი ველი
+          hazard.photos?.join(', ') || '',    // photos array
+          hazard.affectedPersons?.join(', ') || '',  // persons array
+          hazard.injuryDescription || '',     // injury description როგორც status
+          hazard.existingControlMeasures || '',  // სწორი ველი
+          hazard.initialRisk?.total || '',    // risk object-ის total
+          hazard.additionalControlMeasures || '',  // სწორი ველი
+          hazard.residualRisk?.total || '',   // residual risk total
+          hazard.requiredMeasures || '',      // სწორი ველი
+          hazard.responsiblePerson || '',     // ეს სწორია
+          hazard.reviewDate ? new Date(hazard.reviewDate).toLocaleDateString('ka-GE') : ''  // review date როგორც "bold object"
         ])
       : Array(5).fill(null).map(() => Array(tableHeaders[0].length).fill(''));
 
@@ -295,12 +295,12 @@ export class ReportService {
     const hazardsHTML = document.hazards?.map((hazard: any, index: number) => `
       <tr>
         <td>${index + 1}</td>
-        <td>${hazard.hazard || 'N/A'}</td>
-        <td>${hazard.probability || 'N/A'}</td>
-        <td>${hazard.severity || 'N/A'}</td>
-        <td>${hazard.initialRisk || 'N/A'}</td>
-        <td>${hazard.residualRisk || 'N/A'}</td>
-        <td>${hazard.preventiveMeasure || 'N/A'}</td>
+        <td>${hazard.hazardIdentification || 'N/A'}</td>
+        <td>${hazard.initialRisk?.probability || 'N/A'}</td>
+        <td>${hazard.initialRisk?.severity || 'N/A'}</td>
+        <td>${hazard.initialRisk?.total || 'N/A'}</td>
+        <td>${hazard.residualRisk?.total || 'N/A'}</td>
+        <td>${hazard.requiredMeasures || 'N/A'}</td>
       </tr>
     `).join('') || '<tr><td colspan="7">საფრთხეები არ იქნა იდენტიფიცირებული</td></tr>';
 
