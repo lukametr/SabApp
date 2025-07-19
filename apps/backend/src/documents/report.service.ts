@@ -142,25 +142,31 @@ export class ReportService {
     // 3. ცხრილის მონაცემები (hazards) - 17 სვეტი
     const hazards = Array.isArray(document.hazards) ? document.hazards : [];
     const tableRows = hazards.length > 0
-      ? hazards.map((hazard: any) => [
-          hazard.hazardIdentification || '',  // სწორი ველი
-          hazard.photos?.join(', ') || '',    // photos array
-          hazard.affectedPersons?.join(', ') || '',  // persons array
-          hazard.injuryDescription || '',     // injury description
-          hazard.existingControlMeasures || '',  // სწორი ველი
-          hazard.initialRisk?.total || '',    // საწყისი რისკი (მთავარი)
-          hazard.initialRisk?.probability || '',    // ალბათობა
-          hazard.initialRisk?.severity || '',       // სიმძიმე
-          hazard.initialRisk?.total || '',          // ნამრავლი (გამეორება მთავარისა)
-          hazard.additionalControlMeasures || '',  // სწორი ველი
-          hazard.residualRisk?.total || '',   // ნარჩენი რისკი (მთავარი)
-          hazard.residualRisk?.probability || '',   // ალბათობა
-          hazard.residualRisk?.severity || '',      // სიმძიმე
-          hazard.residualRisk?.total || '',         // ნამრავლი (გამეორება მთავარისა)
-          hazard.requiredMeasures || '',      // სწორი ველი
-          hazard.responsiblePerson || '',     // ეს სწორია
-          hazard.reviewDate ? new Date(hazard.reviewDate).toLocaleDateString('ka-GE') : ''  // review date
-        ])
+      ? hazards.map((hazard: any) => {
+          // ფოტოების რაოდენობის ჩვენება binary მონაცემების ნაცვლად
+          const photosCount = hazard.photos && Array.isArray(hazard.photos) ? hazard.photos.length : 0;
+          const photosText = photosCount > 0 ? `${photosCount} ფოტო` : 'ფოტო არ არის';
+          
+          return [
+            hazard.hazardIdentification || '',  // სწორი ველი
+            photosText,    // photos count instead of binary data
+            hazard.affectedPersons?.join(', ') || '',  // persons array
+            hazard.injuryDescription || '',     // injury description
+            hazard.existingControlMeasures || '',  // სწორი ველი
+            hazard.initialRisk?.total || '',    // საწყისი რისკი (მთავარი)
+            hazard.initialRisk?.probability || '',    // ალბათობა
+            hazard.initialRisk?.severity || '',       // სიმძიმე
+            hazard.initialRisk?.total || '',          // ნამრავლი (გამეორება მთავარისა)
+            hazard.additionalControlMeasures || '',  // სწორი ველი
+            hazard.residualRisk?.total || '',   // ნარჩენი რისკი (მთავარი)
+            hazard.residualRisk?.probability || '',   // ალბათობა
+            hazard.residualRisk?.severity || '',      // სიმძიმე
+            hazard.residualRisk?.total || '',         // ნამრავლი (გამეორება მთავარისა)
+            hazard.requiredMeasures || '',      // სწორი ველი
+            hazard.responsiblePerson || '',     // ეს სწორია
+            hazard.reviewDate ? new Date(hazard.reviewDate).toLocaleDateString('ka-GE') : ''  // review date
+          ];
+        })
       : Array(5).fill(null).map(() => Array(tableHeaders[0].length).fill(''));
 
     // 4. ყველა ერთად
@@ -488,11 +494,16 @@ export class ReportService {
     // საფრთხეების ცხრილი - 17 სვეტი (Excel-ის მსგავსი)
     const hazards = Array.isArray(document.hazards) ? document.hazards : [];
     const hazardsHTML = hazards.length > 0
-      ? hazards.map((hazard: any, index: number) => `
+      ? hazards.map((hazard: any, index: number) => {
+          // ფოტოების რაოდენობის ჩვენება binary მონაცემების ნაცვლად
+          const photosCount = hazard.photos && Array.isArray(hazard.photos) ? hazard.photos.length : 0;
+          const photosText = photosCount > 0 ? `${photosCount} ფოტო` : 'ფოტო არ არის';
+          
+          return `
           <tr>
             <td>${index + 1}</td>
             <td>${hazard.hazardIdentification || ''}</td>
-            <td>${hazard.photos?.join(', ') || ''}</td>
+            <td>${photosText}</td>
             <td>${hazard.affectedPersons?.join(', ') || ''}</td>
             <td>${hazard.injuryDescription || ''}</td>
             <td>${hazard.existingControlMeasures || ''}</td>
@@ -509,7 +520,8 @@ export class ReportService {
             <td>${hazard.responsiblePerson || ''}</td>
             <td>${hazard.reviewDate ? new Date(hazard.reviewDate).toLocaleDateString('ka-GE') : ''}</td>
           </tr>
-        `).join('')
+        `;
+        }).join('')
       : '<tr><td colspan="18">საფრთხეები არ იქნა იდენტიფიცირებული</td></tr>';
 
     return `
@@ -523,26 +535,18 @@ export class ReportService {
           <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
           <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@100..900&display=swap" rel="stylesheet">
           <style>
-            @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@100..900&display=swap');
-            
-            @font-face {
-              font-family: 'GeorgianPDF';
-              src: url('https://fonts.gstatic.com/s/notosansgeorgian/v27/PlIaFke5O6RzLfvNNVSioxM2_OTrEhPyDLolKfCsHzC8RrwvsMhh0w.woff2') format('woff2');
-              font-weight: 400;
-              font-style: normal;
-              font-display: block;
-            }
-            
+            /* Use only reliable system fonts that support Georgian */
             * {
               margin: 0;
               padding: 0;
               box-sizing: border-box;
+              font-family: 'DejaVu Sans', 'Liberation Sans', 'Arial Unicode MS', 'Arial', 'Helvetica', sans-serif !important;
             }
             
             body { 
-              font-family: 'Noto Sans Georgian', 'GeorgianPDF', system-ui, -apple-system, sans-serif !important; 
-              font-size: 8px; 
-              line-height: 1.1;
+              font-family: 'DejaVu Sans', 'Liberation Sans', 'Arial Unicode MS', 'Arial', 'Helvetica', sans-serif !important; 
+              font-size: 10px; 
+              line-height: 1.2;
               color: #000;
               background: white;
               -webkit-font-smoothing: antialiased;
@@ -553,10 +557,11 @@ export class ReportService {
               text-align: center; 
               background: #4472C4; 
               color: white; 
-              padding: 10px; 
-              margin-bottom: 15px; 
-              font-size: 12px;
+              padding: 12px; 
+              margin-bottom: 20px; 
+              font-size: 14px;
               font-weight: bold;
+              font-family: 'DejaVu Sans', 'Liberation Sans', 'Arial', sans-serif !important;
             }
             
             .info-section { 
