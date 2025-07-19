@@ -2,17 +2,24 @@ FROM node:20-slim
 
 WORKDIR /app
 
-# Install Chrome dependencies for Puppeteer
+# Install Chrome dependencies and Georgian fonts for Puppeteer
 RUN apt-get update && apt-get install -y \
   wget \
   gnupg \
   ca-certificates \
   procps \
   libxss1 \
+  fonts-noto \
+  fonts-noto-cjk \
+  fonts-liberation \
+  fonts-dejavu \
+  fonts-noto-color-emoji \
+  fontconfig \
   && wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
   && echo "deb [arch=amd64] https://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google.list \
   && apt-get update \
   && apt-get install -y google-chrome-stable \
+  && fc-cache -fv \
   && rm -rf /var/lib/apt/lists/*
 
 # Set Puppeteer to use system Chrome

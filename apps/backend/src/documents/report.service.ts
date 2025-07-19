@@ -268,7 +268,7 @@ export class ReportService {
       
       const browserOptions: any = { 
         headless: 'new',
-        timeout: 60000, // 60 seconds timeout
+        timeout: 60000,
         args: [
           '--no-sandbox', 
           '--disable-setuid-sandbox',
@@ -304,13 +304,12 @@ export class ReportService {
           '/usr/bin/google-chrome',
           '/usr/bin/chromium-browser',
           '/usr/bin/chromium',
-          '/opt/render/project/src/.chrome/chrome', // Render specific
-          '/app/.apt/usr/bin/google-chrome-stable'  // Heroku/Railway
+          '/opt/render/project/src/.chrome/chrome',
+          '/app/.apt/usr/bin/google-chrome-stable'
         ].filter(Boolean);
         
         console.log('🔍 Checking possible Chrome paths:', possiblePaths);
         
-        // რეალური ფაილის არსებობის შემოწმება
         let chromiumPath = null;
         for (const path of possiblePaths) {
           if (path && existsSync(path)) {
@@ -344,18 +343,28 @@ export class ReportService {
         // Set viewport for consistent rendering
         await page.setViewport({ width: 1200, height: 800 });
         
-        // ქართული ფონტების მხარდაჭერისთვის - force serif fonts
+        // ქართული ფონტების მხარდაჭერისთვის - system fonts with DejaVu Sans
         await page.evaluateOnNewDocument(() => {
           // Force UTF-8 encoding
           const meta = document.createElement('meta');
           meta.setAttribute('charset', 'UTF-8');
           document.head.appendChild(meta);
           
-          // Add simple font rule
+          // Add comprehensive font rule
           const style = document.createElement('style');
           style.textContent = `
+            @font-face {
+              font-family: 'GeorgianPDF';
+              src: local('DejaVu Sans'),
+                   local('Liberation Sans'),
+                   local('Noto Sans'),
+                   local('Ubuntu'),
+                   local('Arial'),
+                   local('sans-serif');
+              unicode-range: U+10A0-10FF, U+0000-00FF;
+            }
             * {
-              font-family: 'Times New Roman', serif !important;
+              font-family: 'GeorgianPDF', 'DejaVu Sans', 'Liberation Sans', 'Noto Sans', Arial, sans-serif !important;
             }
           `;
           document.head.appendChild(style);
@@ -363,24 +372,23 @@ export class ReportService {
         
         console.log('📝 Setting page content...');
         
-        // Try simplified HTML first for better PDF compatibility
-        const isSimplified = true; // Toggle for testing
-        const htmlContent = isSimplified ? this.generateSimplifiedHTMLReport(document) : html;
-        
-        await page.setContent(htmlContent, { 
+        // Use regular HTML with enhanced font loading
+        await page.setContent(html, { 
           waitUntil: 'networkidle0',
           timeout: 30000 
         });
+
+        // Wait for fonts to load - simple timeout
+        await new Promise(resolve => setTimeout(resolve, 3000));
         
-        // ფონტების ჩატვირთვის მოლოდინი და ქართული ტექსტის ტესტი
-        console.log('⏳ Testing Georgian font rendering with Times New Roman...');
+        console.log('⏳ Testing Georgian font rendering...');
         
         // Test Georgian text rendering
         await page.evaluate(() => {
           // Create a test element to verify Georgian font loading
           const testDiv = document.createElement('div');
           testDiv.textContent = 'ქართული ტექსტი - აბგდევზთიკლმნოპჟრსტუფქღყშჩცძწჭხჯჰ';
-          testDiv.style.fontFamily = 'Times New Roman, serif';
+          testDiv.style.fontFamily = 'GeorgianPDF, DejaVu Sans, Arial';
           testDiv.style.position = 'absolute';
           testDiv.style.top = '-9999px';
           testDiv.style.fontSize = '12px';
@@ -401,10 +409,10 @@ export class ReportService {
         try {
           pdfBuffer = await page.pdf({
             format: 'A4',
-            landscape: false, // Portrait ორიენტაცია stability-ისთვის
+            landscape: false,
             printBackground: true,
-            width: '297mm', // A4 width
-            height: '210mm', // A4 height landscape equivalent
+            width: '297mm',
+            height: '210mm',
             margin: {
               top: '5mm',
               right: '5mm', 
@@ -412,8 +420,8 @@ export class ReportService {
               left: '5mm'
             },
             displayHeaderFooter: false,
-            timeout: 60000, // 60 second timeout
-            scale: 0.8 // Scale down content to fit better
+            timeout: 60000,
+            scale: 0.8
           });
         } catch (pdfError) {
           console.log('⚠️ First PDF attempt failed, trying fallback options...');
@@ -421,7 +429,7 @@ export class ReportService {
           // Fallback with minimal options
           pdfBuffer = await page.pdf({
             format: 'A4',
-            printBackground: false, // Disable background printing
+            printBackground: false,
             margin: {
               top: '10mm',
               right: '10mm',
@@ -506,17 +514,39 @@ export class ReportService {
 
     return `
       <!DOCTYPE html>
-      <html>
+      <html lang="ka">
         <head>
           <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <title>რისკის შეფასების ფორმა №1</title>
+          <link rel="preconnect" href="https://fonts.googleapis.com">
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+          <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@100..900&display=swap" rel="stylesheet">
           <style>
-            @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@400;700&display=swap');
+            @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@100..900&display=swap');
+            
+            @font-face {
+              font-family: 'GeorgianPDF';
+              src: url('https://fonts.gstatic.com/s/notosansgeorgian/v27/PlIaFke5O6RzLfvNNVSioxM2_OTrEhPyDLolKfCsHzC8RrwvsMhh0w.woff2') format('woff2');
+              font-weight: 400;
+              font-style: normal;
+              font-display: block;
+            }
+            
+            * {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+            }
             
             body { 
-              font-family: 'Times New Roman', serif; 
+              font-family: 'Noto Sans Georgian', 'GeorgianPDF', system-ui, -apple-system, sans-serif !important; 
               font-size: 8px; 
               line-height: 1.1;
+              color: #000;
+              background: white;
+              -webkit-font-smoothing: antialiased;
+              -moz-osx-font-smoothing: grayscale;
             }
             
             .header { 
@@ -674,163 +704,4 @@ export class ReportService {
     `;
   }
 
-  /**
-   * გამარტივებული HTML რეპორტის შექმნა (PDF-ისთვის უკეთესი თავსებადობა)
-   */
-  private generateSimplifiedHTMLReport(document: any): string {
-    // ძირითადი ინფორმაცია
-    const evaluatorName = `${document.evaluatorName || ''} ${document.evaluatorLastName || ''}`.trim();
-    const objectName = document.objectName || '';
-    const workDescription = document.workDescription || '';
-    const date = document.date ? new Date(document.date).toLocaleDateString('ka-GE') : '';
-    const time = document.time ? new Date(document.time).toLocaleTimeString('ka-GE') : '';
-
-    // საფრთხეების მონაცემები
-    const hazards = Array.isArray(document.hazards) ? document.hazards : [];
-    const hazardsHTML = hazards.length > 0
-      ? hazards.map((hazard: any, index: number) => `
-          <tr>
-            <td>${index + 1}</td>
-            <td>${hazard.hazardIdentification || ''}</td>
-            <td>${hazard.initialRisk?.probability || ''}</td>
-            <td>${hazard.initialRisk?.severity || ''}</td>
-            <td>${hazard.initialRisk?.total || ''}</td>
-            <td>${hazard.residualRisk?.probability || ''}</td>
-            <td>${hazard.residualRisk?.severity || ''}</td>
-            <td>${hazard.residualRisk?.total || ''}</td>
-            <td>${hazard.requiredMeasures || ''}</td>
-            <td>${hazard.responsiblePerson || ''}</td>
-          </tr>
-        `).join('')
-      : '<tr><td colspan="10">საფრთხეები არ იქნა იდენტიფიცირებული</td></tr>';
-
-    return `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="UTF-8">
-          <title>რისკის შეფასების ფორმა</title>        <style>
-          * {
-            font-family: 'Times New Roman', serif !important;
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-          }
-                body { 
-            font-family: 'Times New Roman', serif; 
-            font-size: 10px; 
-            line-height: 1.2;
-            margin: 10px;
-          }
-            
-            .header { 
-              text-align: center; 
-              background: #4472C4; 
-              color: white; 
-              padding: 8px; 
-              margin-bottom: 15px; 
-              font-size: 14px;
-              font-weight: bold;
-            }
-            
-            .info-table { 
-              width: 100%; 
-              border-collapse: collapse; 
-              margin-bottom: 15px;
-              font-size: 9px;
-            }
-            
-            .info-table td { 
-              padding: 4px; 
-              border: 1px solid #333; 
-            }
-            
-            .info-table td:first-child { 
-              background: #f0f0f0; 
-              font-weight: bold; 
-              width: 25%; 
-            }
-            
-            .hazards-table { 
-              width: 100%; 
-              border-collapse: collapse; 
-              font-size: 8px;
-            }
-            
-            .hazards-table th, .hazards-table td { 
-              padding: 3px; 
-              border: 1px solid #333; 
-              text-align: center; 
-              vertical-align: top;
-            }
-            
-            .hazards-table th { 
-              background: #e0e0e0; 
-              font-weight: bold; 
-              font-size: 7px;
-            }
-            
-            .hazards-table td { 
-              text-align: left; 
-              font-size: 7px;
-            }
-            
-            @media print {
-              body { font-size: 8px; }
-              .hazards-table { font-size: 6px; }
-              .hazards-table th { font-size: 5px; }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            რისკის შეფასების ფორმა №1
-          </div>
-          
-          <table class="info-table">
-            <tr>
-              <td>შეფასებლის სახელი და გვარი:</td>
-              <td>${evaluatorName}</td>
-              <td>თარიღი:</td>
-              <td>${date}</td>
-            </tr>
-            <tr>
-              <td>სამუშაო ობიექტის დასახელება:</td>
-              <td>${objectName}</td>
-              <td>დრო:</td>
-              <td>${time}</td>
-            </tr>
-            <tr>
-              <td>სამუშაოს აღწერა:</td>
-              <td colspan="3">${workDescription}</td>
-            </tr>
-          </table>
-          
-          <table class="hazards-table">
-            <thead>
-              <tr>
-                <th>№</th>
-                <th>საფრთხე</th>
-                <th>საწყისი ალბათობა</th>
-                <th>საწყისი სიმძიმე</th>
-                <th>საწყისი რისკი</th>
-                <th>ნარჩენი ალბათობა</th>
-                <th>ნარჩენი სიმძიმე</th>
-                <th>ნარჩენი რისკი</th>
-                <th>საჭირო ღონისძიებები</th>
-                <th>პასუხისმგებელი</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${hazardsHTML}
-            </tbody>
-          </table>
-          
-          <div style="margin-top: 20px; text-align: center; font-size: 8px; color: #666;">
-            გენერირებულია: ${new Date().toLocaleDateString('ka-GE')} ${new Date().toLocaleTimeString('ka-GE')}
-          </div>
-        </body>
-      </html>
-    `;
-  }
 }
