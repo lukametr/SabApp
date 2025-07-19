@@ -285,7 +285,9 @@ export class ReportService {
           '--memory-pressure-off',
           '--font-render-hinting=none',
           '--enable-font-antialiasing',
-          '--disable-font-subpixel-positioning'
+          '--disable-font-subpixel-positioning',
+          '--lang=ka-GE',
+          '--accept-lang=ka-GE,ka,en-US,en'
         ]
       };
 
@@ -334,22 +336,26 @@ export class ReportService {
         console.log('🌐 Creating new page...');
         const page = await browser.newPage();
         
+        // Set locale and encoding
+        await page.setExtraHTTPHeaders({
+          'Accept-Language': 'ka-GE,ka,en-US,en'
+        });
+        
         // Set viewport for consistent rendering
         await page.setViewport({ width: 1200, height: 800 });
         
-        // ქართული ფონტების მხარდაჭერისთვის - local fonts
+        // ქართული ფონტების მხარდაჭერისთვის - force serif fonts
         await page.evaluateOnNewDocument(() => {
+          // Force UTF-8 encoding
+          const meta = document.createElement('meta');
+          meta.setAttribute('charset', 'UTF-8');
+          document.head.appendChild(meta);
+          
+          // Add simple font rule
           const style = document.createElement('style');
           style.textContent = `
-            @font-face {
-              font-family: 'Georgian';
-              src: local('BPG Arial'),
-                   local('BPG Nino Medium'),
-                   local('Sylfaen'),
-                   local('DejaVu Sans'),
-                   local('Arial Unicode MS'),
-                   local('Lucida Sans Unicode');
-              unicode-range: U+10A0-10FF; /* Georgian Unicode range */
+            * {
+              font-family: 'Times New Roman', serif !important;
             }
           `;
           document.head.appendChild(style);
@@ -367,16 +373,17 @@ export class ReportService {
         });
         
         // ფონტების ჩატვირთვის მოლოდინი და ქართული ტექსტის ტესტი
-        console.log('⏳ Testing Georgian font rendering...');
+        console.log('⏳ Testing Georgian font rendering with Times New Roman...');
         
         // Test Georgian text rendering
         await page.evaluate(() => {
           // Create a test element to verify Georgian font loading
           const testDiv = document.createElement('div');
-          testDiv.textContent = 'ქართული ტექსტი';
-          testDiv.style.fontFamily = 'Georgian, BPG Arial, Sylfaen, Arial';
+          testDiv.textContent = 'ქართული ტექსტი - აბგდევზთიკლმნოპჟრსტუფქღყშჩცძწჭხჯჰ';
+          testDiv.style.fontFamily = 'Times New Roman, serif';
           testDiv.style.position = 'absolute';
           testDiv.style.top = '-9999px';
+          testDiv.style.fontSize = '12px';
           document.body.appendChild(testDiv);
           
           // Force reflow
@@ -507,7 +514,7 @@ export class ReportService {
             @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@400;700&display=swap');
             
             body { 
-              font-family: 'Georgian', 'BPG Arial', 'BPG Nino Medium', 'Sylfaen', 'DejaVu Sans', 'Arial Unicode MS', 'Lucida Sans Unicode', Arial, sans-serif; 
+              font-family: 'Times New Roman', serif; 
               font-size: 8px; 
               line-height: 1.1;
             }
@@ -703,24 +710,14 @@ export class ReportService {
         <head>
           <meta charset="UTF-8">
           <title>რისკის შეფასების ფორმა</title>        <style>
-          @font-face {
-            font-family: 'Georgian';
-            src: local('BPG Arial'),
-                 local('BPG Nino Medium'),
-                 local('Sylfaen'),
-                 local('DejaVu Sans'),
-                 local('Arial Unicode MS'),
-                 local('Lucida Sans Unicode');
-            unicode-range: U+10A0-10FF; /* Georgian Unicode range */
-          }
-          
           * {
+            font-family: 'Times New Roman', serif !important;
             margin: 0;
             padding: 0;
             box-sizing: border-box;
           }
                 body { 
-            font-family: 'Georgian', 'BPG Arial', 'BPG Nino Medium', 'Sylfaen', 'DejaVu Sans', 'Arial Unicode MS', 'Lucida Sans Unicode', Arial, sans-serif; 
+            font-family: 'Times New Roman', serif; 
             font-size: 10px; 
             line-height: 1.2;
             margin: 10px;
