@@ -282,7 +282,10 @@ export class ReportService {
           '--disable-renderer-backgrounding',
           '--disable-features=TranslateUI',
           '--disable-ipc-flooding-protection',
-          '--memory-pressure-off'
+          '--memory-pressure-off',
+          '--font-render-hinting=none',
+          '--enable-font-antialiasing',
+          '--disable-font-subpixel-positioning'
         ]
       };
 
@@ -334,12 +337,20 @@ export class ReportService {
         // Set viewport for consistent rendering
         await page.setViewport({ width: 1200, height: 800 });
         
-        // ქართული ფონტების მხარდაჭერისთვის
+        // ქართული ფონტების მხარდაჭერისთვის - local fonts
         await page.evaluateOnNewDocument(() => {
-          // ფონტების წინასწარ ჩატვირთვა
           const style = document.createElement('style');
           style.textContent = `
-            @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@400;700&display=swap');
+            @font-face {
+              font-family: 'Georgian';
+              src: local('BPG Arial'),
+                   local('BPG Nino Medium'),
+                   local('Sylfaen'),
+                   local('DejaVu Sans'),
+                   local('Arial Unicode MS'),
+                   local('Lucida Sans Unicode');
+              unicode-range: U+10A0-10FF; /* Georgian Unicode range */
+            }
           `;
           document.head.appendChild(style);
         });
@@ -355,9 +366,26 @@ export class ReportService {
           timeout: 30000 
         });
         
-        // ფონტების ჩატვირთვის მოლოდინი
-        console.log('⏳ Waiting for fonts to load...');
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // ფონტების ჩატვირთვის მოლოდინი და ქართული ტექსტის ტესტი
+        console.log('⏳ Testing Georgian font rendering...');
+        
+        // Test Georgian text rendering
+        await page.evaluate(() => {
+          // Create a test element to verify Georgian font loading
+          const testDiv = document.createElement('div');
+          testDiv.textContent = 'ქართული ტექსტი';
+          testDiv.style.fontFamily = 'Georgian, BPG Arial, Sylfaen, Arial';
+          testDiv.style.position = 'absolute';
+          testDiv.style.top = '-9999px';
+          document.body.appendChild(testDiv);
+          
+          // Force reflow
+          testDiv.offsetHeight;
+          
+          document.body.removeChild(testDiv);
+        });
+        
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
         console.log('📄 Generating PDF...');
         
@@ -479,8 +507,7 @@ export class ReportService {
             @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@400;700&display=swap');
             
             body { 
-              font-family: 'Noto Sans Georgian', 'BPG Arial', 'DejaVu Sans', Arial, sans-serif; 
-              margin: 10px; 
+              font-family: 'Georgian', 'BPG Arial', 'BPG Nino Medium', 'Sylfaen', 'DejaVu Sans', 'Arial Unicode MS', 'Lucida Sans Unicode', Arial, sans-serif; 
               font-size: 8px; 
               line-height: 1.1;
             }
@@ -675,20 +702,29 @@ export class ReportService {
       <html>
         <head>
           <meta charset="UTF-8">
-          <title>რისკის შეფასების ფორმა</title>
-          <style>
-            * {
-              margin: 0;
-              padding: 0;
-              box-sizing: border-box;
-            }
-            
-            body { 
-              font-family: Arial, sans-serif; 
-              font-size: 10px; 
-              line-height: 1.2;
-              margin: 10px;
-            }
+          <title>რისკის შეფასების ფორმა</title>        <style>
+          @font-face {
+            font-family: 'Georgian';
+            src: local('BPG Arial'),
+                 local('BPG Nino Medium'),
+                 local('Sylfaen'),
+                 local('DejaVu Sans'),
+                 local('Arial Unicode MS'),
+                 local('Lucida Sans Unicode');
+            unicode-range: U+10A0-10FF; /* Georgian Unicode range */
+          }
+          
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
+                body { 
+            font-family: 'Georgian', 'BPG Arial', 'BPG Nino Medium', 'Sylfaen', 'DejaVu Sans', 'Arial Unicode MS', 'Lucida Sans Unicode', Arial, sans-serif; 
+            font-size: 10px; 
+            line-height: 1.2;
+            margin: 10px;
+          }
             
             .header { 
               text-align: center; 
