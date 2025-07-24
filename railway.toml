@@ -4,7 +4,7 @@ dockerfile = "Dockerfile"
 
 [build.buildArgs]
 NEXT_PUBLIC_GOOGLE_CLIENT_ID = "${{ NEXT_PUBLIC_GOOGLE_CLIENT_ID }}"
-NEXT_PUBLIC_API_URL = "https://saba-app-production.up.railway.app/api"
+NEXT_PUBLIC_API_URL = "https://sabapp.com/api"
 
 [deploy]
 startCommand = "node dist/main.js"
@@ -22,9 +22,9 @@ JWT_SECRET = "super-secret-jwt-key-for-production-saba-app-123456789"
 JWT_EXPIRES_IN = "7d"
 GOOGLE_CLIENT_SECRET = "GOCSPX-placeholder-secret-key"
 GOOGLE_CLIENT_ID = "${{ NEXT_PUBLIC_GOOGLE_CLIENT_ID }}"
-NEXT_PUBLIC_API_URL = "https://saba-app-production.up.railway.app/api"
+NEXT_PUBLIC_API_URL = "https://sabapp.com/api"
 NEXT_PUBLIC_GOOGLE_CLIENT_ID = "${{ NEXT_PUBLIC_GOOGLE_CLIENT_ID }}"
-CORS_ORIGIN = "https://saba-app-production.up.railway.app"
+CORS_ORIGIN = "https://sabapp.com"
 PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = "true"
 PUPPETEER_EXECUTABLE_PATH = "/usr/bin/google-chrome-stable"
 CHROME_BIN = "/usr/bin/google-chrome-stable"

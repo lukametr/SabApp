@@ -81,7 +81,7 @@ export class AuthService {
             code: authDto.code,
             client_id: this.configService.get<string>('GOOGLE_CLIENT_ID') || '',
             client_secret: this.configService.get<string>('GOOGLE_CLIENT_SECRET') || '',
-            redirect_uri: `${this.configService.get<string>('NEXT_PUBLIC_API_URL') || 'https://saba-app-production.up.railway.app/api'}/auth/google/callback`,
+            redirect_uri: `${this.configService.get<string>('NEXT_PUBLIC_API_URL') || 'https://sabapp.com/api'}/auth/google/callback`,
             grant_type: 'authorization_code',
           } as Record<string, string>),
         });
@@ -211,7 +211,7 @@ export class AuthService {
       
       const clientId = this.configService.get<string>('GOOGLE_CLIENT_ID') || '';
       const clientSecret = this.configService.get<string>('GOOGLE_CLIENT_SECRET') || '';
-      const backendUrl = this.configService.get<string>('NEXT_PUBLIC_API_URL') || 'https://saba-app-production.up.railway.app/api';
+      const backendUrl = this.configService.get<string>('NEXT_PUBLIC_API_URL') || 'https://sabapp.com/api';
       const redirectUri = `${backendUrl}/auth/google/callback`;
       
       console.log('🔧 OAuth Config Debug:', {

@@ -177,8 +177,8 @@ export class DebugController {
   async testOAuthFlow() {
     const googleClientId = process.env.GOOGLE_CLIENT_ID;
     const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://saba-app-production.up.railway.app/api';
-    const frontendUrl = process.env.FRONTEND_URL || 'https://saba-app-production.up.railway.app';
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://sabapp.com/api';
+    const frontendUrl = process.env.FRONTEND_URL || 'https://sabapp.com';
     
     const redirectUri = `${backendUrl}/auth/google/callback`;
     
@@ -217,7 +217,7 @@ export class DebugController {
   async testTokenExchange(@Body() body: { code?: string } = {}) {
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://saba-app-production.up.railway.app/api';
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://sabapp.com/api';
     const redirectUri = `${backendUrl}/auth/google/callback`;
     
     return {
@@ -265,8 +265,8 @@ export class DebugController {
     };
 
     // Build URLs
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://saba-app-production.up.railway.app/api';
-    const frontendUrl = process.env.FRONTEND_URL || 'https://saba-app-production.up.railway.app';
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://sabapp.com/api';
+    const frontendUrl = process.env.FRONTEND_URL || 'https://sabapp.com';
     const redirectUri = `${backendUrl}/auth/google/callback`;
 
     return {
@@ -349,7 +349,7 @@ export class DebugController {
   @Get('oauth-manual-auth-url')
   async getManualAuthUrl() {
     const googleClientId = process.env.GOOGLE_CLIENT_ID;
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://saba-app-production.up.railway.app/api';
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://sabapp.com/api';
     const redirectUri = `${backendUrl}/auth/google/callback`;
     
     // Create state parameter for tracking
@@ -461,7 +461,7 @@ export class DebugController {
 
     const clientId = this.configService.get<string>('GOOGLE_CLIENT_ID') || '';
     const clientSecret = this.configService.get<string>('GOOGLE_CLIENT_SECRET') || '';
-    const backendUrl = this.configService.get<string>('NEXT_PUBLIC_API_URL') || 'https://saba-app-production.up.railway.app/api';
+    const backendUrl = this.configService.get<string>('NEXT_PUBLIC_API_URL') || 'https://sabapp.com/api';
     const redirectUri = `${backendUrl}/auth/google/callback`;
 
     console.log('🧪 Direct Token Test Debug:', {
@@ -833,3 +833,4 @@ export class DebugController {
     }
   }
 }
+

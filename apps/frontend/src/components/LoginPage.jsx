@@ -157,7 +157,7 @@ function LoginPage(_a) {
         try {
             console.log('🔧 Google Login - Starting redirect flow...');
             // Use same redirect flow as RegisterPage
-            var baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://saba-app-production.up.railway.app/api';
+            var baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://sabapp.com/api';
             var googleOAuthUrl = "".concat(baseUrl, "/auth/google");
             console.log('🔧 Google Login - Redirecting to:', googleOAuthUrl);
             window.location.href = googleOAuthUrl;
@@ -253,3 +253,4 @@ function LoginPage(_a) {
       </material_1.Container>
     </material_1.Box>);
 }
+

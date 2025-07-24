@@ -98,7 +98,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
       console.log('🔧 Google Login - Starting redirect flow...');
       
       // Use same redirect flow as RegisterPage
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://saba-app-production.up.railway.app/api';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://sabapp.com/api';
       const googleOAuthUrl = `${baseUrl}/auth/google`;
       
       console.log('🔧 Google Login - Redirecting to:', googleOAuthUrl);

@@ -25,7 +25,7 @@ export class AuthController {
   async initiateGoogleAuth(@Res() res: Response) {
     try {
       const googleClientId = process.env.GOOGLE_CLIENT_ID;
-      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://saba-app-production.up.railway.app/api';
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://sabapp.com/api';
       const redirectUri = `${backendUrl}/auth/google/callback`;
       
       const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
@@ -85,7 +85,7 @@ export class AuthController {
       
       if (!code) {
         console.error('❌ No authorization code received');
-        const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'https://saba-app-production.up.railway.app';
+        const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'https://sabapp.com';
         return res.redirect(`${frontendUrl}/login?error=no_code`);
       }
 
@@ -98,7 +98,7 @@ export class AuthController {
       });
 
       // Redirect with token
-      const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'https://saba-app-production.up.railway.app';
+      const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'https://sabapp.com';
       const redirectUrl = `${frontendUrl}/auth/callback?token=${authResponse.accessToken}`;
       
       console.log('✅ OAuth: Redirecting to frontend with token');
@@ -110,7 +110,7 @@ export class AuthController {
       console.error('❌ Error message:', error.message);
       console.error('❌ Error stack:', error.stack);
       
-      const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'https://saba-app-production.up.railway.app';
+      const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'https://sabapp.com';
       const errorMessage = encodeURIComponent(error.message || 'oauth_error');
       return res.redirect(`${frontendUrl}/login?error=${errorMessage}`);
     }

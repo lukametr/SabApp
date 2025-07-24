@@ -14,7 +14,7 @@ async function testLogin(credentials) {
   console.log(`🧪 Testing login with: ${credentials.email}`);
 
   try {
-    const response = await fetch('https://saba-app-production.up.railway.app/api/auth/login', {
+    const response = await fetch('https://sabapp.com/api/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -57,7 +57,7 @@ async function testRegistration() {
   };
 
   try {
-    const response = await fetch('https://saba-app-production.up.railway.app/api/auth/register', {
+    const response = await fetch('https://sabapp.com/api/auth/register', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

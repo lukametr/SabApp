@@ -8,7 +8,7 @@ You need to add these environment variables in Railway's **Shared Variables** se
 
 ```
 NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id_here
-NEXT_PUBLIC_API_URL=https://saba-app-production.up.railway.app/api
+NEXT_PUBLIC_API_URL=https://sabapp.com/api
 ```
 
 ### How to Add Environment Variables in Railway
@@ -18,7 +18,7 @@ NEXT_PUBLIC_API_URL=https://saba-app-production.up.railway.app/api
 3. Go to the **Variables** tab
 4. Add the variables in the **Shared Variables** section:
    - `NEXT_PUBLIC_GOOGLE_CLIENT_ID`: Your Google OAuth Client ID
-   - `NEXT_PUBLIC_API_URL`: `https://saba-app-production.up.railway.app/api`
+   - `NEXT_PUBLIC_API_URL`: `https://sabapp.com/api`
 
 ### Google OAuth Configuration
 
@@ -31,13 +31,13 @@ NEXT_PUBLIC_API_URL=https://saba-app-production.up.railway.app/api
 2. **Authorized JavaScript Origins**:
 
    ```
-   https://saba-app-production.up.railway.app
+   https://sabapp.com
    http://localhost:3000
    ```
 
 3. **Authorized Redirect URIs**:
    ```
-   https://saba-app-production.up.railway.app/auth/google/callback
+   https://sabapp.com/auth/google/callback
    http://localhost:3000/auth/google/callback
    http://localhost:10000/api/auth/google/callback
    ```
@@ -50,7 +50,7 @@ NEXT_PUBLIC_API_URL=https://saba-app-production.up.railway.app/api
 
 #### Issue 2: API 404 errors
 
-**Solution**: Ensure `NEXT_PUBLIC_API_URL` is set to `https://saba-app-production.up.railway.app/api`
+**Solution**: Ensure `NEXT_PUBLIC_API_URL` is set to `https://sabapp.com/api`
 
 #### Issue 3: Malformed API URLs
 
@@ -63,15 +63,15 @@ After setting environment variables:
 1. **Redeploy your application** in Railway
 2. **Check Railway logs** for any build errors
 3. **Test the application**:
-   - Visit `https://saba-app-production.up.railway.app`
+   - Visit `https://sabapp.com`
    - Check browser console for environment variable logs
    - Test Google Sign-In functionality
    - Test API endpoints
 
 ### Debug Endpoints
 
-- **Health Check**: `https://saba-app-production.up.railway.app/health`
-- **API Documentation**: `https://saba-app-production.up.railway.app/docs`
+- **Health Check**: `https://sabapp.com/health`
+- **API Documentation**: `https://sabapp.com/docs`
 - **Environment Debug**: Check browser console for API configuration logs
 
 ### Common Issues and Solutions
@@ -122,3 +122,4 @@ The project uses these Railway configuration files:
 - Use Railway's environment variable system for secrets
 - Ensure Google OAuth credentials are properly configured
 - Check CORS settings for production domain
+
