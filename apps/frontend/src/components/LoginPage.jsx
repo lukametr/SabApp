@@ -253,4 +253,3 @@ function LoginPage(_a) {
       </material_1.Container>
     </material_1.Box>);
 }
-

@@ -1,0 +1,62 @@
+{
+  "evaluatorName": "ტესტური",
+  "evaluatorLastName": "მუმრაჯი",
+  "objectName": "ოფისი",
+  "workDescription": "კომპიუტერებთან მუშაობა",
+  "date": "2025-08-01T17:24:15.840Z",
+  "time": "2025-08-01T17:24:15.841Z",
+  "hazards": [
+    {
+      "hazardIdentification": "კომპიუტერის ეკრანზე ხანგრძლივი მუშაობა",
+      "photos": [
+        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU77zgAAAABJRU5ErkJggg==",
+        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mMwEP4TDwAJoAH8P/M1PgAAAABJRU5ErkJggg=="
+      ],
+      "affectedPersons": [
+        "თანამშრომელი 1",
+        "თანამშრომელი 2"
+      ],
+      "injuryDescription": "თვალების დაღლა",
+      "existingControlMeasures": "რეგულარული შესვენება",
+      "initialRisk": {
+        "probability": "3",
+        "severity": "2",
+        "total": "6"
+      },
+      "additionalControlMeasures": "ეკრანის კუთხე გასწორება",
+      "residualRisk": {
+        "probability": "2",
+        "severity": "2",
+        "total": "4"
+      },
+      "requiredMeasures": "ყოველ საათში 10 წუთიანი შესვენება",
+      "responsiblePerson": "ოფის მენეჯერი",
+      "reviewDate": "2025-08-01T17:24:15.842Z"
+    },
+    {
+      "hazardIdentification": "არასწორი ავეჯი",
+      "photos": [
+        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU77zgAAAABJRU5ErkJggg=="
+      ],
+      "affectedPersons": [
+        "ყველა თანამშრომელი"
+      ],
+      "injuryDescription": "ზურგის ტკივილი",
+      "existingControlMeasures": "ერგონომიული სკამი",
+      "initialRisk": {
+        "probability": "4",
+        "severity": "3",
+        "total": "12"
+      },
+      "additionalControlMeasures": "ახალი სკამების ყიდვა",
+      "residualRisk": {
+        "probability": "2",
+        "severity": "2",
+        "total": "4"
+      },
+      "requiredMeasures": "ყველა სკამის შეცვლა",
+      "responsiblePerson": "HR მენეჯერი",
+      "reviewDate": "2025-08-01T17:24:15.842Z"
+    }
+  ]
+}
