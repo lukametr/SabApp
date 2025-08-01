@@ -87,13 +87,13 @@ export class DocumentsController {
         const hazardWithPhotos = {
           ...hazard,
           id: hazard.id || `hazard_${Date.now()}_${hazardIndex}`, // Ensure unique ID
-          photos: [] as string[]
+          photos: hazard.photos || [] // Keep existing photos from JSON or initialize empty
         };
         
-        // Add one photo per hazard if available
+        // Add uploaded files to existing photos
         if (photoIndex < savedHazardPhotos.length) {
           hazardWithPhotos.photos.push(savedHazardPhotos[photoIndex]);
-          console.log('📸 Added photo to hazard:', hazardWithPhotos.id, 'at index', photoIndex);
+          console.log('📸 Added uploaded file to hazard:', hazardWithPhotos.id, 'at index', photoIndex);
           photoIndex++;
         }
         
@@ -449,4 +449,43 @@ export class DocumentsController {
   }
 
   // File serving endpoint removed - photos are now stored as base64 in database
+
+  // Excel რეპორტის გენერაცია POST მეთოდით - სრული დოკუმენტის მონაცემებით
+  @Post('generate-excel')
+  async generateExcelFromData(@Body() documentData: any, @Res() res: Response) {
+    try {
+      console.log('📊 Excel რეპორტის გენერაცია POST მონაცემებით:', {
+        title: documentData.title,
+        hazardsCount: documentData.hazards?.length || 0,
+        risksCount: documentData.risks?.length || 0
+      });
+
+      // ვამოწმებთ მონაცემების ფორმატს - hazards ან risks
+      let processedData = documentData;
+      if (documentData.risks && !documentData.hazards) {
+        // ვარსებულობს risks ნაცვლად hazards-ისა, გადავცვალოთ
+        processedData = {
+          ...documentData,
+          hazards: documentData.risks
+        };
+        console.log('🔄 Converted risks to hazards format for Excel generation');
+      }
+
+      const excelBuffer = await this.reportService.generateExcelReport(processedData);
+      
+      const fileName = `რისკების-შეფასება-${processedData.project || 'document'}-${new Date().toISOString().split('T')[0]}.xlsx`;
+      
+      res.set({
+        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'Content-Disposition': `attachment; filename="${encodeURIComponent(fileName)}"`,
+        'Content-Length': excelBuffer.length.toString(),
+      });
+      res.send(excelBuffer);
+      
+      console.log(`✅ Excel რეპორტი გენერირდა წარმატებით, ზომა: ${excelBuffer.length} bytes`);
+    } catch (error) {
+      console.error('❌ Excel რეპორტის POST გენერაციის შეცდომა:', error);
+      res.status(500).json({ message: 'Excel რეპორტის გენერაცია ვერ მოხერხდა', error: error.message });
+    }
+  }
 }

@@ -10,117 +10,53 @@ export class ReportService {
    * დოკუმენტის Excel ფაილის შექმნა
    */
   async generateExcelReport(document: any): Promise<Buffer> {
-    // --- ძველი ვარიანტი ---
-    /*
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet('უსაფრთხოების შეფასება');
-
-    // სათაური
-    worksheet.mergeCells('A1:F1');
-    const titleCell = worksheet.getCell('A1');
-    titleCell.value = 'უსაფრთხოების შეფასების დოკუმენტი';
-    titleCell.font = { size: 16, bold: true };
-    titleCell.alignment = { horizontal: 'center' };
-    titleCell.fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: '4472C4' }
-    };
-
-    // ძირითადი ინფორმაცია
-    let row = 3;
-    const basicInfo = [
-      ['შემფასებლის სახელი:', `${document.evaluatorName} ${document.evaluatorLastName}`],
-      ['ობიექტის დასახელება:', document.objectName],
-      ['სამუშაოს აღწერა:', document.workDescription],
-      ['თარიღი:', new Date(document.date).toLocaleDateString('ka-GE')],
-      ['დრო:', new Date(document.time).toLocaleTimeString('ka-GE')],
-      ['საფრთხეების რაოდენობა:', document.hazards?.length || 0],
-      ['ფოტოების რაოდენობა:', (document.photos?.length || 0) + (document.hazards?.reduce((sum: number, h: any) => sum + (h.photos?.length || 0), 0) || 0)]
-    ];
-
-    basicInfo.forEach(([label, value]) => {
-      worksheet.getCell(`A${row}`).value = label;
-      worksheet.getCell(`A${row}`).font = { bold: true };
-      worksheet.getCell(`B${row}`).value = value;
-      row++;
-    });
-
-    // საფრთხეების ცხრილი
-    if (document.hazards && document.hazards.length > 0) {
-      row += 2;
-      worksheet.getCell(`A${row}`).value = 'იდენტიფიცირებული საფრთხეები';
-      worksheet.getCell(`A${row}`).font = { size: 14, bold: true };
-      row++;
-
-      // ცხრილის თავსართი
-      const headers = ['#', 'საფრთხე', 'ალბათობა', 'მნიშვნელობა', 'რისკი (საწყისი)', 'რისკი (ნარჩენი)', 'ღონისძიება'];
-      headers.forEach((header, index) => {
-        const cell = worksheet.getCell(row, index + 1);
-        cell.value = header;
-        cell.font = { bold: true };
-        cell.fill = {
-          type: 'pattern',
-          pattern: 'solid',
-          fgColor: { argb: 'E7E6E6' }
-        };
-      });
-      row++;
-
-      // საფრთხეების დანამატი
-      document.hazards.forEach((hazard: any, index: number) => {
-        const hazardRow = [
-          index + 1,
-          hazard.hazard || 'N/A',
-          hazard.probability || 'N/A',
-          hazard.severity || 'N/A',
-          hazard.initialRisk || 'N/A',
-          hazard.residualRisk || 'N/A',
-          hazard.preventiveMeasure || 'N/A'
-        ];
-
-        hazardRow.forEach((value, colIndex) => {
-          worksheet.getCell(row, colIndex + 1).value = value;
-        });
-        row++;
-      });
-    }
-
-    // სვეტების ზომის რეგულირება
-    worksheet.columns.forEach(column => {
-      column.width = 15;
-    });
-    worksheet.getColumn(2).width = 25; // საფრთხის აღწერა უფრო ფართო
-    worksheet.getColumn(7).width = 30; // ღონისძიება უფრო ფართო
-
-    // ფაილის გენერაცია
-    const buffer = await workbook.xlsx.writeBuffer();
-    return Buffer.from(buffer);
-    */
-
-    // --- ახალი ვარიანტი ---
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('ფორმა №1');
 
+    // 0. მონაცემების ნორმალიზაცია - risks -> hazards
+    let processedDocument = { ...document };
+    if (document.risks && !document.hazards) {
+      console.log('🔄 Converting risks to hazards format for Excel generation');
+      processedDocument.hazards = document.risks.map((risk: any) => ({
+        hazardIdentification: risk.riskName || risk.hazardIdentification || '',
+        photos: risk.photos || [],
+        affectedPersons: risk.affectedPersons || [],
+        injuryDescription: risk.injuryDescription || '',
+        existingControlMeasures: risk.existingControlMeasures || '',
+        initialRisk: {
+          probability: risk.probability || risk.initialRisk?.probability || '',
+          severity: risk.severity || risk.initialRisk?.severity || '',
+          total: (risk.probability && risk.severity) ? risk.probability * risk.severity : risk.initialRisk?.total || ''
+        },
+        residualRisk: risk.residualRisk || { probability: '', severity: '', total: '' },
+        additionalControlMeasures: risk.additionalControlMeasures || '',
+        requiredMeasures: risk.requiredMeasures || '',
+        responsiblePerson: risk.responsiblePerson || '',
+        reviewDate: risk.reviewDate || ''
+      }));
+      console.log(`✅ Converted ${processedDocument.hazards.length} risks to hazards format`);
+    }
+
     // 1. Header Data (ზედა ნაწილი)
-    const evaluatorName = `${document.evaluatorName || ''} ${document.evaluatorLastName || ''}`.trim();
-    const objectName = document.objectName || '';
-    const workDescription = document.workDescription || '';
-    const date = document.date ? new Date(document.date).toLocaleDateString('ka-GE') : '';
-    const time = document.time ? new Date(document.time).toLocaleTimeString('ka-GE') : '';
+    const evaluatorName = `${processedDocument.evaluatorName || ''} ${processedDocument.evaluatorLastName || ''}`.trim();
+    const objectName = processedDocument.objectName || processedDocument.project || '';
+    const workDescription = processedDocument.workDescription || processedDocument.title || '';
+    const date = processedDocument.date || processedDocument.assessmentDate ? 
+      new Date(processedDocument.date || processedDocument.assessmentDate).toLocaleDateString('ka-GE') : '';
+    const time = processedDocument.time ? new Date(processedDocument.time).toLocaleTimeString('ka-GE') : '';
 
     const headerData = [
-      ['რისკის შეფასების ფორმა №1', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
-      ['შეფასებლის სახელი და გვარი:', evaluatorName, '', '', '', '', '', '', '', '', 'თარიღი:', date, '', '', '', '', ''],
-      ['სამუშაო ობიექტის დასახელება:', objectName, '', '', '', '', '', '', '', '', 'დრო:', time, '', '', '', '', ''],
-      ['სამუშაოს დაწყების თარიღი:', workDescription, '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']
+      ['რისკის შეფასების ფორმა №1', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''], // A1:Q1
+      ['შეფასებლის სახელი და გვარი:', evaluatorName, '', '', '', '', '', '', '', 'თარიღი:', date, '', '', '', '', '', ''], // A2:I2 და J2:Q2 
+      ['სამუშაო ობიექტის დასახელება:', objectName, '', '', '', '', '', '', '', 'დრო:', time, '', '', '', '', '', ''], // A3:I3 და J3:Q3
+      ['სამუშაოს დაწყების თარიღი:', workDescription, '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''] // A4:Q4
     ];
 
-    // 2. ცხრილის სათაურები - 13 მთავარი ჰედერი + 4 დამატებითი = 17 სვეტი
+    // 2. ცხრილის სათაურები - 17 სვეტი
     const tableHeaders = [
       [
         'საფრთხე და იდენტიფიკაცია',
-        'არსებული ფოტო/ვიდეო მასალა',
+        'ფოტო/ვიდეო მასალა',
         'პოტენციურად დაზარალებული პირები',
         'ტრავმის ხასიათი',
         'მიმდინარე კონტროლის ღონისძიებები',
@@ -140,31 +76,27 @@ export class ReportService {
     ];
 
     // 3. ცხრილის მონაცემები (hazards) - 17 სვეტი
-    const hazards = Array.isArray(document.hazards) ? document.hazards : [];
+    const hazards = Array.isArray(processedDocument.hazards) ? processedDocument.hazards : [];
     const tableRows = hazards.length > 0
       ? hazards.map((hazard: any) => {
-          // ფოტოების რაოდენობის ჩვენება binary მონაცემების ნაცვლად
-          const photosCount = hazard.photos && Array.isArray(hazard.photos) ? hazard.photos.length : 0;
-          const photosText = photosCount > 0 ? `${photosCount} ფოტო` : 'ფოტო არ არის';
-          
           return [
-            hazard.hazardIdentification || '',  // სწორი ველი
-            photosText,    // photos count instead of binary data
-            hazard.affectedPersons?.join(', ') || '',  // persons array
-            hazard.injuryDescription || '',     // injury description
-            hazard.existingControlMeasures || '',  // სწორი ველი
-            hazard.initialRisk?.total || '',    // საწყისი რისკი (მთავარი)
-            hazard.initialRisk?.probability || '',    // ალბათობა
-            hazard.initialRisk?.severity || '',       // სიმძიმე
-            hazard.initialRisk?.total || '',          // ნამრავლი (გამეორება მთავარისა)
-            hazard.additionalControlMeasures || '',  // სწორი ველი
-            hazard.residualRisk?.total || '',   // ნარჩენი რისკი (მთავარი)
-            hazard.residualRisk?.probability || '',   // ალბათობა
-            hazard.residualRisk?.severity || '',      // სიმძიმე
-            hazard.residualRisk?.total || '',         // ნამრავლი (გამეორება მთავარისა)
-            hazard.requiredMeasures || '',      // სწორი ველი
-            hazard.responsiblePerson || '',     // ეს სწორია
-            hazard.reviewDate ? new Date(hazard.reviewDate).toLocaleDateString('ka-GE') : ''  // review date
+            hazard.hazardIdentification || '',  
+            '', // ფოტო სვეტი ცარიელი - ფოტო შემდეგ ჩაისვება
+            hazard.affectedPersons?.join(', ') || '',  
+            hazard.injuryDescription || '',     
+            hazard.existingControlMeasures || '',  
+            hazard.initialRisk?.total || '',    
+            hazard.initialRisk?.probability || '',    
+            hazard.initialRisk?.severity || '',       
+            hazard.initialRisk?.total || '',          
+            hazard.additionalControlMeasures || '',  
+            hazard.residualRisk?.total || '',   
+            hazard.residualRisk?.probability || '',   
+            hazard.residualRisk?.severity || '',      
+            hazard.residualRisk?.total || '',         
+            hazard.requiredMeasures || '',      
+            hazard.responsiblePerson || '',     
+            hazard.reviewDate ? new Date(hazard.reviewDate).toLocaleDateString('ka-GE') : ''  
           ];
         })
       : Array(5).fill(null).map(() => Array(tableHeaders[0].length).fill(''));
@@ -180,29 +112,128 @@ export class ReportService {
     // 5. Worksheet-ში ჩასმა
     worksheet.addRows(fullSheetData);
 
-    // 6. Merge-ები
+    // Helper ფუნქცია Excel სვეტების letter-ებისთვის (A, B, C... Z, AA, AB...)
+    const getColumnLetter = (col: number): string => {
+      let letter = '';
+      while (col >= 0) {
+        letter = String.fromCharCode(65 + (col % 26)) + letter;
+        col = Math.floor(col / 26) - 1;
+      }
+      return letter;
+    };
+
+    // 6. ფოტოების ჩასმის ფუნქცია - გაუმჯობესებული ზომებით
+    const addImageToWorksheet = async (base64Data: string, position: { col: number, row: number, width?: number, height?: number }) => {
+      try {
+        // base64 სტრინგიდან ბაფერის შექმნა
+        const matches = base64Data.match(/^data:([^;]+);base64,(.+)$/);
+        if (matches) {
+          const mimeType = matches[1];
+          const base64Content = matches[2];
+          const buffer = Buffer.from(base64Content, 'base64');
+          
+          // Extension ტიპის განსაზღვრა
+          let extension: 'png' | 'jpeg' | 'gif' = 'png';
+          if (mimeType.includes('jpeg') || mimeType.includes('jpg')) {
+            extension = 'jpeg';
+          } else if (mimeType.includes('png')) {
+            extension = 'png';
+          } else if (mimeType.includes('gif')) {
+            extension = 'gif';
+          }
+
+          // ფოტოს ჩამატება workbook-ში
+          const imageId = workbook.addImage({
+            buffer: buffer,
+            extension: extension,
+          });
+
+          // ზუსტი range გამოთვლა position პარამეტრების გამოყენებით - column overflow დაცვით
+          const startRow = position.row; // 1-based Excel row
+          const startCol = getColumnLetter(position.col); // უსაფრთხო column letter გენერაცია
+          const endCol = getColumnLetter(position.col + (position.width || 1));
+          const endRow = startRow + (position.height || 2);
+          const range = `${startCol}${startRow}:${endCol}${endRow}`;
+          
+          // ფოტოს ჩამატება დინამიურად გამოთვლილი ზომით
+          worksheet.addImage(imageId, range);
+
+          console.log(`✅ Added image at range: ${range} with dynamic size`);
+        } else {
+          console.error('❌ Invalid base64 image format');
+        }
+      } catch (error) {
+        console.error('❌ Error adding image to Excel:', error);
+      }
+    };
+
+    // 7. ფოტოების ჩასმა hazards-ისთვის - გაუმჯობესებული
+    if (hazards.length > 0) {
+      const headerRowsCount = headerData.length + 1; // header rows + empty row
+      const tableHeaderRow = headerRowsCount + 1; // table header row
+      const dataStartRow = tableHeaderRow + 1; // მონაცემების დაწყების სტრიქონი (სწორი)
+      
+      for (let i = 0; i < hazards.length; i++) {
+        const hazard = hazards[i];
+        const currentExcelRow = dataStartRow + i; // Excel row number (1-based)
+        
+        if (hazard.photos && hazard.photos.length > 0) {
+          console.log(`📸 Adding ${hazard.photos.length} photos for hazard ${i + 1}`);
+          
+          // მრავალი ფოტოს სწორი პოზიციონირება
+          const photosPerRow = 2; // 2 ფოტო ჰორიზონტალურად
+          const photoRows = Math.ceil(hazard.photos.length / photosPerRow);
+          
+          // დინამიური spacing ფოტოების ზომის მიხედვით
+          const baseSpacing = 3; // ძირითადი spacing
+          const photoHeight = 3; // ფოტოს სიმაღლე
+          const spacingMultiplier = Math.max(baseSpacing, photoHeight + 1); // მინიმუმ 4 სტრიქონი spacing
+          
+          // სტრიქონის სიმაღლის გაზრდა ფოტოებისთვის - დინამიური სიმაღლე
+          worksheet.getRow(currentExcelRow).height = photoRows * 60;
+          
+          // ყველა ფოტოს ჩამატება სწორი პოზიციონირებით
+          for (let photoIndex = 0; photoIndex < hazard.photos.length; photoIndex++) {
+            const photo = hazard.photos[photoIndex];
+            const col = 1 + (photoIndex % photosPerRow); // B ან C სვეტი
+            const photoRow = currentExcelRow + Math.floor(photoIndex / photosPerRow) * spacingMultiplier; // დინამიური spacing
+            
+            // Column boundary შემოწმება - ფოტო არ უნდა გადავიდეს ცხრილის ზღვარს
+            const maxCol = 16; // Q სვეტი არის 16 (0-indexed)
+            const safeCol = Math.min(col, maxCol - 2); // 2 სვეტი დავტოვოთ width-ისთვის
+            
+            await addImageToWorksheet(photo, { 
+              col: safeCol, // უსაფრთხო სვეტი
+              row: photoRow, // განსხვავებული row ყოველი ფოტოსთვის
+              width: 1.5, // უფრო ფართო
+              height: photoHeight   // დინამიური სიმაღლე
+            });
+          }
+        }
+      }
+    }
+
+    // 8. Merge-ები - სწორი ფორმატირებისთვის
     worksheet.mergeCells('A1:Q1'); // სათაური spans all 17 columns
-    worksheet.mergeCells('B2:J2'); // შეფასებლის სახელი
-    worksheet.mergeCells('K2:K2'); // თარიღი
-    worksheet.mergeCells('B3:J3'); // ობიექტი
-    worksheet.mergeCells('K3:K3'); // დრო
-    worksheet.mergeCells('B4:Q4'); // სამუშაოს აღწერა spans all columns
+    worksheet.mergeCells('A2:I2'); // შეფასებლის სახელი და გვარი
+    worksheet.mergeCells('J2:Q2'); // თარიღი
+    worksheet.mergeCells('A3:I3'); // სამუშაო ობიექტის დასახელება
+    worksheet.mergeCells('J3:Q3'); // დრო
+    worksheet.mergeCells('A4:Q4'); // სამუშაოს დაწყების თარიღი spans all columns 
     
-    // Table header merges - ყველა სვეტი ცალკეა, merge არ არის საჭირო
-    
-    // სვეტების სიგანის მორგება - 17 სვეტი
+    // 9. სვეტების სიგანის მორგება - 17 სვეტი
     worksheet.columns = [
       { width: 25 }, // A - საფრთხე და იდენტიფიკაცია
-      { width: 20 }, // B - ფოტო
+      { width: 20 }, // B - ფოტო (გაფართოვებული ფოტოებისთვის)
       { width: 25 }, // C - პოტენციურად დაზარალებული პირები
       { width: 20 }, // D - ტრავმის ხასიათი
       { width: 25 }, // E - მიმდინარე კონტროლის ღონისძიებები
-      { width: 15 }, // F - საწყისი რისკი (მთავარი)
+      { width: 15 }, // F - საწყისი რისკი
       { width: 12 }, // G - ალბათობა
       { width: 12 }, // H - სიმძიმე
       { width: 12 }, // I - ნამრავლი
       { width: 25 }, // J - დამატებითი კონტროლის ღონისძიებები
-      { width: 15 }, // K - ნარჩენი რისკი (მთავარი)
+      { width: 15 }, // K - ნარჩენი რისკი
       { width: 12 }, // L - ალბათობა
       { width: 12 }, // M - სიმძიმე
       { width: 12 }, // N - ნამრავლი
@@ -211,36 +242,75 @@ export class ReportService {
       { width: 20 }, // Q - გადახედვის სავარაუდო თარიღი
     ];
 
-    // 8. სტილები (სათაური და table header)
-    // სათაური
+    // 10. სტილები - header ინფორმაცია
     const titleCell = worksheet.getCell('A1');
-    titleCell.font = { size: 16, bold: true };
+    titleCell.font = { size: 14, bold: true, name: 'Arial' };
     titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
     titleCell.fill = {
       type: 'pattern',
       pattern: 'solid',
       fgColor: { argb: '4472C4' }
     };
-    titleCell.font = { color: { argb: 'FFFFFF' }, size: 16, bold: true };
+    titleCell.border = {
+      top: { style: 'thin' },
+      left: { style: 'thin' },
+      bottom: { style: 'thin' },
+      right: { style: 'thin' }
+    };
 
-    // Table Header სტილი
-    const headerRowIdx = headerData.length + 2; // e.g. 4+2=6
+    // Header rows styling - გაუმჯობესებული
+    for (let i = 2; i <= headerData.length + 1; i++) {
+      const row = worksheet.getRow(i);
+      row.eachCell((cell, colNumber) => {
+        if (colNumber === 1 || colNumber === 10) { // Label columns
+          cell.font = { bold: true, size: 10, name: 'Arial' };
+          cell.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'F2F2F2' }
+          };
+        } else {
+          cell.font = { size: 10, name: 'Arial' };
+        }
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
+        };
+        cell.alignment = { vertical: 'middle', wrapText: true };
+      });
+      row.height = 25;
+    }
+
+    // Table Header სტილი - გაუმჯობესებული ღია ნაცრისფერი ფონით
+    const headerRowIdx = headerData.length + 2;
     const headerRow = worksheet.getRow(headerRowIdx);
     headerRow.eachCell(cell => {
-      cell.font = { bold: true };
+      cell.font = { bold: true, size: 10, name: 'Arial' };
       cell.fill = {
         type: 'pattern',
         pattern: 'solid',
-        fgColor: { argb: 'E7E6E6' }
+        fgColor: { argb: 'D3D3D3' } // ღია ნაცრისფერი
       };
       cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+      cell.border = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' }
+      };
     });
 
-    // ცხრილის სხეულის სტილი
+    // Header row height
+    headerRow.height = 50;
+
+    // ცხრილის სხეულის სტილი - გაუმჯობესებული
     const dataStartRow = headerRowIdx + 1;
     for (let i = dataStartRow; i <= dataStartRow + tableRows.length; i++) {
       const row = worksheet.getRow(i);
       row.eachCell(cell => {
+        cell.font = { size: 10, name: 'Arial' };
         cell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: true };
         cell.border = {
           top: { style: 'thin' },
@@ -249,9 +319,29 @@ export class ReportService {
           right: { style: 'thin' }
         };
       });
+      // Default row height
+      if (!row.height || row.height < 40) {
+        row.height = 40;
+      }
     }
 
-    // 9. ფაილის გენერაცია
+    // Page Setup - Landscape orientation და fit to page
+    worksheet.pageSetup = {
+      orientation: 'landscape',
+      fitToPage: true,
+      fitToWidth: 1,
+      fitToHeight: 0, // unlimited pages vertically
+      margins: {
+        left: 0.7,
+        right: 0.7,
+        top: 0.75,
+        bottom: 0.75,
+        header: 0.3,
+        footer: 0.3
+      }
+    };
+
+    // 11. ფაილის გენერაცია
     const buffer = await workbook.xlsx.writeBuffer();
     return Buffer.from(buffer);
   }
