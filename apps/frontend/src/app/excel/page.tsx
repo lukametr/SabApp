@@ -1,7 +1,7 @@
 'use client';
 
 import { Box, Container } from '@mui/material';
-import ExcelAnalyzer from '../../../components/ExcelAnalyzer';
+import ExcelAnalyzer from '../../components/ExcelAnalyzer';
 
 export default function ExcelPage() {
   return (
