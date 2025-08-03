@@ -42,20 +42,27 @@ RUN pnpm install --frozen-lockfile --recursive
 # Copy the rest of the monorepo
 COPY . .
 
+# Copy production environment files if they exist
+RUN if [ -f "apps/backend/.env.production" ]; then cp apps/backend/.env.production apps/backend/.env; fi
+RUN if [ -f "apps/frontend/.env.production" ]; then cp apps/frontend/.env.production apps/frontend/.env.local; fi
+
 ARG CACHEBUST=1
 # Set environment variables for frontend build
 ARG NEXT_PUBLIC_GOOGLE_CLIENT_ID=675742559993-5quocp5mgvmog0fd2g8ue03vpleb23t5.apps.googleusercontent.com
 ARG NEXT_PUBLIC_API_URL=https://sabapp.com/api
 ARG GOOGLE_CLIENT_ID=675742559993-5quocp5mgvmog0fd2g8ue03vpleb23t5.apps.googleusercontent.com
-ARG GOOGLE_CLIENT_SECRET=GOCSPX-placeholder
-ARG NEXTAUTH_SECRET=saba-nextauth-secret-production-key-2024
+ARG GOOGLE_CLIENT_SECRET
+ARG NEXTAUTH_SECRET
 ARG NEXTAUTH_URL=https://sabapp.com
+ARG PORT=3001
+
 ENV NEXT_PUBLIC_GOOGLE_CLIENT_ID=${NEXT_PUBLIC_GOOGLE_CLIENT_ID}
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 ENV GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
 ENV GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
 ENV NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
 ENV NEXTAUTH_URL=${NEXTAUTH_URL}
+ENV PORT=${PORT}
 
 # Build frontend and backend
 ENV SKIP_ENV_VALIDATION=true

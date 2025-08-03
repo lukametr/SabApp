@@ -69,6 +69,18 @@ async function bootstrap() {
 
   // Debug middleware და SPA fallback ამოღებულია, რადგან ServeStaticModule სწორად ემსახურება static ფაილებს და არ იჭერს API როუტებს
 
+  // Production logging
+  if (process.env.NODE_ENV === 'production') {
+    app.use((req: any, res: any, next: any) => {
+      const start = Date.now();
+      res.on('finish', () => {
+        const duration = Date.now() - start;
+        console.log(`${req.method} ${req.url} - ${res.statusCode} - ${duration}ms`);
+      });
+      next();
+    });
+  }
+
   // Security headers
   app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" },
