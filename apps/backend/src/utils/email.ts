@@ -1,6 +1,13 @@
 import nodemailer from 'nodemailer';
 
 export async function sendVerificationEmail(to: string, token: string) {
+  // Skip email sending in development if SMTP is not configured
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER) {
+    console.log('📧 Email sending skipped (SMTP not configured)');
+    console.log(`📧 Verification token for ${to}: ${token}`);
+    return;
+  }
+
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT) || 587,
