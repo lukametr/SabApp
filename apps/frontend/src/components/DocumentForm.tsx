@@ -630,13 +630,15 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
     }
 
     // Always send hazards from local state, not from data.hazards
+    // Don't include hazards in formattedData - they will be passed separately
     const formattedData: CreateDocumentDto = {
       ...data,
-      hazards: hazards as unknown as CreateDocumentDto['hazards'],
+      hazards: [], // Empty - actual hazards passed as second parameter
     };
 
     console.log('📊 Form submission data:', {
-      hazardsCount: hazards.length,
+      formDataHazards: formattedData.hazards?.length || 0,
+      actualHazardsCount: hazards.length,
       hazardPhotos: hazards.map(h => ({
         id: h.id,
         hasMediaFile: !!(h as any).mediaFile,

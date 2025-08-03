@@ -5,6 +5,7 @@
 ### Required Railway Environment Variables
 
 #### Backend Variables:
+
 ```bash
 # Database
 MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/sabap
@@ -36,6 +37,7 @@ EMAIL_FROM=noreply@sabapp.com
 ```
 
 #### Frontend Variables:
+
 ```bash
 # API Configuration
 NEXT_PUBLIC_API_URL=https://sabapp.com/api
@@ -70,7 +72,7 @@ GOOGLE_CLIENT_SECRET=your-google-client-secret-here
 5. **Email Service Setup**
    - Configure Gmail SMTP or use SendGrid/Mailgun
    - Generate app password for Gmail
-   - Update EMAIL_* variables accordingly
+   - Update EMAIL\_\* variables accordingly
 
 ## Important Notes
 
@@ -82,13 +84,15 @@ GOOGLE_CLIENT_SECRET=your-google-client-secret-here
 ## Health Check
 
 The application includes health check endpoints:
+
 - `/health` - Basic health status
-- `/api/health` - API health status  
+- `/api/health` - API health status
 - `/health/debug` - Debug information (development only)
 
 ## Build Process
 
 The application uses Docker for deployment with:
+
 - Multi-stage build process
 - Chrome/Puppeteer support for PDF generation
 - Production environment optimization

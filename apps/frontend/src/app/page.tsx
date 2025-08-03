@@ -23,10 +23,11 @@ export default function Home() {
       await new Promise(resolve => setTimeout(resolve, 300));
       
       // Check for Google OAuth success parameters
-      const auth = searchParams.get('auth');
-      const tokenParam = searchParams.get('token');
-      const userParam = searchParams.get('user');
-      const error = searchParams.get('error');
+      const auth = searchParams?.get('auth');
+      const tokenParam = searchParams?.get('token');
+      const userParam = searchParams?.get('user');
+      const error = searchParams?.get('error');
+      const stayOnHome = searchParams?.get('stay'); // New parameter to stay on home page
 
       if (auth === 'success' && tokenParam && userParam) {
         try {
@@ -52,6 +53,13 @@ export default function Home() {
         return;
       }
 
+      // If user explicitly wants to stay on home page, don't redirect
+      if (stayOnHome === 'true') {
+        console.log('🏠 User requested to stay on home page');
+        setIsChecking(false);
+        return;
+      }
+
       // Check if user is already authenticated
       const currentState = useAuthStore.getState();
       console.log('🏠 Current auth state:', {
@@ -60,7 +68,7 @@ export default function Home() {
         hasUser: !!currentState.user,
       });
       
-      if (currentState.isAuthenticated && currentState.token && currentState.user) {
+      if (currentState.isAuthenticated() && currentState.token && currentState.user) {
         try {
           // Validate token
           const payload = JSON.parse(atob(currentState.token.split('.')[1]));

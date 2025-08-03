@@ -38,6 +38,7 @@ import SubscriptionBanner from './subscription/SubscriptionBanner';
 import { useDocumentStore } from '../store/documentStore';
 import { useAuthStore } from '../store/authStore';
 import { CreateDocumentDto, Document, UpdateDocumentDto } from '../types/document';
+import { useIdleTimeout } from '../hooks/useIdleTimeout';
 
 interface DashboardProps {
   user?: {
@@ -60,6 +61,19 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
   const [openForm, setOpenForm] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+  // Idle timeout - 24 hours
+  useIdleTimeout({
+    timeoutDuration: 24 * 60 * 60 * 1000, // 24 hours
+    onTimeout: () => {
+      console.log('🕐 User idle for 24 hours - logging out and clearing cache');
+      localStorage.clear();
+      sessionStorage.clear();
+      logout();
+      router.push('/');
+      window.location.reload();
+    }
+  });
 
   // No need to call loadFromStorage here - handled by AuthProvider
 
@@ -147,8 +161,17 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
     };
   }, []);
 
-  const handleSubmit = useCallback(async (data: CreateDocumentDto) => {
+  const handleSubmit = useCallback(async (data: CreateDocumentDto, actualHazards?: any[]) => {
+    console.log('📋 Dashboard handleSubmit called:', {
+      isEdit: !!editDoc,
+      dataHazards: data.hazards?.length || 0,
+      actualHazards: actualHazards?.length || 0
+    });
+
     if (editDoc) {
+      // Use actualHazards if provided, otherwise fall back to data.hazards
+      const hazardsToUse = actualHazards || data.hazards;
+      
       const updateData: UpdateDocumentDto = {
         id: editDoc.id,
         evaluatorName: data.evaluatorName,
@@ -157,11 +180,14 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
         workDescription: data.workDescription,
         date: data.date,
         time: data.time,
-        hazards: data.hazards,
+        hazards: hazardsToUse,
         photos: [] // Base64 data URLs - empty for now
       };
+      
+      console.log('📋 Updating document with hazards:', hazardsToUse?.length || 0);
       await updateDocument(updateData);
     } else {
+      // For new documents, use data as is
       await handleCreateDocument(data);
     }
     fetchDocuments();
@@ -226,6 +252,10 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
                   Clear Cache
                 </MenuItem>
               )}
+              <MenuItem onClick={() => router.push('/?stay=true')}>
+                <Shield sx={{ mr: 1 }} />
+                მთავარი გვერდი
+              </MenuItem>
               <MenuItem onClick={handleLogout}>
                 <Logout sx={{ mr: 1 }} />
                 გამოსვლა
