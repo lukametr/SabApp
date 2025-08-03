@@ -1,7 +1,8 @@
 import React from 'react';
 import { Document } from '../types/document';
 import { Card, CardContent, Typography, Grid, Box, IconButton, Tooltip, Accordion, AccordionSummary, AccordionDetails, Chip } from '@mui/material';
-import { Favorite, FavoriteBorder, Download, Edit, Delete, ExpandMore } from '@mui/icons-material';
+import { Download, Edit, Delete, ExpandMore } from '@mui/icons-material';
+import { TableChart, PictureAsPdf } from '@mui/icons-material'; // Excel და PDF იკონები
 import { useDocumentStore } from '../store/documentStore';
 import { format } from 'date-fns';
 import { ka } from 'date-fns/locale';
@@ -142,24 +143,28 @@ export const DocumentView: React.FC<DocumentViewProps> = ({ document, onEdit, on
             {document.objectName}
           </Typography>
           <Box>
-            <Tooltip title={document.isFavorite ? 'ფავორიტებიდან ამოშლა' : 'ფავორიტებში დამატება'}>
+            {/* ფავორიტების ღილაკი დამალული */}
+            {/* <Tooltip title={document.isFavorite ? 'ფავორიტებიდან ამოშლა' : 'ფავორიტებში დამატება'}>
               <IconButton onClick={handleFavoriteClick}>
                 {document.isFavorite ? <Favorite color="error" /> : <FavoriteBorder />}
               </IconButton>
-            </Tooltip>
-            <Tooltip title="ჩამოტვირთვა (ZIP)">
+            </Tooltip> */}
+            
+            {/* მასალების ჩამოტვირთვის ღილაკი დამალული */}
+            {/* <Tooltip title="ჩამოტვირთვა (ZIP)">
               <IconButton onClick={handleDownload}>
                 <Download />
               </IconButton>
-            </Tooltip>
+            </Tooltip> */}
+            
             <Tooltip title="Excel რეპორტი">
               <IconButton onClick={handleDownloadExcel} color="success">
-                📊
+                <TableChart />
               </IconButton>
             </Tooltip>
             <Tooltip title="PDF რეპორტი">
               <IconButton onClick={handleDownloadPDF} color="error">
-                📄
+                <PictureAsPdf />
               </IconButton>
             </Tooltip>
             {onEdit && (
