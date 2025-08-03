@@ -219,10 +219,13 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
                   Admin Panel
                 </MenuItem>
               )}
-              <MenuItem onClick={handleClearCache}>
-                <Security sx={{ mr: 1 }} />
-                Clear Cache
-              </MenuItem>
+              {/* ქეშის წაშლის ღილაკი მხოლოდ სუპერ ადმინისთვის */}
+              {currentUser?.role === 'admin' && (
+                <MenuItem onClick={handleClearCache}>
+                  <Security sx={{ mr: 1 }} />
+                  Clear Cache
+                </MenuItem>
+              )}
               <MenuItem onClick={handleLogout}>
                 <Logout sx={{ mr: 1 }} />
                 გამოსვლა
