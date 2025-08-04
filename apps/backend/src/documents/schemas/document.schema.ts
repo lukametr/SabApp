@@ -45,13 +45,13 @@ class Hazard {
   @Prop({ required: true })
   existingControlMeasures: string;
 
-  @Prop({ type: Risk, required: true })
+  @Prop({ type: Risk, required: true, default: () => ({ probability: 0, severity: 0, total: 0 }) })
   initialRisk: Risk;
 
   @Prop({ required: true })
   additionalControlMeasures: string;
 
-  @Prop({ type: Risk, required: true })
+  @Prop({ type: Risk, required: true, default: () => ({ probability: 0, severity: 0, total: 0 }) })
   residualRisk: Risk;
 
   @Prop({ required: true })

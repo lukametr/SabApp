@@ -60,7 +60,7 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
 
   const addHazard = () => {
     const newHazard: HazardData = {
-      id: Date.now().toString(),
+      id: `hazard_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       hazardIdentification: '',
       affectedPersons: [],
       injuryDescription: '',

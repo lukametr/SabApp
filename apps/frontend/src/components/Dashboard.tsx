@@ -132,20 +132,33 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
       workDescription: doc.workDescription,
       date: doc.date,
       time: doc.time,
-      hazards: (doc.hazards || []).map(hazard => {
+      hazards: (doc.hazards || []).map((hazard, index) => {
         console.log('🔄 Converting hazard with risks:', {
           id: hazard.id,
           initialRisk: hazard.initialRisk,
           residualRisk: hazard.residualRisk
         });
+        
+        // შენარჩუნება ორიგინალური ID-ის ან შექმნა სტაბილური ID-ის
+        const hazardId = hazard.id || `hazard_${doc.id}_${index}`;
+        
         return {
           ...hazard,
-          id: hazard.id || `hazard_${Date.now()}_${Math.random()}`, // Ensure ID exists
+          id: hazardId, // შენარჩუნება ორიგინალური ID
           reviewDate: hazard.reviewDate ? new Date(hazard.reviewDate) : new Date(),
           photos: hazard.photos || [], // Keep existing photos
-          // Preserve risk values exactly as they are
-          initialRisk: hazard.initialRisk ? { ...hazard.initialRisk } : { probability: 0, severity: 0, total: 0 },
-          residualRisk: hazard.residualRisk ? { ...hazard.residualRisk } : { probability: 0, severity: 0, total: 0 }
+          affectedPersons: hazard.affectedPersons || [],
+          // დავრწმუნდეთ რომ risk ობიექტები სწორი სტრუქტურის არის
+          initialRisk: {
+            probability: hazard.initialRisk?.probability || 0,
+            severity: hazard.initialRisk?.severity || 0,
+            total: hazard.initialRisk?.total || 0
+          },
+          residualRisk: {
+            probability: hazard.residualRisk?.probability || 0,
+            severity: hazard.residualRisk?.severity || 0,
+            total: hazard.residualRisk?.total || 0
+          }
         };
       }),
       // photos: doc.photos || [] // TODO: Fix type mismatch between string[] and File[]
