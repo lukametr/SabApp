@@ -17,6 +17,9 @@ import {
 import { 
   Add,
   GetApp,
+  AdminPanelSettings,
+  Assignment,
+  Security
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import DocumentList from './DocumentList';
