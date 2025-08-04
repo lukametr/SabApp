@@ -213,14 +213,52 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
         <Toolbar>
           <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
             <Shield sx={{ mr: 1 }} />
-            <Typography variant="h6" component="div" sx={{ fontWeight: 'bold' }}>
+            <Typography 
+              variant="h6" 
+              component="div" 
+              sx={{ 
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                mr: 3,
+                '&:hover': {
+                  opacity: 0.8
+                }
+              }}
+              onClick={() => router.push('/?stay=true')}
+            >
               SabApp
             </Typography>
+            
+            {/* Navigation Items */}
+            <Button 
+              color="inherit" 
+              sx={{ mr: 2 }}
+              startIcon={<Assignment />}
+            >
+              სამუშაო სივრცე
+            </Button>
           </Box>
+          
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            {/* Show admin badge if user is admin */}
+            {currentUser?.role === 'admin' && (
+              <Chip 
+                icon={<AdminPanelSettings />}
+                label="Super Admin"
+                size="small"
+                sx={{ 
+                  mr: 2,
+                  bgcolor: 'rgba(255, 255, 255, 0.2)',
+                  color: 'white',
+                  '& .MuiSvgIcon-root': { color: 'white' }
+                }}
+              />
+            )}
+            
             <Typography variant="body1" sx={{ mr: 2 }}>
               {currentUser?.name || 'მომხმარებელი'}
             </Typography>
+            
             <IconButton
               size="large"
               color="inherit"
@@ -228,6 +266,18 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
             >
               <AccountCircle />
             </IconButton>
+            
+            {/* Direct logout button */}
+            <IconButton
+              size="large"
+              color="inherit"
+              onClick={handleLogout}
+              sx={{ ml: 1 }}
+              title="გამოსვლა"
+            >
+              <Logout />
+            </IconButton>
+            
             <Menu
               anchorEl={anchorEl}
               open={Boolean(anchorEl)}
@@ -255,10 +305,6 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
               <MenuItem onClick={() => router.push('/?stay=true')}>
                 <Shield sx={{ mr: 1 }} />
                 მთავარი გვერდი
-              </MenuItem>
-              <MenuItem onClick={handleLogout}>
-                <Logout sx={{ mr: 1 }} />
-                გამოსვლა
               </MenuItem>
             </Menu>
           </Box>
