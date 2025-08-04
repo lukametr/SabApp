@@ -562,15 +562,31 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
         // Convert hazards to internal format
         const formattedHazards: HazardData[] = (defaultValues.hazards || []).map((hazard: any, index: number) => {
           console.log(`🔄 Processing hazard ${index}:`, hazard);
+          console.log(`🔄 Initial risk:`, hazard.initialRisk);
+          console.log(`🔄 Residual risk:`, hazard.residualRisk);
+          
           return {
             id: hazard.id || `hazard_${Date.now()}_${Math.random()}`,
             hazardIdentification: hazard.hazardIdentification || '',
             affectedPersons: hazard.affectedPersons || [],
             injuryDescription: hazard.injuryDescription || '',
             existingControlMeasures: hazard.existingControlMeasures || '',
-            initialRisk: hazard.initialRisk || { probability: 0, severity: 0, total: 0 },
+            // Preserve existing risk values exactly as they are, don't reset to 0
+            initialRisk: hazard.initialRisk && typeof hazard.initialRisk === 'object' 
+              ? { 
+                  probability: hazard.initialRisk.probability || 0, 
+                  severity: hazard.initialRisk.severity || 0, 
+                  total: hazard.initialRisk.total || 0 
+                }
+              : { probability: 0, severity: 0, total: 0 },
             additionalControlMeasures: hazard.additionalControlMeasures || '',
-            residualRisk: hazard.residualRisk || { probability: 0, severity: 0, total: 0 },
+            residualRisk: hazard.residualRisk && typeof hazard.residualRisk === 'object'
+              ? { 
+                  probability: hazard.residualRisk.probability || 0, 
+                  severity: hazard.residualRisk.severity || 0, 
+                  total: hazard.residualRisk.total || 0 
+                }
+              : { probability: 0, severity: 0, total: 0 },
             requiredMeasures: hazard.requiredMeasures || '',
             responsiblePerson: hazard.responsiblePerson || '',
             reviewDate: hazard.reviewDate ? new Date(hazard.reviewDate) : null, // Keep null if no date

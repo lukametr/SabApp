@@ -160,12 +160,22 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
       workDescription: doc.workDescription,
       date: doc.date,
       time: doc.time,
-      hazards: (doc.hazards || []).map(hazard => ({
-        ...hazard,
-        id: hazard.id || `hazard_${Date.now()}_${Math.random()}`, // Ensure ID exists
-        reviewDate: hazard.reviewDate ? new Date(hazard.reviewDate) : new Date(),
-        photos: hazard.photos || [] // Keep existing photos
-      })),
+      hazards: (doc.hazards || []).map(hazard => {
+        console.log('🔄 Converting hazard with risks:', {
+          id: hazard.id,
+          initialRisk: hazard.initialRisk,
+          residualRisk: hazard.residualRisk
+        });
+        return {
+          ...hazard,
+          id: hazard.id || `hazard_${Date.now()}_${Math.random()}`, // Ensure ID exists
+          reviewDate: hazard.reviewDate ? new Date(hazard.reviewDate) : new Date(),
+          photos: hazard.photos || [], // Keep existing photos
+          // Preserve risk values exactly as they are
+          initialRisk: hazard.initialRisk ? { ...hazard.initialRisk } : { probability: 0, severity: 0, total: 0 },
+          residualRisk: hazard.residualRisk ? { ...hazard.residualRisk } : { probability: 0, severity: 0, total: 0 }
+        };
+      }),
       // photos: doc.photos || [] // TODO: Fix type mismatch between string[] and File[]
     };
   }, []);
