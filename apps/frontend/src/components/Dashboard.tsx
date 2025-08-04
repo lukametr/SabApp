@@ -88,9 +88,18 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
     fetchDocuments(); 
   }, [fetchDocuments]);
 
-  const handleCreateDocument = useCallback(async (data: CreateDocumentDto) => {
+  const handleCreateDocument = useCallback(async (data: CreateDocumentDto, actualHazards?: any[]) => {
     try {
-      await createDocument(data);
+      // Use actualHazards if provided, otherwise use data.hazards
+      const hazardsToUse = actualHazards || data.hazards;
+      
+      const createData = {
+        ...data,
+        hazards: hazardsToUse
+      };
+      
+      console.log('📋 Creating document with hazards:', hazardsToUse?.length || 0);
+      await createDocument(createData);
       setOpen(false);
     } catch (error) {
       console.error('დოკუმენტის შექმნის შეცდომა:', error);
@@ -187,8 +196,8 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
       console.log('📋 Updating document with hazards:', hazardsToUse?.length || 0);
       await updateDocument(updateData);
     } else {
-      // For new documents, use data as is
-      await handleCreateDocument(data);
+      // For new documents, pass actualHazards as well
+      await handleCreateDocument(data, actualHazards);
     }
     fetchDocuments();
   }, [editDoc, updateDocument, handleCreateDocument, fetchDocuments]);
@@ -224,7 +233,10 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
                   opacity: 0.8
                 }
               }}
-              onClick={() => router.push('/?stay=true')}
+              onClick={() => {
+                console.log('🏠 Navigating to home page with stay=true');
+                window.location.href = '/?stay=true';
+              }}
             >
               SabApp
             </Typography>
@@ -302,7 +314,10 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
                   Clear Cache
                 </MenuItem>
               )}
-              <MenuItem onClick={() => router.push('/?stay=true')}>
+              <MenuItem onClick={() => {
+                console.log('🏠 Navigating to home page with stay=true via menu');
+                window.location.href = '/?stay=true';
+              }}>
                 <Shield sx={{ mr: 1 }} />
                 მთავარი გვერდი
               </MenuItem>
