@@ -119,6 +119,19 @@ export class DocumentsService {
         preserveMetadata: !!(updateDocumentDto.authorId || updateDocumentDto.createdAt)
       });
       
+      // Validation: check if hazards array is provided and not empty during update
+      if (updateDocumentDto.hazards !== undefined) {
+        console.log('📋 Hazards validation:', {
+          isArray: Array.isArray(updateDocumentDto.hazards),
+          length: updateDocumentDto.hazards.length,
+          hazards: updateDocumentDto.hazards.map(h => ({ id: h.id, hazardId: h.hazardIdentification }))
+        });
+        
+        if (!Array.isArray(updateDocumentDto.hazards)) {
+          throw new Error('Hazards must be an array');
+        }
+      }
+      
       if (!mongoose.Types.ObjectId.isValid(id)) {
         throw new NotFoundException(`Invalid document ID: ${id}`);
       }

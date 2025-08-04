@@ -78,18 +78,10 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
     fetchDocuments(); 
   }, [fetchDocuments]);
 
-  const handleCreateDocument = useCallback(async (data: CreateDocumentDto, actualHazards?: any[]) => {
+  const handleCreateDocument = useCallback(async (data: CreateDocumentDto) => {
     try {
-      // Use actualHazards if provided, otherwise use data.hazards
-      const hazardsToUse = actualHazards || data.hazards;
-      
-      const createData = {
-        ...data,
-        hazards: hazardsToUse
-      };
-      
-      console.log('📋 Creating document with hazards:', hazardsToUse?.length || 0);
-      await createDocument(createData);
+      console.log('📋 Creating document with hazards:', data.hazards?.length || 0);
+      await createDocument(data);
       setOpen(false);
     } catch (error) {
       console.error('დოკუმენტის შექმნის შეცდომა:', error);
@@ -165,17 +157,14 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
     };
   }, []);
 
-  const handleSubmit = useCallback(async (data: CreateDocumentDto, actualHazards?: any[]) => {
+  const handleSubmit = useCallback(async (data: CreateDocumentDto) => {
     console.log('📋 Dashboard handleSubmit called:', {
       isEdit: !!editDoc,
       dataHazards: data.hazards?.length || 0,
-      actualHazards: actualHazards?.length || 0
+      hasValidHazards: !!(data.hazards && data.hazards.length > 0)
     });
 
     if (editDoc) {
-      // Use actualHazards if provided, otherwise fall back to data.hazards
-      const hazardsToUse = actualHazards || data.hazards;
-      
       const updateData: UpdateDocumentDto = {
         id: editDoc.id,
         evaluatorName: data.evaluatorName,
@@ -184,7 +173,7 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
         workDescription: data.workDescription,
         date: data.date,
         time: data.time,
-        hazards: hazardsToUse,
+        hazards: data.hazards, // უშუალოდ data-დან
         photos: [], // Base64 data URLs - empty for now
         // Preserve metadata from original document
         authorId: editDoc.authorId,
@@ -200,12 +189,11 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
         id: updateData.id,
         authorId: updateData.authorId,
         createdAt: updateData.createdAt,
-        hazards: hazardsToUse?.length || 0
+        hazards: data.hazards?.length || 0
       });
       await updateDocument(updateData);
     } else {
-      // For new documents, pass actualHazards as well
-      await handleCreateDocument(data, actualHazards);
+      await handleCreateDocument(data);
     }
     fetchDocuments();
   }, [editDoc, updateDocument, handleCreateDocument, fetchDocuments]);

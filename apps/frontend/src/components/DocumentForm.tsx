@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Box, Button, TextField, Typography, Grid, Checkbox, FormControlLabel, Alert, Chip, Dialog, DialogTitle, DialogContent, IconButton, Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
@@ -19,7 +19,7 @@ const PERSONS = [
 ];
 
 interface Props {
-  onSubmit: (data: CreateDocumentDto, hazards?: HazardData[]) => void;
+  onSubmit: (data: CreateDocumentDto) => void;
   onCancel?: () => void;
   defaultValues?: Partial<CreateDocumentDto>;
   open: boolean;
@@ -645,16 +645,16 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
       return;
     }
 
-    // Always send hazards from local state, not from data.hazards
-    // Don't include hazards in formattedData - they will be passed separately
+    // აუცილებლად დაამატე hazards state-დან
     const formattedData: CreateDocumentDto = {
       ...data,
-      hazards: [], // Empty - actual hazards passed as second parameter
+      hazards: hazards, // მთავარი განსხვავება - hazards state-დან
     };
 
     console.log('📊 Form submission data:', {
       formDataHazards: formattedData.hazards?.length || 0,
       actualHazardsCount: hazards.length,
+      hasHazards: !!formattedData.hazards,
       hazardPhotos: hazards.map(h => ({
         id: h.id,
         hasMediaFile: !!(h as any).mediaFile,
@@ -663,8 +663,8 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
     });
 
     try {
-      // Pass hazards as second argument so parent always gets correct data
-      await handleFormSubmit(formattedData, hazards);
+      // გამარტივება - გადაეცი formattedData რომელიც უკვე შეიცავს hazards-ს
+      await handleFormSubmit(formattedData);
       // Don't clean state on successful submit - just close dialog
       handleDialogClose();
     } catch (error) {
