@@ -190,10 +190,23 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
         date: data.date,
         time: data.time,
         hazards: hazardsToUse,
-        photos: [] // Base64 data URLs - empty for now
+        photos: [], // Base64 data URLs - empty for now
+        // Preserve metadata from original document
+        authorId: editDoc.authorId,
+        createdAt: editDoc.createdAt,
+        updatedAt: new Date(), // Update timestamp
+        isFavorite: editDoc.isFavorite,
+        assessmentA: editDoc.assessmentA,
+        assessmentSh: editDoc.assessmentSh,
+        assessmentR: editDoc.assessmentR,
       };
       
-      console.log('📋 Updating document with hazards:', hazardsToUse?.length || 0);
+      console.log('📋 Updating document with preserved metadata:', {
+        id: updateData.id,
+        authorId: updateData.authorId,
+        createdAt: updateData.createdAt,
+        hazards: hazardsToUse?.length || 0
+      });
       await updateDocument(updateData);
     } else {
       // For new documents, pass actualHazards as well

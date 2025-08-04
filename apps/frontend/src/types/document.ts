@@ -72,4 +72,12 @@ export interface UpdateDocumentDto {
   time?: Date;
   hazards?: Hazard[];
   photos?: string[]; // Base64 data URLs
+  // Preserve metadata during updates
+  authorId?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+  isFavorite?: boolean;
+  assessmentA?: number;
+  assessmentSh?: number;
+  assessmentR?: number;
 } 
