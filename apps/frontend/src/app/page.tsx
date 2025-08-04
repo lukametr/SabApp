@@ -27,7 +27,6 @@ export default function Home() {
       const tokenParam = searchParams?.get('token');
       const userParam = searchParams?.get('user');
       const error = searchParams?.get('error');
-      const stayOnHome = searchParams?.get('stay'); // New parameter to stay on home page
 
       if (auth === 'success' && tokenParam && userParam) {
         try {
@@ -53,13 +52,6 @@ export default function Home() {
         return;
       }
 
-      // If user explicitly wants to stay on home page, don't redirect
-      if (stayOnHome === 'true') {
-        console.log('🏠 User requested to stay on home page');
-        setIsChecking(false);
-        return;
-      }
-
       // Check if user is already authenticated
       const currentState = useAuthStore.getState();
       console.log('🏠 Current auth state:', {
@@ -68,6 +60,9 @@ export default function Home() {
         hasUser: !!currentState.user,
       });
       
+      // DISABLED: Auto-redirect to dashboard for authenticated users
+      // Users should be able to visit home page even when authenticated
+      /*
       if (currentState.isAuthenticated() && currentState.token && currentState.user) {
         try {
           // Validate token
@@ -80,6 +75,23 @@ export default function Home() {
             return;
           } else {
             console.log('🏠 Token expired, staying on home page');
+            useAuthStore.getState().logout();
+          }
+        } catch (error) {
+          console.error('🏠 Error validating token:', error);
+          useAuthStore.getState().logout();
+        }
+      }
+      */
+      
+      // Just validate token silently and logout if expired
+      if (currentState.isAuthenticated() && currentState.token && currentState.user) {
+        try {
+          const payload = JSON.parse(atob(currentState.token.split('.')[1]));
+          const exp = payload.exp * 1000;
+          
+          if (Date.now() >= exp) {
+            console.log('🏠 Token expired, logging out');
             useAuthStore.getState().logout();
           }
         } catch (error) {

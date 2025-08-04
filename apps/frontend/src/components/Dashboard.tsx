@@ -234,8 +234,8 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
                 }
               }}
               onClick={() => {
-                console.log('🏠 Navigating to home page with stay=true');
-                window.location.href = '/?stay=true';
+                console.log('🏠 Navigating to home page');
+                window.location.href = '/';
               }}
             >
               SabApp
@@ -315,8 +315,8 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
                 </MenuItem>
               )}
               <MenuItem onClick={() => {
-                console.log('🏠 Navigating to home page with stay=true via menu');
-                window.location.href = '/?stay=true';
+                console.log('🏠 Navigating to home page via menu');
+                window.location.href = '/';
               }}>
                 <Shield sx={{ mr: 1 }} />
                 მთავარი გვერდი
