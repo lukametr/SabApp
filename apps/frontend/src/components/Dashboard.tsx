@@ -8,27 +8,15 @@ import {
   DialogTitle, 
   DialogContent, 
   Typography,
-  AppBar,
-  Toolbar,
-  IconButton,
-  Menu,
-  MenuItem,
   Container,
   Paper,
   Grid,
   Card,
   CardContent,
-  Chip
 } from '@mui/material';
 import { 
-  Shield, 
-  AccountCircle, 
-  Logout, 
   Add,
-  Assignment,
   GetApp,
-  Security,
-  AdminPanelSettings
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import DocumentList from './DocumentList';
@@ -60,7 +48,6 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
   const [viewDoc, setViewDoc] = useState<Document | null>(null);
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
   const [openForm, setOpenForm] = useState(false);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   // Idle timeout - 24 hours
   useIdleTimeout({
@@ -131,24 +118,6 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
     setOpenForm(false);
     setSelectedDocument(null);
   }, []);
-
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
-
-  const handleLogout = () => {
-    logout();
-    router.push('/');
-  };
-
-  const handleClearCache = () => {
-    localStorage.clear();
-    window.location.reload();
-  };
 
   const convertDocumentToCreateDto = useCallback((doc: Document): Partial<CreateDocumentDto> => {
     console.log('🔄 Converting document to DTO:', { id: doc.id, hazardsCount: doc.hazards?.length || 0 });
@@ -239,115 +208,7 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
   }).length;
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
-      {/* Header */}
-      <AppBar position="static" elevation={0}>
-        <Toolbar>
-          <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
-            <Shield sx={{ mr: 1 }} />
-            <Typography 
-              variant="h6" 
-              component="div" 
-              sx={{ 
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                mr: 3,
-                '&:hover': {
-                  opacity: 0.8
-                }
-              }}
-              onClick={() => {
-                console.log('🏠 Navigating to home page');
-                window.location.href = '/';
-              }}
-            >
-              SabApp
-            </Typography>
-            
-            {/* Navigation Items */}
-            <Button 
-              color="inherit" 
-              sx={{ mr: 2 }}
-              startIcon={<Assignment />}
-            >
-              სამუშაო სივრცე
-            </Button>
-          </Box>
-          
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            {/* Show admin badge if user is admin */}
-            {currentUser?.role === 'admin' && (
-              <Chip 
-                icon={<AdminPanelSettings />}
-                label="Super Admin"
-                size="small"
-                sx={{ 
-                  mr: 2,
-                  bgcolor: 'rgba(255, 255, 255, 0.2)',
-                  color: 'white',
-                  '& .MuiSvgIcon-root': { color: 'white' }
-                }}
-              />
-            )}
-            
-            <Typography variant="body1" sx={{ mr: 2 }}>
-              {currentUser?.name || 'მომხმარებელი'}
-            </Typography>
-            
-            <IconButton
-              size="large"
-              color="inherit"
-              onClick={handleMenuOpen}
-            >
-              <AccountCircle />
-            </IconButton>
-            
-            {/* Direct logout button */}
-            <IconButton
-              size="large"
-              color="inherit"
-              onClick={handleLogout}
-              sx={{ ml: 1 }}
-              title="გამოსვლა"
-            >
-              <Logout />
-            </IconButton>
-            
-            <Menu
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl)}
-              onClose={handleMenuClose}
-            >
-              {/* Debug: Show current user info */}
-              <MenuItem disabled>
-                <Typography variant="caption">
-                  Role: {currentUser?.role || 'undefined'} | Admin: {currentUser?.role === 'admin' ? 'Yes' : 'No'}
-                </Typography>
-              </MenuItem>
-              {currentUser?.role === 'admin' && (
-                <MenuItem onClick={() => router.push('/admin')}>
-                  <AdminPanelSettings sx={{ mr: 1 }} />
-                  Admin Panel
-                </MenuItem>
-              )}
-              {/* ქეშის წაშლის ღილაკი მხოლოდ სუპერ ადმინისთვის */}
-              {currentUser?.role === 'admin' && (
-                <MenuItem onClick={handleClearCache}>
-                  <Security sx={{ mr: 1 }} />
-                  Clear Cache
-                </MenuItem>
-              )}
-              <MenuItem onClick={() => {
-                console.log('🏠 Navigating to home page via menu');
-                window.location.href = '/';
-              }}>
-                <Shield sx={{ mr: 1 }} />
-                მთავარი გვერდი
-              </MenuItem>
-            </Menu>
-          </Box>
-        </Toolbar>
-      </AppBar>
+    <Box sx={{ minHeight: '100vh', backgroundColor: '#f5f5f5', pt: 2 }}>
 
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
         {/* Subscription Banner */}

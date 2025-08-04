@@ -67,6 +67,12 @@ class Hazard {
   photos: string[];
 }
 
+// Define interface for timestamp fields added by mongoose
+export interface DocumentWithTimestamps {
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 @Schema({ timestamps: true })
 export class Document extends MongoDocument {
   @Prop({ required: true })
@@ -110,6 +116,10 @@ export class Document extends MongoDocument {
 
   @Prop({ type: [String], default: [] })
   photos: string[];
+
+  // TypeScript types for timestamp fields
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export const DocumentSchema = SchemaFactory.createForClass(Document);

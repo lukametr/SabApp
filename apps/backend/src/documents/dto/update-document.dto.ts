@@ -116,4 +116,33 @@ export class UpdateDocumentDto {
   @IsArray()
   @IsString({ each: true })
   photos?: string[];
+
+  // Metadata fields for preserving document integrity
+  @IsOptional()
+  @IsString()
+  authorId?: string;
+
+  @IsOptional()
+  @Transform(({ value }) => value ? new Date(value) : undefined)
+  @IsDate()
+  @Type(() => Date)
+  createdAt?: Date;
+
+  @IsOptional()
+  @Transform(({ value }) => value ? new Date(value) : undefined)
+  @IsDate()
+  @Type(() => Date)
+  updatedAt?: Date;
+
+  @IsOptional()
+  isFavorite?: boolean;
+
+  @IsOptional()
+  assessmentA?: number;
+
+  @IsOptional()
+  assessmentSh?: number;
+
+  @IsOptional()
+  assessmentR?: number;
 } 

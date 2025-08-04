@@ -115,7 +115,8 @@ export class DocumentsService {
       console.log('📋 Updating document in service:', id, {
         userId: userId || 'anonymous',
         hazardsCount: updateDocumentDto.hazards?.length || 0,
-        photosCount: updateDocumentDto.photos?.length || 0
+        photosCount: updateDocumentDto.photos?.length || 0,
+        preserveMetadata: !!(updateDocumentDto.authorId || updateDocumentDto.createdAt)
       });
       
       if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -128,14 +129,40 @@ export class DocumentsService {
         filter.authorId = userId;
       }
       
+      // Get existing document first to preserve metadata if not provided
+      const existingDocument = await this.documentModel.findOne(filter).exec();
+      if (!existingDocument) {
+        throw new NotFoundException('დოკუმენტი ვერ მოიძებნა ან წვდომა არ გაქვთ');
+      }
+
+      // Merge update data with preserved metadata
+      const updateData = {
+        ...updateDocumentDto,
+        // Preserve metadata if not explicitly provided in update
+        authorId: updateDocumentDto.authorId || existingDocument.authorId,
+        createdAt: updateDocumentDto.createdAt || existingDocument.createdAt,
+        updatedAt: updateDocumentDto.updatedAt || new Date(),
+        // Preserve assessments if not provided
+        assessmentA: updateDocumentDto.assessmentA !== undefined ? updateDocumentDto.assessmentA : existingDocument.assessmentA,
+        assessmentSh: updateDocumentDto.assessmentSh !== undefined ? updateDocumentDto.assessmentSh : existingDocument.assessmentSh,
+        assessmentR: updateDocumentDto.assessmentR !== undefined ? updateDocumentDto.assessmentR : existingDocument.assessmentR,
+        isFavorite: updateDocumentDto.isFavorite !== undefined ? updateDocumentDto.isFavorite : existingDocument.isFavorite,
+      };
+      
       const document = await this.documentModel
-        .findOneAndUpdate(filter, updateDocumentDto, { new: true })
+        .findOneAndUpdate(filter, updateData, { new: true })
         .exec();
+      
       if (!document) {
         throw new NotFoundException('დოკუმენტი ვერ მოიძებნა ან წვდომა არ გაქვთ');
       }
       
-      console.log('✅ Document updated successfully:', document._id);
+      console.log('✅ Document updated successfully with metadata preserved:', {
+        id: document._id,
+        authorId: document.authorId,
+        createdAt: document.createdAt,
+        updatedAt: document.updatedAt
+      });
       return document.toJSON() as Document;
     } catch (error) {
       console.error('❌ Error updating document:', error);
