@@ -53,9 +53,10 @@ interface HazardSectionProps {
 
 function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
   const [expandedHazard, setExpandedHazard] = useState<string | null>(null);
-  const [cameraActive, setCameraActive] = useState<string | null>(null);
-  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [showCamera, setShowCamera] = useState(false);
+  const [cameraError, setCameraError] = useState<string>('');
   const videoRef = useRef<HTMLVideoElement>(null);
+  const hazardIdRef = useRef<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const addHazard = () => {
@@ -89,83 +90,90 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
   };
 
   const handleCamera = async (hazardId: string, e?: React.MouseEvent) => {
-    e?.preventDefault(); // Prevent form submission
-    if (cameraActive !== hazardId) {
-      try {
-        const mediaStream = await navigator.mediaDevices.getUserMedia({ 
-          video: { 
-            facingMode: 'environment', // Use back camera on mobile
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
-          } 
-        });
-        setStream(mediaStream);
-        setCameraActive(hazardId);
-        if (videoRef.current) {
-          videoRef.current.srcObject = mediaStream;
-          // Ensure video plays on iOS Safari
-          videoRef.current.play().catch(console.error);
-        }
-      } catch {
-        // Try front camera if back camera fails
-        try {
-          const frontStream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: 'user' } 
+    e?.preventDefault();
+    e?.stopPropagation();
+    
+    if (showCamera) {
+      // Stop camera
+      if (videoRef.current && videoRef.current.srcObject) {
+        const stream = videoRef.current.srcObject as MediaStream;
+        stream.getTracks().forEach(track => track.stop());
+        videoRef.current.srcObject = null;
+      }
+      setShowCamera(false);
+      setCameraError('');
+      return;
+    }
+    
+    // Start camera
+    hazardIdRef.current = hazardId;
+    setShowCamera(true);
+    setCameraError('');
+    
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+          facingMode: 'environment'
+        },
+        audio: false
+      });
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        // Wait for video to be ready
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current?.play().catch(err => {
+            console.error('Video play error:', err);
           });
-          setStream(frontStream);
-          setCameraActive(hazardId);
-          if (videoRef.current) {
-            videoRef.current.srcObject = frontStream;
-            videoRef.current.play().catch(console.error);
-          }
-        } catch {
-          alert('კამერასთან წვდომა ვერ მოხერხდა');
-        }
+        };
       }
-    } else {
-      if (stream) {
-        stream.getTracks().forEach((track: MediaStreamTrack) => track.stop());
-      }
-      setCameraActive(null);
+    } catch (err) {
+      console.error('Camera error:', err);
+      setCameraError('კამერის ჩართვა ვერ მოხერხდა');
+      setShowCamera(false);
     }
   };
 
-  const handleCapture = (hazardId: string, e?: React.MouseEvent) => {
-    e?.preventDefault(); // Prevent form submission
-    if (videoRef.current) {
-      const canvas = document.createElement('canvas');
-      canvas.width = videoRef.current.videoWidth;
-      canvas.height = videoRef.current.videoHeight;
-      canvas.getContext('2d')?.drawImage(videoRef.current, 0, 0);
-      canvas.toBlob(blob => {
+  const handleCapturePhoto = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!videoRef.current) return;
+    
+    const video = videoRef.current;
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const context = canvas.getContext('2d');
+    
+    if (context) {
+      context.drawImage(video, 0, 0);
+      canvas.toBlob((blob) => {
         if (blob) {
           const reader = new FileReader();
           reader.onloadend = () => {
-            const base64DataUrl = reader.result as string;
-            const capturedFile = new File([blob], 'capture.jpg', { type: 'image/jpeg' });
-            console.log('📸 Captured photo:', { base64DataUrl: base64DataUrl.substring(0, 50) + '...' });
-            const hazard = hazards.find(h => h.id === hazardId);
-            if (hazard) {
-              // Always add to photos array for persistence
-              const newPhotos = [...(hazard.photos || []), base64DataUrl];
-              updateHazard(hazardId, {
-                mediaFile: capturedFile,
-                mediaPreview: undefined, // remove preview after save
-                photos: newPhotos
-              });
-            }
-          };
-          reader.onerror = (error) => {
-            console.error('Error reading captured photo:', error);
+            const base64data = reader.result as string;
+            handleFileUpload(hazardIdRef.current, base64data);
+            // არ დახურო კამერა ავტომატურად
           };
           reader.readAsDataURL(blob);
         }
-      }, 'image/jpeg');
+      }, 'image/jpeg', 0.8);
     }
-    if (stream) {
-      stream.getTracks().forEach((track: MediaStreamTrack) => track.stop());
+  };
+
+  const handleFileUpload = (hazardId: string, base64data: string) => {
+    const hazard = hazards.find(h => h.id === hazardId);
+    if (hazard) {
+      // Always add to photos array for persistence
+      const newPhotos = [...(hazard.photos || []), base64data];
+      updateHazard(hazardId, {
+        photos: newPhotos
+      });
+      console.log('📸 Photo saved:', { hazardId, photoCount: newPhotos.length });
     }
-    setCameraActive(null);
   };
 
   const handleFileChange = (hazardId: string, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -221,6 +229,16 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
       updateHazard(hazardId, { affectedPersons: updated });
     }
   };
+
+  // Cleanup camera on unmount
+  useEffect(() => {
+    return () => {
+      if (videoRef.current && videoRef.current.srcObject) {
+        const stream = videoRef.current.srcObject as MediaStream;
+        stream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, []);
 
   return (
     <Box>
@@ -310,31 +328,6 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
                     />
                   )}
                 </Box>
-                {cameraActive === hazard.id && (
-                  <Box mt={2}>
-                    <video 
-                      ref={videoRef} 
-                      autoPlay 
-                      playsInline 
-                      muted
-                      width="100%" 
-                      height={200}
-                      style={{ 
-                        borderRadius: 8, 
-                        maxWidth: '400px',
-                        objectFit: 'cover',
-                        backgroundColor: '#000'
-                      }} 
-                    />
-                    <Button 
-                      onClick={(e) => handleCapture(hazard.id, e)} 
-                      variant="contained" 
-                      sx={{ mt: 1, display: 'block' }}
-                    >
-                      გადაღება
-                    </Button>
-                  </Box>
-                )}
                 {hazard.photos && hazard.photos.length > 0 && (
                   <Box mt={2}>
                     <Typography variant="body2" mb={1}>შენახული ფოტოები:</Typography>
@@ -578,6 +571,72 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
           </AccordionDetails>
         </Accordion>
       ))}
+
+      {/* Camera Modal */}
+      {showCamera && (
+        <Box sx={{ 
+          position: 'fixed', 
+          top: 0, 
+          left: 0, 
+          right: 0, 
+          bottom: 0, 
+          bgcolor: 'rgba(0,0,0,0.8)', 
+          zIndex: 1300,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          p: 2
+        }}>
+          <Box sx={{ 
+            bgcolor: 'white', 
+            borderRadius: 2, 
+            p: 3, 
+            maxWidth: '500px', 
+            width: '100%' 
+          }}>
+            <Typography variant="h6" gutterBottom>
+              ფოტოს გადაღება
+            </Typography>
+            
+            {cameraError && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {cameraError}
+              </Alert>
+            )}
+            
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              style={{
+                width: '100%',
+                height: 'auto',
+                backgroundColor: '#000',
+                borderRadius: '8px',
+                marginBottom: '16px'
+              }}
+            />
+            
+            <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleCapturePhoto}
+                startIcon={<PhotoCamera />}
+              >
+                გადაღება
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={(e) => handleCamera('', e)}
+              >
+                გაუქმება
+              </Button>
+            </Box>
+          </Box>
+        </Box>
+      )}
     </Box>
   );
 }

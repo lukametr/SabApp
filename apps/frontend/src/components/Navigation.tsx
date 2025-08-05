@@ -249,7 +249,7 @@ export default function Navigation() {
 
   const isActive = (path: string) => pathname === path
 
-  const handleRegistrationSubmit = async (data: RegistrationFormData) => {
+  const handleRegistrationSubmit = async (data: { personalNumber: string; phoneNumber: string }) => {
     if (!pendingIdToken) return
 
     setLoading(true)
