@@ -25,6 +25,7 @@ import {
 } from '@mui/icons-material';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '../store/authStore';
+import PWAInstallButton from './PWAInstallButton';
 
 export default function LandingPage() {
   const theme = useTheme();
@@ -35,7 +36,7 @@ export default function LandingPage() {
 
   useEffect(() => {
     // Check for error parameter
-    const errorParam = searchParams.get('error');
+    const errorParam = searchParams?.get('error');
     if (errorParam) {
       setError(decodeURIComponent(errorParam));
       
@@ -213,6 +214,13 @@ export default function LandingPage() {
               </Grid>
             ))}
           </Grid>
+        </Container>
+      </Box>
+
+      {/* PWA Install Section */}
+      <Box sx={{ py: 6, backgroundColor: '#f9f9f9' }}>
+        <Container maxWidth="md">
+          <PWAInstallButton />
         </Container>
       </Box>
 

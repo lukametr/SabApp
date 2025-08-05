@@ -19,10 +19,29 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'Document Management System',
-  description: 'A modern document management system',
+  title: 'SabApp - უსაფრთხოების შეფასების აპლიკაცია',
+  description: 'უსაფრთხოების შეფასების ფორმების შევსება და მართვა',
+  manifest: '/manifest.json',
   icons: {
     icon: '/favicon.ico',
+    apple: [
+      { url: '/icon-192.svg', sizes: '192x192', type: 'image/svg+xml' },
+      { url: '/icon-512.svg', sizes: '512x512', type: 'image/svg+xml' },
+    ],
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'SabApp',
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  openGraph: {
+    type: 'website',
+    siteName: 'SabApp',
+    title: 'SabApp - უსაფრთხოების შეფასების აპლიკაცია',
+    description: 'უსაფრთხოების შეფასების ფორმების შევსება და მართვა',
   },
 };
 

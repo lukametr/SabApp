@@ -1,0 +1,6 @@
+<svg width="192" height="192" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="192" height="192" rx="20" fill="#1976d2"/>
+  <circle cx="96" cy="96" r="60" fill="white"/>
+  <path d="M75 85L85 95L115 65" stroke="#1976d2" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="96" y="130" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="16" font-weight="bold">SabApp</text>
+</svg>
