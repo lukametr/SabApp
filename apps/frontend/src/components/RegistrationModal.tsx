@@ -14,7 +14,8 @@ import {
 import { useForm } from 'react-hook-form';
 
 interface RegistrationFormData {
-  // Removed personalNumber and phoneNumber fields
+  personalNumber: string;
+  phoneNumber: string;
 }
 
 interface RegistrationModalProps {

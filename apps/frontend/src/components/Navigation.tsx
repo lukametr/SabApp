@@ -22,6 +22,11 @@ interface ApiError {
   message: string;
 }
 
+interface RegistrationFormData {
+  personalNumber: string;
+  phoneNumber: string;
+}
+
 declare global {
   interface Window {
     google: {
@@ -244,7 +249,7 @@ export default function Navigation() {
 
   const isActive = (path: string) => pathname === path
 
-  const handleRegistrationSubmit = async (data: { personalNumber: string; phoneNumber: string }) => {
+  const handleRegistrationSubmit = async (data: RegistrationFormData) => {
     if (!pendingIdToken) return
 
     setLoading(true)

@@ -88,17 +88,39 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
     onHazardsChange(updatedHazards);
   };
 
-  const handleCamera = async (hazardId: string) => {
+  const handleCamera = async (hazardId: string, e?: React.MouseEvent) => {
+    e?.preventDefault(); // Prevent form submission
     if (cameraActive !== hazardId) {
       try {
-        const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const mediaStream = await navigator.mediaDevices.getUserMedia({ 
+          video: { 
+            facingMode: 'environment', // Use back camera on mobile
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          } 
+        });
         setStream(mediaStream);
         setCameraActive(hazardId);
         if (videoRef.current) {
           videoRef.current.srcObject = mediaStream;
+          // Ensure video plays on iOS Safari
+          videoRef.current.play().catch(console.error);
         }
       } catch {
-        alert('კამერასთან წვდომა ვერ მოხერხდა');
+        // Try front camera if back camera fails
+        try {
+          const frontStream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: 'user' } 
+          });
+          setStream(frontStream);
+          setCameraActive(hazardId);
+          if (videoRef.current) {
+            videoRef.current.srcObject = frontStream;
+            videoRef.current.play().catch(console.error);
+          }
+        } catch {
+          alert('კამერასთან წვდომა ვერ მოხერხდა');
+        }
       }
     } else {
       if (stream) {
@@ -108,7 +130,8 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
     }
   };
 
-  const handleCapture = (hazardId: string) => {
+  const handleCapture = (hazardId: string, e?: React.MouseEvent) => {
+    e?.preventDefault(); // Prevent form submission
     if (videoRef.current) {
       const canvas = document.createElement('canvas');
       canvas.width = videoRef.current.videoWidth;
@@ -259,7 +282,7 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
                 <Box display="flex" gap={2} alignItems="center">
                   <Button 
                     variant="outlined" 
-                    onClick={() => handleCamera(hazard.id)} 
+                    onClick={(e) => handleCamera(hazard.id, e)} 
                     startIcon={<PhotoCamera />} 
                     sx={{ minWidth: 0 }}
                   >
@@ -289,8 +312,25 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
                 </Box>
                 {cameraActive === hazard.id && (
                   <Box mt={2}>
-                    <video ref={videoRef} autoPlay width={300} height={200} style={{ borderRadius: 8 }} />
-                    <Button onClick={() => handleCapture(hazard.id)} variant="contained" sx={{ mt: 1 }}>
+                    <video 
+                      ref={videoRef} 
+                      autoPlay 
+                      playsInline 
+                      muted
+                      width="100%" 
+                      height={200}
+                      style={{ 
+                        borderRadius: 8, 
+                        maxWidth: '400px',
+                        objectFit: 'cover',
+                        backgroundColor: '#000'
+                      }} 
+                    />
+                    <Button 
+                      onClick={(e) => handleCapture(hazard.id, e)} 
+                      variant="contained" 
+                      sx={{ mt: 1, display: 'block' }}
+                    >
                       გადაღება
                     </Button>
                   </Box>
@@ -298,26 +338,33 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
                 {hazard.photos && hazard.photos.length > 0 && (
                   <Box mt={2}>
                     <Typography variant="body2" mb={1}>შენახული ფოტოები:</Typography>
-                    <Box display="flex" flexWrap="wrap" gap={1}>
+                    <Grid container spacing={1}>
                       {hazard.photos.map((base64Photo: string, index: number) => (
-                        <Box key={index} position="relative">
-                          <Image 
-                            src={base64Photo} // base64 data URL
-                            alt={`ფოტო ${index + 1}`}
-                            width={150}
-                            height={120}
-                            unoptimized
-                            style={{ maxWidth: 150, borderRadius: 8, objectFit: 'cover' }}
-                          />
-                          <IconButton
-                            size="small"
-                            onClick={() => {
-                              const updatedPhotos = hazard.photos.filter((_: string, i: number) => i !== index);
-                              updateHazard(hazard.id, { photos: updatedPhotos } as any);
-                            }}
-                            sx={{
-                              position: 'absolute',
-                              top: 2,
+                        <Grid item xs={6} sm={4} md={3} key={index}>
+                          <Box position="relative" sx={{ width: '100%' }}>
+                            <Image 
+                              src={base64Photo} // base64 data URL
+                              alt={`ფოტო ${index + 1}`}
+                              width={150}
+                              height={120}
+                              unoptimized
+                              style={{ 
+                                width: '100%', 
+                                height: '120px',
+                                borderRadius: 8, 
+                                objectFit: 'cover',
+                                display: 'block'
+                              }}
+                            />
+                            <IconButton
+                              size="small"
+                              onClick={() => {
+                                const updatedPhotos = hazard.photos.filter((_: string, i: number) => i !== index);
+                                updateHazard(hazard.id, { photos: updatedPhotos } as any);
+                              }}
+                              sx={{
+                                position: 'absolute',
+                                top: 2,
                               right: 2,
                               bgcolor: 'rgba(255, 255, 255, 0.8)',
                               '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.9)' }
@@ -325,9 +372,10 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
                           >
                             <Delete fontSize="small" />
                           </IconButton>
-                        </Box>
+                          </Box>
+                        </Grid>
                       ))}
-                    </Box>
+                    </Grid>
                   </Box>
                 )}
               </Grid>
