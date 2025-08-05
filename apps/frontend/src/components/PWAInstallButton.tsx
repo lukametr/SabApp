@@ -133,7 +133,7 @@ const PWAInstallButton: React.FC = () => {
           </Typography>
           
           <Typography variant="body2" sx={{ mb: 2, opacity: 0.9 }}>
-            დააყენეთ SabApp თქვენს {isMobile ? 'ტელეფონზე' : 'კომპიუტერზე'} სწრაფი წვდომისთვის
+            დააყენეთ SabApp თქვენს {isMobile ? 'მოწყობილობაზე' : 'მოწყობილობაზე'} სწრაფი წვდომისთვის
           </Typography>
           
           <Button
@@ -171,14 +171,15 @@ const PWAInstallButton: React.FC = () => {
         </DialogTitle>
         
         <DialogContent>
-          {isIOS ? (
+          <Stack spacing={3}>
+            {/* iOS Instructions */}
             <Stack spacing={2}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                 <PhoneIphone sx={{ mr: 2, color: 'primary.main' }} />
                 <Typography variant="h6">iOS (iPhone/iPad)</Typography>
               </Box>
               
-              <Typography variant="body1" sx={{ mb: 2 }}>
+              <Typography variant="body1" sx={{ mb: 1 }}>
                 SabApp-ის მთავარ ეკრანზე დასამატებლად:
               </Typography>
               
@@ -247,14 +248,15 @@ const PWAInstallButton: React.FC = () => {
                 </Box>
               </Stack>
             </Stack>
-          ) : (
+
+            {/* Android Instructions */}
             <Stack spacing={2}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                 <PhoneAndroid sx={{ mr: 2, color: 'primary.main' }} />
                 <Typography variant="h6">Android</Typography>
               </Box>
               
-              <Typography variant="body1" sx={{ mb: 2 }}>
+              <Typography variant="body1" sx={{ mb: 1 }}>
                 SabApp-ის მთავარ ეკრანზე დასამატებლად:
               </Typography>
               
@@ -323,7 +325,84 @@ const PWAInstallButton: React.FC = () => {
                 </Box>
               </Stack>
             </Stack>
-          )}
+
+            {/* Desktop Instructions */}
+            <Stack spacing={2}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <GetApp sx={{ mr: 2, color: 'primary.main' }} />
+                <Typography variant="h6">კომპიუტერი/ლეპტოპი</Typography>
+              </Box>
+              
+              <Typography variant="body1" sx={{ mb: 1 }}>
+                კომპიუტერზე SabApp-ის დასაყენებლად:
+              </Typography>
+              
+              <Stack spacing={1.5}>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Box sx={{ 
+                    backgroundColor: 'primary.main', 
+                    color: 'white', 
+                    borderRadius: '50%', 
+                    width: 24, 
+                    height: 24, 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    mr: 2,
+                    fontSize: '14px',
+                    fontWeight: 'bold'
+                  }}>
+                    1
+                  </Box>
+                  <Typography>
+                    Chrome ან Edge ბრაუზერში შესვლისას ამ ღილაკზე დაჭერისას ავტომატურად გამოჩნდება "დაყენება" შეტყობინება
+                  </Typography>
+                </Box>
+                
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Box sx={{ 
+                    backgroundColor: 'primary.main', 
+                    color: 'white', 
+                    borderRadius: '50%', 
+                    width: 24, 
+                    height: 24, 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    mr: 2,
+                    fontSize: '14px',
+                    fontWeight: 'bold'
+                  }}>
+                    2
+                  </Box>
+                  <Typography>
+                    მისამართის ხაზის გვერდით <GetApp sx={{ fontSize: 18, mx: 0.5 }} /> ღილაკზე დააჭირეთ
+                  </Typography>
+                </Box>
+                
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Box sx={{ 
+                    backgroundColor: 'primary.main', 
+                    color: 'white', 
+                    borderRadius: '50%', 
+                    width: 24, 
+                    height: 24, 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    mr: 2,
+                    fontSize: '14px',
+                    fontWeight: 'bold'
+                  }}>
+                    3
+                  </Box>
+                  <Typography>
+                    დაადასტურეთ დაყენება და SabApp გამოჩნდება როგორც ჩვეულებრივი პროგრამა
+                  </Typography>
+                </Box>
+              </Stack>
+            </Stack>
+          </Stack>
           
           <Box sx={{ mt: 3, p: 2, backgroundColor: 'grey.50', borderRadius: 1 }}>
             <Typography variant="body2" color="text.secondary">
