@@ -92,5 +92,6 @@ exports.authApi = {
     googleCallback: function (data) {
         return api.post('/auth/google/callback', data);
     },
+    updateProfile: function (data) { return api.patch('/auth/profile', data); },
 };
 exports.default = api;

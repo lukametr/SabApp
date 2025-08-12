@@ -7,6 +7,7 @@ export type User = {
   role: 'user' | 'admin';
   status: 'active' | 'blocked' | 'suspended';
   // Removed personalNumber and phoneNumber
+  phoneNumber?: string | null;
   organization?: string | null;
   position?: string | null;
   isEmailVerified?: boolean;

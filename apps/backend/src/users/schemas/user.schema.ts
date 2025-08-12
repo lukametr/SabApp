@@ -38,6 +38,9 @@ export class User {
   @Prop({ required: false, unique: true, sparse: true })
   googleId?: string;
 
+  @Prop({ required: false })
+  phoneNumber?: string;
+
   @Prop()
   organization?: string;
 

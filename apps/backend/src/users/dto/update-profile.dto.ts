@@ -12,4 +12,7 @@ export class UpdateProfileDto {
 
   @ApiPropertyOptional({ description: 'Job position or title' })
   position?: string | null;
+
+  @ApiPropertyOptional({ description: 'Phone number in international or local format' })
+  phoneNumber?: string | null;
 }

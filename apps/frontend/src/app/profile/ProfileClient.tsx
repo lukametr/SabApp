@@ -14,7 +14,7 @@ export default function ProfileClient() {
     name: '',
     organization: '',
     position: '',
-    picture: '' as string,
+    phoneNumber: '' as string,
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +39,7 @@ export default function ProfileClient() {
       name: user.name || '',
       organization: user.organization || '',
       position: user.position || '',
-      picture: user.picture || '',
+      phoneNumber: user.phoneNumber || '',
     });
     setEditing(true);
   };
@@ -52,7 +52,7 @@ export default function ProfileClient() {
       if (form.name !== user.name) payload.name = form.name;
       if ((form.organization || null) !== (user.organization || null)) payload.organization = form.organization || null;
       if ((form.position || null) !== (user.position || null)) payload.position = form.position || null;
-      if ((form.picture || null) !== (user.picture || null)) payload.picture = form.picture || null;
+  if ((form.phoneNumber || null) !== (user.phoneNumber || null)) payload.phoneNumber = form.phoneNumber || null;
 
       await authApi.updateProfile(payload);
       setUser({ ...user, ...payload });
@@ -84,6 +84,9 @@ export default function ProfileClient() {
       </div>
       {!editing ? (
         <>
+          {user.phoneNumber && (
+            <div className="mb-2">ტელეფონი: <span className="font-mono">{user.phoneNumber}</span></div>
+          )}
           {user.organization && (
             <div className="mb-2">ორგანიზაცია: <span className="font-mono">{user.organization}</span></div>
           )}
@@ -113,8 +116,8 @@ export default function ProfileClient() {
             <input value={form.position} onChange={e=>setForm({...form, position: e.target.value})} className="w-full border rounded px-3 py-2" />
           </div>
           <div>
-            <label className="block text-sm text-gray-700 mb-1">ფოტოს URL</label>
-            <input value={form.picture} onChange={e=>setForm({...form, picture: e.target.value})} className="w-full border rounded px-3 py-2" />
+            <label className="block text-sm text-gray-700 mb-1">ტელეფონი</label>
+            <input value={form.phoneNumber} onChange={e=>setForm({...form, phoneNumber: e.target.value})} className="w-full border rounded px-3 py-2" />
           </div>
           <div className="flex gap-2 pt-2">
             <button disabled={saving} onClick={save} className="px-4 py-2 bg-green-600 text-white rounded disabled:opacity-50">შენახვა</button>

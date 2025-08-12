@@ -98,7 +98,7 @@ export const authApi = {
     api.post('/auth/register', userData),
   googleCallback: (data: { code: string; state?: string }) =>
     api.post('/auth/google/callback', data),
-  updateProfile: (data: { name?: string; picture?: string | null; organization?: string | null; position?: string | null }) =>
+  updateProfile: (data: { name?: string; organization?: string | null; position?: string | null; phoneNumber?: string | null }) =>
     api.patch('/auth/profile', data),
 };
 

@@ -354,6 +354,7 @@ export class UsersService {
     if (typeof data.picture !== 'undefined') allowed.picture = data.picture || undefined;
     if (typeof data.organization !== 'undefined') allowed.organization = data.organization || undefined;
     if (typeof data.position !== 'undefined') allowed.position = data.position || undefined;
+  if (typeof data.phoneNumber !== 'undefined') allowed.phoneNumber = data.phoneNumber || undefined;
 
     const user = await this.userModel.findByIdAndUpdate(
       userId,

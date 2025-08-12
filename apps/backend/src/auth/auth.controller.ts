@@ -179,6 +179,7 @@ export class AuthController {
   status: user.status,
   isEmailVerified: user.isEmailVerified,
       googleId: user.googleId,
+  phoneNumber: user.phoneNumber,
       organization: user.organization,
       position: user.position,
   lastLoginAt: user.lastLoginAt,
@@ -224,6 +225,7 @@ export class AuthController {
       role: user.role,
       status: user.status,
       // ...existing code...
+  phoneNumber: user.phoneNumber,
       isEmailVerified: user.isEmailVerified,
       lastLoginAt: user.lastLoginAt,
       createdAt: user.createdAt,
