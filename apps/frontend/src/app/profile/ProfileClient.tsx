@@ -52,10 +52,15 @@ export default function ProfileClient() {
       if (form.name !== user.name) payload.name = form.name;
       if ((form.organization || null) !== (user.organization || null)) payload.organization = form.organization || null;
       if ((form.position || null) !== (user.position || null)) payload.position = form.position || null;
-  if ((form.phoneNumber || null) !== (user.phoneNumber || null)) payload.phoneNumber = form.phoneNumber || null;
+      if ((form.phoneNumber || null) !== (user.phoneNumber || null)) payload.phoneNumber = form.phoneNumber || null;
 
-      await authApi.updateProfile(payload);
-      setUser({ ...user, ...payload });
+      const res = await authApi.updateProfile(payload);
+      const updated = res?.data ?? { ...user, ...payload };
+      // Update state and persist to localStorage so it survives reload
+      setUser(updated);
+      if (typeof window !== 'undefined') {
+        try { localStorage.setItem('user', JSON.stringify(updated)); } catch {}
+      }
       setEditing(false);
     } catch (e: any) {
       setError(e?.response?.data?.message || e?.message || 'ვერ დავაკოპირე ცვლილებები');
@@ -80,7 +85,7 @@ export default function ProfileClient() {
         <div>
           <div className="font-semibold text-lg">{user.name}</div>
           <div className="text-gray-600">{user.email}</div>
-        </div>
+  </div>
       </div>
       {!editing ? (
         <>
