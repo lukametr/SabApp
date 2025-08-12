@@ -63,6 +63,9 @@ export default function Navigation() {
   const [loading, setLoading] = useState(false)
   const [authError, setAuthError] = useState<string>('')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  
+  // Use a safe initial for avatar fallback when no user.picture
+  const profileInitial = (user?.name?.trim()?.charAt(0) || user?.email?.trim()?.charAt(0) || 'პ').toUpperCase()
 
   const handleSmoothScroll = (elementId: string) => {
     const element = document.getElementById(elementId);
@@ -360,8 +363,8 @@ export default function Navigation() {
               )}
               {user && (
                 <>
-                  <Link href="/profile" className="flex items-center space-x-2">
-                    {user.picture && (
+                  <Link href="/profile" aria-label="პროფილი" className="flex items-center space-x-2 px-2 py-1 rounded hover:bg-gray-50">
+                    {user.picture ? (
                       <Image 
                         src={user.picture} 
                         alt="profile" 
@@ -369,8 +372,12 @@ export default function Navigation() {
                         height={32}
                         className="rounded-full"
                       />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-semibold">
+                        {profileInitial}
+                      </div>
                     )}
-                    <span className="font-medium text-gray-700 hidden lg:inline">{user.name}</span>
+                    <span className="font-medium text-gray-700">{user.name || 'პროფილი'}</span>
                   </Link>
                   
                   {/* Admin Panel Link */}
@@ -514,7 +521,7 @@ export default function Navigation() {
               {user && (
                 <div className="px-3 space-y-3">
                   <div className="flex items-center space-x-3 px-4 py-2">
-                    {user.picture && (
+                    {user.picture ? (
                       <Image 
                         src={user.picture} 
                         alt="profile" 
@@ -522,9 +529,13 @@ export default function Navigation() {
                         height={40}
                         className="rounded-full"
                       />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-semibold">
+                        {profileInitial}
+                      </div>
                     )}
                     <div>
-                      <div className="text-base font-medium text-gray-800">{user.name}</div>
+                      <div className="text-base font-medium text-gray-800">{user.name || 'პროფილი'}</div>
                       <div className="text-sm text-gray-500">{user.email}</div>
                     </div>
                   </div>
