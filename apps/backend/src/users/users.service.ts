@@ -349,38 +349,75 @@ export class UsersService {
   }
 
   async updateProfile(userId: string, data: UpdateProfileDto): Promise<UserDocument> {
-    // Build $set and $unset to ensure fields are actually updated/cleared
-    const $set: Record<string, any> = {};
-    const $unset: Record<string, ''> = {};
-
-    // Helper to process string-or-null fields
-    const handleField = (key: keyof User, value: string | null | undefined) => {
-      if (typeof value === 'undefined') return; // no change requested
-      if (value === null || value === '') {
-        $unset[String(key)] = '';
-      } else {
-        $set[String(key)] = value;
-      }
-    };
-
-    // Apply fields
-    if (typeof data.name !== 'undefined') $set['name'] = data.name;
-    handleField('picture', data.picture as any);
-    handleField('organization', data.organization as any);
-    handleField('position', data.position as any);
-    handleField('phoneNumber', data.phoneNumber as any);
-
+    console.log('🔄 UpdateProfile called with:', { userId, data });
+    
     const updateDoc: any = {};
-    if (Object.keys($set).length) updateDoc.$set = $set;
-    if (Object.keys($unset).length) updateDoc.$unset = $unset;
+    const $set: Record<string, any> = {};
+    const $unset: Record<string, 1> = {};
+
+    // Handle name field (required, so only set)
+    if (data.name !== undefined) {
+      $set.name = data.name;
+    }
+
+    // Handle optional string fields that can be null/cleared
+    if (data.picture !== undefined) {
+      if (data.picture === null || data.picture === '') {
+        $unset.picture = 1;
+      } else {
+        $set.picture = data.picture;
+      }
+    }
+
+    if (data.organization !== undefined) {
+      if (data.organization === null || data.organization === '') {
+        $unset.organization = 1;
+      } else {
+        $set.organization = data.organization;
+      }
+    }
+
+    if (data.position !== undefined) {
+      if (data.position === null || data.position === '') {
+        $unset.position = 1;
+      } else {
+        $set.position = data.position;
+      }
+    }
+
+    if (data.phoneNumber !== undefined) {
+      if (data.phoneNumber === null || data.phoneNumber === '') {
+        $unset.phoneNumber = 1;
+      } else {
+        $set.phoneNumber = data.phoneNumber;
+      }
+    }
+
+    // Build update document
+    if (Object.keys($set).length > 0) {
+      updateDoc.$set = $set;
+    }
+    if (Object.keys($unset).length > 0) {
+      updateDoc.$unset = $unset;
+    }
+
+    console.log('🔄 MongoDB update document:', updateDoc);
 
     const user = await this.userModel.findByIdAndUpdate(
       userId,
       updateDoc,
-      { new: true }
+      { new: true, runValidators: true }
     ).exec();
 
     if (!user) throw new NotFoundException('User not found');
+    
+    console.log('✅ Profile updated successfully:', {
+      userId: user._id,
+      phoneNumber: user.phoneNumber,
+      organization: user.organization,
+      position: user.position
+    });
+    
     return user;
   }
 }
