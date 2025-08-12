@@ -5,6 +5,7 @@ import { Model } from 'mongoose';
 import { User, UserDocument, UserRole, UserStatus } from './schemas/user.schema';
 import { GoogleUserInfo } from './dto/google-auth.dto';
 import * as bcrypt from 'bcryptjs';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @Injectable()
 export class UsersService {
@@ -345,5 +346,22 @@ export class UsersService {
       emailVerificationTokenExpires: undefined,
     });
     console.log('✅ Email verified for user:', userId);
+  }
+
+  async updateProfile(userId: string, data: UpdateProfileDto): Promise<UserDocument> {
+    const allowed: Partial<User> = {};
+    if (typeof data.name !== 'undefined') allowed.name = data.name;
+    if (typeof data.picture !== 'undefined') allowed.picture = data.picture || undefined;
+    if (typeof data.organization !== 'undefined') allowed.organization = data.organization || undefined;
+    if (typeof data.position !== 'undefined') allowed.position = data.position || undefined;
+
+    const user = await this.userModel.findByIdAndUpdate(
+      userId,
+      { $set: allowed },
+      { new: true }
+    ).exec();
+
+    if (!user) throw new NotFoundException('User not found');
+    return user;
   }
 }

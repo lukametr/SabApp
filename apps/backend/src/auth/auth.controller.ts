@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, UseGuards, Request, Res, BadRequestException, Query, NotFoundException } from '@nestjs/common';
+import { Controller, Post, Body, Get, UseGuards, Request, Res, BadRequestException, Query, NotFoundException, Patch } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
@@ -9,6 +9,7 @@ import { RolesGuard } from './guards/roles.guard';
 import { Roles } from './decorators/roles.decorator';
 import { UserRole } from '../users/schemas/user.schema';
 import { Response } from 'express';
+import { UpdateProfileDto } from '../users/dto/update-profile.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -175,9 +176,14 @@ export class AuthController {
       name: user.name,
       picture: user.picture,
       role: user.role,
+  status: user.status,
+  isEmailVerified: user.isEmailVerified,
       googleId: user.googleId,
       organization: user.organization,
       position: user.position,
+  lastLoginAt: user.lastLoginAt,
+  createdAt: user.createdAt,
+  updatedAt: user.updatedAt,
     };
   }
 
@@ -282,5 +288,26 @@ export class AuthController {
       console.error('Email verification error:', error);
       throw error;
     }
+  }
+
+  @Patch('profile')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update current user profile' })
+  @ApiResponse({ status: 200, description: 'Profile updated successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async updateProfile(@Request() req: any, @Body() body: UpdateProfileDto) {
+    const user = await this.usersService.updateProfile(req.user.id || req.user.sub, body);
+    return {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      picture: user.picture,
+      role: user.role,
+      status: user.status,
+      isEmailVerified: user.isEmailVerified,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
   }
 }
