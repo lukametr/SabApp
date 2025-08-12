@@ -23,7 +23,7 @@ async function createAdminUser() {
       email: 'admin@saba.com',
       password: 'admin123', // Will be hashed by createEmailUser
       personalNumber: '01234567891', // Changed to unique number
-      phoneNumber: '555-0001', // Changed to unique number
+  // phoneNumber intentionally omitted to avoid confusing defaults
       organization: 'SabaApp',
       position: 'System Administrator'
     };

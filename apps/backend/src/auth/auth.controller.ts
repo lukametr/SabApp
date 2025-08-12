@@ -212,7 +212,7 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'User profile retrieved successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getProfile(@Request() req: any) {
-    const user = await this.usersService.findById(req.user.id);
+    const user = await this.usersService.findById(req.user.id || req.user.sub);
     if (!user) {
       throw new Error('User not found');
     }
