@@ -349,16 +349,34 @@ export class UsersService {
   }
 
   async updateProfile(userId: string, data: UpdateProfileDto): Promise<UserDocument> {
-    const allowed: Partial<User> = {};
-    if (typeof data.name !== 'undefined') allowed.name = data.name;
-    if (typeof data.picture !== 'undefined') allowed.picture = data.picture || undefined;
-    if (typeof data.organization !== 'undefined') allowed.organization = data.organization || undefined;
-    if (typeof data.position !== 'undefined') allowed.position = data.position || undefined;
-  if (typeof data.phoneNumber !== 'undefined') allowed.phoneNumber = data.phoneNumber || undefined;
+    // Build $set and $unset to ensure fields are actually updated/cleared
+    const $set: Record<string, any> = {};
+    const $unset: Record<string, ''> = {};
+
+    // Helper to process string-or-null fields
+    const handleField = (key: keyof User, value: string | null | undefined) => {
+      if (typeof value === 'undefined') return; // no change requested
+      if (value === null || value === '') {
+        $unset[String(key)] = '';
+      } else {
+        $set[String(key)] = value;
+      }
+    };
+
+    // Apply fields
+    if (typeof data.name !== 'undefined') $set['name'] = data.name;
+    handleField('picture', data.picture as any);
+    handleField('organization', data.organization as any);
+    handleField('position', data.position as any);
+    handleField('phoneNumber', data.phoneNumber as any);
+
+    const updateDoc: any = {};
+    if (Object.keys($set).length) updateDoc.$set = $set;
+    if (Object.keys($unset).length) updateDoc.$unset = $unset;
 
     const user = await this.userModel.findByIdAndUpdate(
       userId,
-      { $set: allowed },
+      updateDoc,
       { new: true }
     ).exec();
 
