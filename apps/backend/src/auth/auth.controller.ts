@@ -218,7 +218,7 @@ export class AuthController {
     }
     
     return {
-      id: user._id,
+  id: String(user._id),
       name: user.name,
       email: user.email,
       picture: user.picture,
@@ -226,6 +226,8 @@ export class AuthController {
       status: user.status,
       // ...existing code...
   phoneNumber: user.phoneNumber,
+  organization: user.organization,
+  position: user.position,
       isEmailVerified: user.isEmailVerified,
       lastLoginAt: user.lastLoginAt,
       createdAt: user.createdAt,
@@ -301,13 +303,17 @@ export class AuthController {
   async updateProfile(@Request() req: any, @Body() body: UpdateProfileDto) {
     const user = await this.usersService.updateProfile(req.user.id || req.user.sub, body);
     return {
-      id: user._id,
+  id: String(user._id),
       name: user.name,
       email: user.email,
       picture: user.picture,
       role: user.role,
       status: user.status,
+  phoneNumber: user.phoneNumber,
+  organization: user.organization,
+  position: user.position,
       isEmailVerified: user.isEmailVerified,
+  lastLoginAt: user.lastLoginAt,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };

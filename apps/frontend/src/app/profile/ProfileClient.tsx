@@ -54,8 +54,9 @@ export default function ProfileClient() {
       if ((form.position || null) !== (user.position || null)) payload.position = form.position || null;
       if ((form.phoneNumber || null) !== (user.phoneNumber || null)) payload.phoneNumber = form.phoneNumber || null;
 
-      const res = await authApi.updateProfile(payload);
-      const updated = res?.data ?? { ...user, ...payload };
+  const res = await authApi.updateProfile(payload);
+  const fromServer = res?.data || {};
+  const updated = { ...user, ...payload, ...fromServer };
       // Update state and persist to localStorage so it survives reload
       setUser(updated);
       if (typeof window !== 'undefined') {
