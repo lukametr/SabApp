@@ -19,6 +19,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:3000'),
   title: 'SabApp - უსაფრთხოების შეფასების აპლიკაცია',
   description: 'უსაფრთხოების შეფასების ფორმების შევსება და მართვა',
   manifest: '/manifest.json',

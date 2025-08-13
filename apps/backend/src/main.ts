@@ -24,7 +24,6 @@ async function createDefaultAdmin(app: any) {
       email: 'admin@saba.com',
       password: 'admin123', // Will be hashed by createEmailUser
       personalNumber: '01234567891',
-      phoneNumber: '555-0001',
       organization: 'SabaApp',
       position: 'System Administrator'
     };
