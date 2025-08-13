@@ -157,9 +157,10 @@ export class ReportService {
             extension = 'gif';
           }
 
-          // ფოტოს ჩამატება workbook-ში
+          // ფოტოს ჩამატება workbook-ში - Node.js Buffer ტიპისთვის
+          const nodeBuffer = Buffer.from(buffer);
           const imageId = workbook.addImage({
-            buffer: buffer,
+            buffer: nodeBuffer,
             extension: extension,
           });
 
