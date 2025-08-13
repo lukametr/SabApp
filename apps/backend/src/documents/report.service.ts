@@ -159,7 +159,7 @@ export class ReportService {
 
           // ფოტოს ჩამატება workbook-ში
           const imageId = workbook.addImage({
-            buffer: Buffer.from(buffer),
+            buffer: buffer,
             extension: extension,
           });
 
