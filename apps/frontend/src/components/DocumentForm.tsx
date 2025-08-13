@@ -656,6 +656,7 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
 export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, defaultValues, open, onClose }: Props) {
   const [hazards, setHazards] = useState<HazardData[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { control, handleSubmit: submitForm, formState: { errors }, reset, getValues } = useForm<CreateDocumentDto>({
     defaultValues: {
@@ -751,12 +752,21 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
   }, [defaultValues, open, isInitialized]); // Add isInitialized to dependencies
 
   const handleFormSubmitInternal = async (data: CreateDocumentDto) => {
+    // Prevent double submission
+    if (isSubmitting) {
+      console.log('⚠️ Form submission already in progress, ignoring...');
+      return;
+    }
+
     // ველების ვალიდაცია
     if (!data.evaluatorName?.trim() || !data.evaluatorLastName?.trim() || 
         !data.objectName?.trim() || !data.workDescription?.trim()) {
       alert('გთხოვთ შეავსოთ ყველა სავალდებულო ველი');
       return;
     }
+
+    // Set submitting state
+    setIsSubmitting(true);
 
     // საფრთხის გარეშეც შეიძლება დოკუმენტის შექმნა
     const formattedData: CreateDocumentDto = {
@@ -783,16 +793,21 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
     } catch (error) {
       console.error('ფორმის გაგზავნის შეცდომა:', error);
       alert('დოკუმენტის შენახვისას მოხდა შეცდომა');
+    } finally {
+      // Reset submitting state
+      setIsSubmitting(false);
     }
   };
 
   // Function to handle dialog close without cleanup (for successful submissions)
   const handleDialogClose = () => {
+    setIsSubmitting(false);
     onClose();
   };
 
   // Function to handle dialog close and cleanup (for cancel/escape)
   const handleCloseWithCleanup = () => {
+    setIsSubmitting(false);
     // შეამოწმე არის თუ არა ცვლილებები
     const hasChanges = hazards.length > 0 || isFormDirty();
     
@@ -873,20 +888,20 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
             </Button>
             <Button 
               variant="contained" 
+              disabled={isSubmitting}
               onClick={() => {
                 const formData = getValues();
                 handleFormSubmitInternal(formData);
               }}
             >
-              {defaultValues ? 'განახლება' : 'შენახვა'}
+              {isSubmitting ? 'იშენახება...' : (defaultValues ? 'განახლება' : 'შენახვა')}
             </Button>
           </Box>
         </Box>
       </DialogTitle>
       <DialogContent>
         <Box 
-          component="form" 
-          onSubmit={submitForm(handleFormSubmitInternal)} 
+          component="div" 
           noValidate 
           sx={{ mt: 2 }}
           role="form"
