@@ -37,12 +37,17 @@ export class ReportService {
       console.log(`✅ Converted ${processedDocument.hazards.length} risks to hazards format`);
     }
 
-    // 1. Header Data (ზედა ნაწილი) - გაუმჯობესებული ექსტრაქცია
+    // 1. Header Data (ზედა ნაწილი) - გაუმჯობესებული ექსტრაქცია მომხმარებლის ინფორმაციით
     const evaluatorName = processedDocument.evaluatorName && processedDocument.evaluatorLastName 
       ? `${processedDocument.evaluatorName} ${processedDocument.evaluatorLastName}`.trim()
       : processedDocument.evaluatorName || processedDocument.evaluatorLastName || 
         processedDocument.evaluator || processedDocument.inspector || 
         processedDocument.createdBy || '';
+    
+    // მომხმარებლის ინფორმაცია - ორგანიზაცია და პოზიცია
+    const userOrganization = processedDocument.userInfo?.organization || '';
+    const userPosition = processedDocument.userInfo?.position || '';
+    const userContact = processedDocument.userInfo?.phoneNumber || processedDocument.userInfo?.email || '';
     
     const objectName = processedDocument.objectName || 
       processedDocument.project || 
@@ -66,8 +71,10 @@ export class ReportService {
     const headerData = [
       ['რისკის შეფასების ფორმა №1', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''], // A1:Q1
       ['შეფასებლის სახელი და გვარი:', evaluatorName, '', '', '', '', '', '', '', 'თარიღი:', date, '', '', '', '', '', ''], // A2:I2 და J2:Q2 
-      ['სამუშაო ობიექტის დასახელება:', objectName, '', '', '', '', '', '', '', 'დრო:', time, '', '', '', '', '', ''], // A3:I3 და J3:Q3
-      ['სამუშაოს დაწყების თარიღი:', workDescription, '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''] // A4:Q4
+      ['ორგანიზაცია:', userOrganization, '', '', '', '', '', '', '', 'დრო:', time, '', '', '', '', '', ''], // A3:I3 და J3:Q3
+      ['პოზიცია:', userPosition, '', '', '', '', '', '', '', 'კონტაქტი:', userContact, '', '', '', '', '', ''], // A4:I4 და J4:Q4
+      ['სამუშაო ობიექტის დასახელება:', objectName, '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''], // A5:Q5
+      ['სამუშაოს აღწერა:', workDescription, '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''] // A6:Q6
     ];
 
     // 2. ცხრილის სათაურები - 17 სვეტი
@@ -130,7 +137,7 @@ export class ReportService {
     // 5. Worksheet-ში ჩასმა
     worksheet.addRows(fullSheetData);
 
-    // 6. ფოტოების ჩასმის ფუნქცია - ფიქსირებული B სვეტში
+    // 6. ფოტოების ჩასმის ფუნქცია - გაუმჯობესებული ზომებითა და ორიენტაციით
     const addImageToWorksheet = async (base64Data: string, position: { row: number, photoIndex?: number }) => {
       try {
         // base64 სტრინგიდან ბაფერის შექმნა
@@ -156,20 +163,20 @@ export class ReportService {
             extension: extension,
           });
 
-          // ფიქსირებული B სვეტი (col: 1 = B სვეტი) - არასოდეს გასცდება
-          const photoRow = position.row + (position.photoIndex || 0) * 4; // 4 row spacing between photos
+          // B სვეტში ფოტოების განლაგება უკეთესი spacing-ით
+          const photoRow = position.row + (position.photoIndex || 0) * 5; // 5 row spacing for better fit
           
-          // ფოტოს ჩამატება range სინტაქსით - მხოლოდ B სვეტში
+          // ფოტოს ჩამატება range სინტაქსით - უკეთესი ზომებით
           const startCell = `B${photoRow}`;
-          const endCell = `B${photoRow + 2}`;
+          const endCell = `B${photoRow + 3}`; // 4 რიგის სიმაღლე
           const range = `${startCell}:${endCell}`;
           
           worksheet.addImage(imageId, range);
 
-          // Row height-ის გაზრდა ფოტოსთვის
-          worksheet.getRow(photoRow).height = 80;
-          worksheet.getRow(photoRow + 1).height = 80;
-          worksheet.getRow(photoRow + 2).height = 80;
+          // Row height-ის ოპტიმალური მორგება ფოტოების გამოსაჩენად
+          for (let i = 0; i < 4; i++) {
+            worksheet.getRow(photoRow + i).height = 75; // optimized height
+          }
 
           console.log(`✅ Added image in B column at row ${photoRow} with range ${range}`);
         } else {
@@ -195,7 +202,7 @@ export class ReportService {
           
           // სტრიქონის სიმაღლის გაზრდა ფოტოებისთვის
           const photosCount = hazard.photos.length;
-          const totalHeight = Math.max(80, photosCount * 60); // მინიმუმ 80px, მაქსიმუმ photosCount * 60
+          const totalHeight = Math.max(100, photosCount * 90); // ოპტიმალური spacing
           worksheet.getRow(currentExcelRow).height = totalHeight;
           
           // ყველა ფოტოს ჩამატება ვერტიკალურად B სვეტში
@@ -204,20 +211,23 @@ export class ReportService {
             
             await addImageToWorksheet(photo, { 
               row: currentExcelRow, // ბაზისური row
-              photoIndex: photoIndex // ვერტიკალური spacing
+              photoIndex: photoIndex // ვერტიკალური spacing (5-row intervals)
             });
           }
         }
       }
     }
 
-    // 8. Merge-ები - სწორი ფორმატირებისთვის
+    // 8. Merge-ები - სწორი ფორმატირებისთვის (6 header rows ახლა)
     worksheet.mergeCells('A1:Q1'); // სათაური spans all 17 columns
     worksheet.mergeCells('A2:I2'); // შეფასებლის სახელი და გვარი
     worksheet.mergeCells('J2:Q2'); // თარიღი
-    worksheet.mergeCells('A3:I3'); // სამუშაო ობიექტის დასახელება
+    worksheet.mergeCells('A3:I3'); // ორგანიზაცია
     worksheet.mergeCells('J3:Q3'); // დრო
-    worksheet.mergeCells('A4:Q4'); // სამუშაოს დაწყების თარიღი spans all columns 
+    worksheet.mergeCells('A4:I4'); // პოზიცია
+    worksheet.mergeCells('J4:Q4'); // კონტაქტი
+    worksheet.mergeCells('A5:Q5'); // სამუშაო ობიექტი spans all columns
+    worksheet.mergeCells('A6:Q6'); // სამუშაოს აღწერა spans all columns 
     
     // 9. სვეტების სიგანის მორგება - 17 სვეტი
     worksheet.columns = [

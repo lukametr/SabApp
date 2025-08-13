@@ -316,10 +316,26 @@ export class DocumentsController {
 
   // Excel რეპორტის ჩამოტვირთვა
   @Get(':id/download/excel')
-  async downloadExcelReport(@Param('id') id: string, @Res() res: Response) {
+  async downloadExcelReport(@Param('id') id: string, @Res() res: Response, @Request() req: any) {
     try {
       const document = await this.documentsService.findOne(id);
-      const excelBuffer = await this.reportService.generateExcelReport(document);
+      
+      // მომხმარებლის ინფორმაციის მიღება
+      const userInfo = req.user ? {
+        name: req.user.name || '',
+        email: req.user.email || '',
+        organization: req.user.organization || '',
+        position: req.user.position || '',
+        phoneNumber: req.user.phoneNumber || ''
+      } : {};
+      
+      // დოკუმენტს ვუმატებთ user ინფორმაციას
+      const documentWithUserInfo = {
+        ...document,
+        userInfo
+      };
+      
+      const excelBuffer = await this.reportService.generateExcelReport(documentWithUserInfo);
       
       const fileName = `უსაფრთხოების-შეფასება-${document.objectName}-${new Date().toISOString().split('T')[0]}.xlsx`;
       

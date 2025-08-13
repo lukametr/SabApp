@@ -541,18 +541,6 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
               </Grid>
 
               <Grid item xs={12}>
-                <TextField
-                  label="შესრულებაზე პასუხისმგებელი"
-                  fullWidth
-                  value={hazard.responsiblePerson}
-                  onChange={(e) => {
-                    console.log('[HazardSection] responsiblePerson change', { id: hazard.id, value: e.target.value });
-                    updateHazard(hazard.id, { responsiblePerson: e.target.value });
-                  }}
-                />
-              </Grid>
-
-              <Grid item xs={12}>
                 <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ka}>
                   <DatePicker
                     label="გადახედვის სავარაუდო დრო"
@@ -567,10 +555,34 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
                   />
                 </LocalizationProvider>
               </Grid>
+
+              <Grid item xs={12}>
+                <TextField
+                  label="შესრულებაზე პასუხისმგებელი"
+                  fullWidth
+                  value={hazard.responsiblePerson}
+                  onChange={(e) => {
+                    console.log('[HazardSection] responsiblePerson change', { id: hazard.id, value: e.target.value });
+                    updateHazard(hazard.id, { responsiblePerson: e.target.value });
+                  }}
+                />
+              </Grid>
             </Grid>
           </AccordionDetails>
         </Accordion>
       ))}
+
+      {/* ახალი საფრთხის დამატების ღილაკი ბოლოში */}
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+        <Button
+          variant="outlined"
+          startIcon={<Add />}
+          onClick={addHazard}
+          sx={{ minWidth: 200 }}
+        >
+          ახალი საფრთხის დამატება
+        </Button>
+      </Box>
 
       {/* Camera Modal */}
       {showCamera && (
@@ -645,7 +657,7 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
   const [hazards, setHazards] = useState<HazardData[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  const { control, handleSubmit: submitForm, formState: { errors }, reset } = useForm<CreateDocumentDto>({
+  const { control, handleSubmit: submitForm, formState: { errors }, reset, getValues } = useForm<CreateDocumentDto>({
     defaultValues: {
       evaluatorName: '',
       evaluatorLastName: '',
@@ -739,12 +751,6 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
   }, [defaultValues, open, isInitialized]); // Add isInitialized to dependencies
 
   const handleFormSubmitInternal = async (data: CreateDocumentDto) => {
-    // ვალიდაცია - მინიმუმ ერთი საფრთხე უნდა იყოს
-    if (hazards.length === 0) {
-      alert('გთხოვთ დაამატოთ მინიმუმ ერთი საფრთხე');
-      return;
-    }
-
     // ველების ვალიდაცია
     if (!data.evaluatorName?.trim() || !data.evaluatorLastName?.trim() || 
         !data.objectName?.trim() || !data.workDescription?.trim()) {
@@ -752,10 +758,10 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
       return;
     }
 
-    // აუცილებლად დაამატე hazards state-დან
+    // საფრთხის გარეშეც შეიძლება დოკუმენტის შექმნა
     const formattedData: CreateDocumentDto = {
       ...data,
-      hazards: hazards, // მთავარი განსხვავება - hazards state-დან
+      hazards: hazards, // ცარიელიც შეიძლება იყოს
     };
 
     console.log('📊 Form submission data:', {
@@ -787,7 +793,29 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
 
   // Function to handle dialog close and cleanup (for cancel/escape)
   const handleCloseWithCleanup = () => {
-    // Clean up form state only when explicitly closing/canceling
+    // შეამოწმე არის თუ არა ცვლილებები
+    const hasChanges = hazards.length > 0 || isFormDirty();
+    
+    if (hasChanges) {
+      const confirmed = window.confirm(
+        'გსურთ ფაილის შენახვა? შენახვის გარეშე ყველა ცვლილება დაიკარგება.'
+      );
+      
+      if (confirmed) {
+        // სცადე შენახვა
+        const formData = getFormData();
+        if (formData.evaluatorName?.trim() && formData.evaluatorLastName?.trim() && 
+            formData.objectName?.trim() && formData.workDescription?.trim()) {
+          handleFormSubmitInternal(formData);
+          return;
+        } else {
+          alert('შენახვისთვის საჭიროა ყველა სავალდებულო ველის შევსება');
+          return;
+        }
+      }
+    }
+    
+    // წაშალე მონაცემები მხოლოდ დასტურის შემდეგ
     setHazards([]);
     setIsInitialized(false);
     reset({
@@ -801,6 +829,17 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
       photos: []
     });
     onClose();
+  };
+
+  // დამხმარე ფუნქციები ცვლილებების შესამოწმებლად
+  const isFormDirty = () => {
+    const currentValues = getValues();
+    return !!(currentValues.evaluatorName || currentValues.evaluatorLastName || 
+              currentValues.objectName || currentValues.workDescription);
+  };
+
+  const getFormData = () => {
+    return getValues();
   };
 
   // Function to handle cancel
