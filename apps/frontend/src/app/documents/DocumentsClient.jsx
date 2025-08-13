@@ -168,7 +168,7 @@ function DocumentsClient() {
             date: doc.date,
             time: doc.time,
             hazards: doc.hazards || [],
-            photos: [] // Photos will be handled separately for editing
+            photos: doc.photos || [] // Keep existing photos for editing
         };
     };
     // უნივერსალური onSubmit ფუნქცია
@@ -189,7 +189,7 @@ function DocumentsClient() {
                         date: data.date,
                         time: data.time,
                         hazards: hazardsToSend,
-                        photos: [] // UpdateDocumentDto-ში photos არის string[]
+                        photos: data.photos || [] // Keep existing photos or use form photos
                     };
                     return [4 /*yield*/, handleUpdate(updateData)];
                 case 1:
