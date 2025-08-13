@@ -47,43 +47,34 @@ export default function ProfileClient() {
   const save = async () => {
     try {
       setSaving(true);
-      setError(null);
-      const payload: any = {};
-      if (form.name !== user.name) payload.name = form.name;
-      if ((form.organization || null) !== (user.organization || null)) payload.organization = form.organization || null;
-      if ((form.position || null) !== (user.position || null)) payload.position = form.position || null;
-      if ((form.phoneNumber || null) !== (user.phoneNumber || null)) payload.phoneNumber = form.phoneNumber || null;
-
-      console.log('💾 Saving profile with payload:', payload);
+      setError('');
       
-      // Update profile in backend
-      const res = await authApi.updateProfile(payload);
-      console.log('✅ Profile update response:', res.data);
+      // მონაცემების მომზადება
+      const payload = {
+        name: form.name,
+        organization: form.organization,
+        position: form.position,
+        phoneNumber: form.phoneNumber
+      };
       
-      // **CRITICAL FIX: Fetch fresh data from database**
-      console.log('🔄 Fetching fresh user data from database...');
-      const freshUserResponse = await authApi.me();
-      const freshUser = freshUserResponse.data;
-      console.log('✅ Fresh user data from DB:', freshUser);
+      // API call
+      const response = await authApi.updateProfile(payload);
       
-      // Update state with FRESH data from database
-      setUser(freshUser);
+      // გადმოღებული მონაცემების შენახვა
+      const updatedUser = response.data;
       
-      // Update localStorage with FRESH data from database
-      if (typeof window !== 'undefined') {
-        try { 
-          localStorage.setItem('user', JSON.stringify(freshUser)); 
-          console.log('💾 localStorage updated with fresh data');
-        } catch (e) {
-          console.error('❌ Failed to update localStorage:', e);
-        }
-      }
+      // Store-ში განახლება
+      setUser(updatedUser);
       
+      // localStorage-ში განახლება
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      
+      // რედაქტირების დახურვა
       setEditing(false);
-      console.log('✅ Profile save complete');
-    } catch (e: any) {
-      console.error('❌ Profile save failed:', e);
-      setError(e?.response?.data?.message || e?.message || 'ვერ დავაკოპირე ცვლილებები');
+      
+    } catch (err) {
+      console.error('Save error:', err);
+      setError('შენახვა ვერ მოხერხდა');
     } finally {
       setSaving(false);
     }

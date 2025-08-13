@@ -349,67 +349,23 @@ export class UsersService {
   }
 
   async updateProfile(userId: string, data: UpdateProfileDto): Promise<UserDocument> {
-    console.log('🔄 UpdateProfile called with:', { userId, data });
+    // პირდაპირი განახლება findByIdAndUpdate-ით
+    const updateData: any = {};
     
-    const updateDoc: any = {};
-    const $set: Record<string, any> = {};
-    const $unset: Record<string, 1> = {};
-
-    // Handle name field (required, so only set)
-    if (data.name !== undefined) {
-      $set.name = data.name;
-    }
-
-    // Handle optional string fields that can be null/cleared
-    if (data.picture !== undefined) {
-      if (data.picture === null || data.picture === '') {
-        $unset.picture = 1;
-      } else {
-        $set.picture = data.picture;
-      }
-    }
-
-    if (data.organization !== undefined) {
-      if (data.organization === null || data.organization === '') {
-        $unset.organization = 1;
-      } else {
-        $set.organization = data.organization;
-      }
-    }
-
-    if (data.position !== undefined) {
-      if (data.position === null || data.position === '') {
-        $unset.position = 1;
-      } else {
-        $set.position = data.position;
-      }
-    }
-
-    if (data.phoneNumber !== undefined) {
-      if (data.phoneNumber === null || data.phoneNumber === '') {
-        $unset.phoneNumber = 1;
-      } else {
-        $set.phoneNumber = data.phoneNumber;
-      }
-    }
-
-    // Build update document
-    if (Object.keys($set).length > 0) {
-      updateDoc.$set = $set;
-    }
-    if (Object.keys($unset).length > 0) {
-      updateDoc.$unset = $unset;
-    }
-
-    console.log('🔄 MongoDB update document:', updateDoc);
-
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.organization !== undefined) updateData.organization = data.organization;
+    if (data.position !== undefined) updateData.position = data.position;
+    if (data.phoneNumber !== undefined) updateData.phoneNumber = data.phoneNumber;
+    
     const user = await this.userModel.findByIdAndUpdate(
       userId,
-      updateDoc,
+      updateData,
       { new: true, runValidators: true }
     ).exec();
-
-    if (!user) throw new NotFoundException('User not found');
+    
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
     
     console.log('✅ Profile updated successfully:', {
       userId: user._id,

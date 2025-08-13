@@ -307,22 +307,24 @@ export class AuthController {
   @ApiOperation({ summary: 'Update current user profile' })
   @ApiResponse({ status: 200, description: 'Profile updated successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async updateProfile(@Request() req: any, @Body() body: UpdateProfileDto) {
-    const user = await this.usersService.updateProfile(req.user.id || req.user.sub, body);
+  async updateProfile(@Request() req: any, @Body() updateData: UpdateProfileDto) {
+    const userId = req.user.id || req.user.sub;
+    const updatedUser = await this.usersService.updateProfile(userId, updateData);
+    
+    // აბრუნე სრული user ობიექტი ყველა ველით
     return {
-  id: String(user._id),
-      name: user.name,
-      email: user.email,
-      picture: user.picture,
-      role: user.role,
-      status: user.status,
-  phoneNumber: user.phoneNumber,
-  organization: user.organization,
-  position: user.position,
-      isEmailVerified: user.isEmailVerified,
-  lastLoginAt: user.lastLoginAt,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
+      id: String(updatedUser._id),
+      email: updatedUser.email,
+      name: updatedUser.name,
+      phoneNumber: updatedUser.phoneNumber,
+      organization: updatedUser.organization,
+      position: updatedUser.position,
+      picture: updatedUser.picture,
+      role: updatedUser.role,
+      status: updatedUser.status,
+      isEmailVerified: updatedUser.isEmailVerified,
+      createdAt: updatedUser.createdAt,
+      updatedAt: updatedUser.updatedAt
     };
   }
 }
