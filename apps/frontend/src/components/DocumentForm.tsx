@@ -749,7 +749,7 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
     if (!open && isInitialized) {
       setIsInitialized(false);
     }
-  }, [defaultValues, open, isInitialized]); // Add isInitialized to dependencies
+  }, [open, isInitialized]); // Remove defaultValues from dependencies to prevent re-initialization
 
   const handleFormSubmitInternal = async (data: CreateDocumentDto) => {
     // Prevent double submission
