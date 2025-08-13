@@ -69,7 +69,8 @@ export default function DocumentsClient() {
       date: doc.date,
       time: doc.time,
       hazards: doc.hazards || [],
-      photos: doc.photos || [] // Keep existing photos for editing
+      // რედაქტირებისას არ ვაწვდით photos-ს CreateDocumentDto-ში რადგან ისინი string[] არიან, არა File[]
+      // photos ცალკე იმუშავებენ UpdateDocumentDto-ში
     };
   };
 
@@ -88,7 +89,7 @@ export default function DocumentsClient() {
         date: data.date,
         time: data.time,
         hazards: hazardsToSend,
-        photos: data.photos || [] // Keep existing photos or use form photos
+        photos: selectedDocument.photos || [] // Keep existing photos from selected document (string[])
       };
       await handleUpdate(updateData);
     } else {
