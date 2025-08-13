@@ -873,7 +873,10 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
             </Button>
             <Button 
               variant="contained" 
-              onClick={submitForm(handleFormSubmitInternal)}
+              onClick={() => {
+                const formData = getValues();
+                handleFormSubmitInternal(formData);
+              }}
             >
               {defaultValues ? 'განახლება' : 'შენახვა'}
             </Button>
