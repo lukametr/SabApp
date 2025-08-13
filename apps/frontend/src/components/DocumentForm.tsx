@@ -32,8 +32,6 @@ const riskOptions = [0, 1, 2, 3, 4, 5];
 interface HazardData {
   id: string;
   hazardIdentification: string;
-  mediaFile?: File;
-  mediaPreview?: string;
   affectedPersons: string[];
   injuryDescription: string;
   existingControlMeasures: string;
@@ -58,6 +56,16 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hazardIdRef = useRef<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  console.log('🔄 [HazardSection] Current hazards state:', {
+    count: hazards.length,
+    hazards: hazards.map(h => ({
+      id: h.id,
+      hazardIdentification: h.hazardIdentification || 'EMPTY',
+      affectedPersons: h.affectedPersons?.length || 0,
+      photosCount: h.photos?.length || 0
+    }))
+  });
 
   const addHazard = () => {
     const newHazard: HazardData = {
@@ -85,7 +93,25 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
 
   const updateHazard = (id: string, updates: Partial<HazardData>) => {
     const updatedHazards = hazards.map(h => h.id === id ? { ...h, ...updates } : h);
-    console.log('[HazardSection] updateHazard', { id, updates, result: updatedHazards.find(h => h.id === id) });
+    const updatedHazard = updatedHazards.find(h => h.id === id);
+    console.log('🔄 [HazardSection] updateHazard', { 
+      id, 
+      updates, 
+      updatedHazard: {
+        id: updatedHazard?.id,
+        hazardIdentification: updatedHazard?.hazardIdentification,
+        affectedPersons: updatedHazard?.affectedPersons,
+        injuryDescription: updatedHazard?.injuryDescription,
+        existingControlMeasures: updatedHazard?.existingControlMeasures,
+        additionalControlMeasures: updatedHazard?.additionalControlMeasures,
+        requiredMeasures: updatedHazard?.requiredMeasures,
+        responsiblePerson: updatedHazard?.responsiblePerson,
+        initialRisk: updatedHazard?.initialRisk,
+        residualRisk: updatedHazard?.residualRisk,
+        reviewDate: updatedHazard?.reviewDate,
+        photos: updatedHazard?.photos?.length || 0
+      }
+    });
     onHazardsChange(updatedHazards);
   };
 
@@ -185,11 +211,9 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
         reader.onloadend = () => {
           const base64DataUrl = reader.result as string;
           console.log('📁 File uploaded:', { fileName: f.name, base64DataUrl: base64DataUrl.substring(0, 50) + '...' });
-          // Always add to photos array for persistence
+          // Add to photos array for persistence (base64 format)
           const newPhotos = [...(hazard.photos || []), base64DataUrl];
           updateHazard(hazardId, {
-            mediaFile: f,
-            mediaPreview: undefined, // remove preview after save
             photos: newPhotos
           });
         };
@@ -320,13 +344,6 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
                     style={{ display: 'none' }} 
                     onChange={(e) => handleFileChange(hazard.id, e)} 
                   />
-                  {hazard.mediaPreview && (
-                    <Chip 
-                      label="ფაილი დამატებულია" 
-                      color="success" 
-                      onDelete={() => updateHazard(hazard.id, { mediaFile: undefined, mediaPreview: undefined })} 
-                    />
-                  )}
                 </Box>
                 {hazard.photos && hazard.photos.length > 0 && (
                   <Box mt={2}>
@@ -774,12 +791,23 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
       hazards: hazards, // ცარიელიც შეიძლება იყოს
     };
 
-    console.log('📊 Form submission data:', {
+    console.log('📊 [DETAILED] Form submission data:', {
       formDataHazards: formattedData.hazards?.length || 0,
       actualHazardsCount: hazards.length,
       hasHazards: !!formattedData.hazards,
-      hazardPhotos: hazards.map(h => ({
+      detailedHazards: hazards.map(h => ({
         id: h.id,
+        hazardIdentification: h.hazardIdentification || 'EMPTY',
+        affectedPersons: h.affectedPersons?.length || 0,
+        injuryDescription: h.injuryDescription || 'EMPTY',
+        existingControlMeasures: h.existingControlMeasures || 'EMPTY',
+        additionalControlMeasures: h.additionalControlMeasures || 'EMPTY',
+        requiredMeasures: h.requiredMeasures || 'EMPTY',
+        responsiblePerson: h.responsiblePerson || 'EMPTY',
+        initialRisk: h.initialRisk,
+        residualRisk: h.residualRisk,
+        reviewDate: h.reviewDate,
+        photosCount: h.photos?.length || 0,
         hasMediaFile: !!(h as any).mediaFile,
         hasMediaPreview: !!(h as any).mediaPreview
       }))

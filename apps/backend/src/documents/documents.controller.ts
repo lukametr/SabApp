@@ -80,22 +80,31 @@ export class DocumentsController {
       }
     }
     
-    // Add base64 photos to hazards in order
+    // Add base64 photos to hazards in order - photos are already base64 in JSON
     if (hazards.length > 0) {
       let photoIndex = 0;
       hazards = hazards.map((hazard: any, hazardIndex: number) => {
         const hazardWithPhotos = {
           ...hazard,
           id: hazard.id || `hazard_${Date.now()}_${hazardIndex}`, // Ensure unique ID
-          photos: hazard.photos || [] // Keep existing photos from JSON or initialize empty
+          photos: hazard.photos || [] // Photos are already base64 from frontend
         };
         
-        // Add uploaded files to existing photos
+        // Legacy: Add uploaded files to existing photos (if any file uploads)
         if (photoIndex < savedHazardPhotos.length) {
           hazardWithPhotos.photos.push(savedHazardPhotos[photoIndex]);
           console.log('📸 Added uploaded file to hazard:', hazardWithPhotos.id, 'at index', photoIndex);
           photoIndex++;
         }
+        
+        console.log('✅ Final hazard with photos:', {
+          id: hazardWithPhotos.id,
+          hazardIdentification: hazardWithPhotos.hazardIdentification || 'EMPTY',
+          photosCount: hazardWithPhotos.photos?.length || 0,
+          hasAllFields: !!(hazardWithPhotos.hazardIdentification && 
+                           hazardWithPhotos.affectedPersons && 
+                           hazardWithPhotos.injuryDescription)
+        });
         
         return hazardWithPhotos;
       });
@@ -196,7 +205,7 @@ export class DocumentsController {
       }
     }
     
-    // Add base64 photos to hazards in order
+    // Add base64 photos to hazards in order - photos are already base64 in JSON
     if (hazards.length > 0) {
       let photoIndex = 0;
       hazards = hazards.map((hazard: any, hazardIndex: number) => {
@@ -206,12 +215,21 @@ export class DocumentsController {
           photos: hazard.photos || [] as string[]
         };
         
-        // Add one photo per hazard if available
+        // Legacy: Add one photo per hazard if available (if any file uploads)
         if (photoIndex < savedHazardPhotos.length) {
           hazardWithPhotos.photos.push(savedHazardPhotos[photoIndex]);
           console.log('📸 Added photo to hazard:', hazardWithPhotos.id, 'at index', photoIndex);
           photoIndex++;
         }
+        
+        console.log('✅ Final updated hazard with photos:', {
+          id: hazardWithPhotos.id,
+          hazardIdentification: hazardWithPhotos.hazardIdentification || 'EMPTY',
+          photosCount: hazardWithPhotos.photos?.length || 0,
+          hasAllFields: !!(hazardWithPhotos.hazardIdentification && 
+                           hazardWithPhotos.affectedPersons && 
+                           hazardWithPhotos.injuryDescription)
+        });
         
         return hazardWithPhotos;
       });

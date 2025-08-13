@@ -29,19 +29,34 @@ export const documentApi = {
     formData.append('date', data.date.toISOString());
     formData.append('time', data.time.toISOString());
 
-    // Process hazards and extract photos
+    // Process hazards - photos are already base64 encoded in photos array
     const hazardPhotos: File[] = [];
     const processedHazards = data.hazards.map(hazard => {
       const processedHazard = {
         ...hazard,
         reviewDate: hazard.reviewDate ? hazard.reviewDate.toISOString() : null, // Convert Date to ISO string or null
-        photos: [] as string[] // Remove File objects, will be added by backend
+        photos: hazard.photos || [] as string[] // Keep base64 photos as they are
       };
       
-      // Extract photos from hazard
+      console.log('🔄 [API] Processing hazard for create:', {
+        id: hazard.id,
+        hazardIdentification: hazard.hazardIdentification || 'EMPTY',
+        affectedPersons: hazard.affectedPersons?.length || 0,
+        injuryDescription: hazard.injuryDescription || 'EMPTY',
+        existingControlMeasures: hazard.existingControlMeasures || 'EMPTY',
+        additionalControlMeasures: hazard.additionalControlMeasures || 'EMPTY',
+        requiredMeasures: hazard.requiredMeasures || 'EMPTY',
+        responsiblePerson: hazard.responsiblePerson || 'EMPTY',
+        initialRisk: hazard.initialRisk,
+        residualRisk: hazard.residualRisk,
+        reviewDate: hazard.reviewDate,
+        photosCount: hazard.photos?.length || 0
+      });
+      
+      // Legacy: Extract File objects from mediaFile if present (for compatibility)
       if ((hazard as any).mediaFile) {
         hazardPhotos.push((hazard as any).mediaFile);
-        console.log('📸 Added hazard photo:', (hazard as any).mediaFile.name);
+        console.log('📸 Added hazard photo from mediaFile:', (hazard as any).mediaFile.name);
       }
       
       return processedHazard;
@@ -94,20 +109,35 @@ export const documentApi = {
     if (data.date) formData.append('date', data.date.toISOString());
     if (data.time) formData.append('time', data.time.toISOString());
 
-    // Process hazards and extract photos
+    // Process hazards - photos are already base64 encoded in photos array
     const hazardPhotos: File[] = [];
     if (data.hazards && data.hazards.length > 0) {
       const processedHazards = data.hazards.map(hazard => {
         const processedHazard = {
           ...hazard,
           reviewDate: hazard.reviewDate ? hazard.reviewDate.toISOString() : null, // Convert Date to ISO string or null
-          photos: hazard.photos || [] as string[] // Keep existing photos
+          photos: hazard.photos || [] as string[] // Keep base64 photos as they are
         };
         
-        // Extract new photos from hazard
+        console.log('🔄 [API] Processing hazard for update:', {
+          id: hazard.id,
+          hazardIdentification: hazard.hazardIdentification || 'EMPTY',
+          affectedPersons: hazard.affectedPersons?.length || 0,
+          injuryDescription: hazard.injuryDescription || 'EMPTY',
+          existingControlMeasures: hazard.existingControlMeasures || 'EMPTY',
+          additionalControlMeasures: hazard.additionalControlMeasures || 'EMPTY',
+          requiredMeasures: hazard.requiredMeasures || 'EMPTY',
+          responsiblePerson: hazard.responsiblePerson || 'EMPTY',
+          initialRisk: hazard.initialRisk,
+          residualRisk: hazard.residualRisk,
+          reviewDate: hazard.reviewDate,
+          photosCount: hazard.photos?.length || 0
+        });
+        
+        // Legacy: Extract File objects from mediaFile if present (for compatibility)
         if ((hazard as any).mediaFile) {
           hazardPhotos.push((hazard as any).mediaFile);
-          console.log('📸 Added hazard photo for update:', (hazard as any).mediaFile.name);
+          console.log('📸 Added hazard photo from mediaFile for update:', (hazard as any).mediaFile.name);
         }
         
         return processedHazard;
