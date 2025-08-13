@@ -161,12 +161,19 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'User not found' })
   async getMe(@Request() req: any) {
-    console.log('📍 /auth/me called for user:', req.user?.email);
+    console.log('📍 /auth/me called for user:', {
+      email: req.user?.email,
+      id: req.user?.id,
+      sub: req.user?.sub,
+    });
     
-    const user = await this.usersService.findById(req.user.sub);
+    // JwtStrategy.validate returns an object with `id`, not `sub`.
+    // However, keep compatibility with tokens that include `sub`.
+    const userId = req.user?.id || req.user?.sub;
+    const user = await this.usersService.findById(userId);
     
     if (!user) {
-      console.error('❌ User not found for ID:', req.user.sub);
+      console.error('❌ User not found for ID:', userId);
       throw new NotFoundException('User not found');
     }
     
