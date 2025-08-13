@@ -882,26 +882,12 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
           <Typography variant="h5" fontWeight={600}>
         {defaultValues ? 'დოკუმენტის რედაქტირება' : 'ახალი დოკუმენტი'}
           </Typography>
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <Button variant="outlined" onClick={handleCancel}>
-              გაუქმება
-            </Button>
-            <Button 
-              variant="contained" 
-              disabled={isSubmitting}
-              onClick={() => {
-                const formData = getValues();
-                handleFormSubmitInternal(formData);
-              }}
-            >
-              {isSubmitting ? 'იშენახება...' : (defaultValues ? 'განახლება' : 'შენახვა')}
-            </Button>
-          </Box>
         </Box>
       </DialogTitle>
       <DialogContent>
         <Box 
-          component="div" 
+          component="form" 
+          onSubmit={submitForm(handleFormSubmitInternal)}
           noValidate 
           sx={{ mt: 2 }}
           role="form"
@@ -970,8 +956,12 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
                 <Button variant="outlined" onClick={handleCancel}>
                   გაუქმება
                 </Button>
-                <Button type="submit" variant="contained">
-                  {defaultValues ? 'განახლება' : 'შენახვა'}
+                <Button 
+                  type="submit" 
+                  variant="contained"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'იშენახება...' : (defaultValues ? 'განახლება' : 'შენახვა')}
                 </Button>
               </Box>
             </Grid>
