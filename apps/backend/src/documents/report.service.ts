@@ -145,8 +145,9 @@ export class ReportService {
         if (matches) {
           const mimeType = matches[1];
           const base64Content = matches[2];
-          const buffer = Buffer.from(base64Content, 'base64');
-          
+          // Create proper Node.js Buffer directly from base64 string
+          const imageBuffer = Buffer.from(base64Content, 'base64');
+
           // Extension ტიპის განსაზღვრა
           let extension: 'png' | 'jpeg' | 'gif' = 'png';
           if (mimeType.includes('jpeg') || mimeType.includes('jpg')) {
@@ -158,9 +159,8 @@ export class ReportService {
           }
 
           // ფოტოს ჩამატება workbook-ში - Node.js Buffer ტიპისთვის
-          const nodeBuffer = Buffer.from(buffer);
           const imageId = workbook.addImage({
-            buffer: nodeBuffer,
+            buffer: imageBuffer,
             extension: extension,
           });
 
