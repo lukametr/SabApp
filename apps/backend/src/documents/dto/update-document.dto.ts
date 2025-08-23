@@ -57,6 +57,7 @@ class HazardDto {
   responsiblePerson?: string;
 
   @IsOptional()
+  @Transform(({ value }) => (value === null || value === '' ? undefined : (typeof value === 'string' || typeof value === 'number') ? new Date(value) : value))
   @IsDate()
   @Type(() => Date)
   reviewDate?: Date;
@@ -102,7 +103,8 @@ export class UpdateDocumentDto {
       try {
         return JSON.parse(value);
       } catch {
-        return [];
+  // If parsing fails, treat as not provided to avoid wiping hazards
+  return undefined;
       }
     }
     return value;

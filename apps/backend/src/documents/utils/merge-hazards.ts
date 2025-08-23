@@ -73,7 +73,20 @@ export const mergeHazardsAuthoritative = (current: HazardLike[] = [], incoming: 
     const existing = currentById.get(key);
     if (!existing) {
       // New hazard, ensure photos is array if provided
-      return { ...h, photos: Array.isArray(h.photos) ? h.photos : (h.photos ? [h.photos] : []) } as HazardLike;
+      return {
+        ...h,
+        // Default required strings to '' if omitted to satisfy schema validators on update
+        hazardIdentification: h.hazardIdentification ?? '',
+        injuryDescription: h.injuryDescription ?? '',
+        existingControlMeasures: h.existingControlMeasures ?? '',
+        additionalControlMeasures: h.additionalControlMeasures ?? '',
+        requiredMeasures: h.requiredMeasures ?? '',
+        responsiblePerson: h.responsiblePerson ?? '',
+        affectedPersons: Array.isArray(h.affectedPersons) ? h.affectedPersons : [],
+        initialRisk: { ...(h.initialRisk || {}) },
+        residualRisk: { ...(h.residualRisk || {}) },
+        photos: Array.isArray(h.photos) ? h.photos : (h.photos ? [h.photos] : [])
+      } as HazardLike;
     }
     return {
       ...existing,

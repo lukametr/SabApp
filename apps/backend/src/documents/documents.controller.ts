@@ -172,20 +172,22 @@ export class DocumentsController {
     let hazards: any[] | undefined = undefined;
     const hazardsProvided = (updateDocumentDto as any).hazards !== undefined;
     if (hazardsProvided) {
-      let parsed: any[] = [];
+      let parsed: any[] | undefined = undefined;
       if (typeof updateDocumentDto.hazards === 'string') {
         try {
           parsed = JSON.parse(updateDocumentDto.hazards as any);
-          console.log('📋 Parsed hazards from string:', parsed.length);
+          console.log('📋 Parsed hazards from string:', Array.isArray(parsed) ? parsed.length : 0);
         } catch (error) {
-          console.error('❌ Error parsing hazards:', error);
-          parsed = [];
+          console.error('❌ Error parsing hazards (leaving existing hazards intact):', error);
+          parsed = undefined; // do not wipe hazards on parse error
         }
-      } else {
+      } else if (Array.isArray(updateDocumentDto.hazards)) {
         parsed = updateDocumentDto.hazards as any[];
         console.log('📋 Received hazards as array:', parsed.length);
+      } else if (updateDocumentDto.hazards == null) {
+        parsed = undefined;
       }
-      hazards = parsed;
+      hazards = parsed as any[] | undefined;
     }
     
     // Convert files to base64 and store in database
@@ -209,7 +211,7 @@ export class DocumentsController {
     }
     
     // Add base64 photos to hazards in order - photos are already base64 in JSON
-    if (Array.isArray(hazards) && hazards.length > 0) {
+  if (Array.isArray(hazards) && hazards.length > 0) {
       let photoIndex = 0;
       hazards = hazards.map((hazard: any, hazardIndex: number) => {
         const hazardWithPhotos = {
@@ -242,7 +244,12 @@ export class DocumentsController {
     const documentUpdate: any = { ...updateDocumentDto };
     // Hazards: include only if provided; otherwise do NOT touch existing hazards
     if (hazardsProvided) {
-      documentUpdate.hazards = hazards || [];
+      if (Array.isArray(hazards)) {
+        documentUpdate.hazards = hazards;
+      } else {
+        // hazards parse failed or was null: do not include to keep existing
+        delete documentUpdate.hazards;
+      }
     } else {
       delete documentUpdate.hazards;
     }

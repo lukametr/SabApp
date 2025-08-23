@@ -186,7 +186,7 @@ export class DocumentsService {
       });
       
       const document = await this.documentModel
-        .findOneAndUpdate(filter, updateData, { new: true })
+        .findOneAndUpdate(filter, updateData, { new: true, runValidators: true, context: 'query' })
         .exec();
       
       if (!document) {
