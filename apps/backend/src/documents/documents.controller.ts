@@ -168,21 +168,24 @@ export class DocumentsController {
         throw new Error('Document ID is required');
       }
     
-    // Parse hazards from string if it's a string
-    let hazards = [];
-    if (updateDocumentDto.hazards) {
+    // Parse hazards only if provided; never default to empty (prevents accidental wipe)
+    let hazards: any[] | undefined = undefined;
+    const hazardsProvided = (updateDocumentDto as any).hazards !== undefined;
+    if (hazardsProvided) {
+      let parsed: any[] = [];
       if (typeof updateDocumentDto.hazards === 'string') {
         try {
-          hazards = JSON.parse(updateDocumentDto.hazards as any);
-          console.log('📋 Parsed hazards from string:', hazards.length);
+          parsed = JSON.parse(updateDocumentDto.hazards as any);
+          console.log('📋 Parsed hazards from string:', parsed.length);
         } catch (error) {
           console.error('❌ Error parsing hazards:', error);
-          hazards = [];
+          parsed = [];
         }
       } else {
-        hazards = updateDocumentDto.hazards;
-        console.log('📋 Received hazards as array:', hazards.length);
+        parsed = updateDocumentDto.hazards as any[];
+        console.log('📋 Received hazards as array:', parsed.length);
       }
+      hazards = parsed;
     }
     
     // Convert files to base64 and store in database
@@ -206,7 +209,7 @@ export class DocumentsController {
     }
     
     // Add base64 photos to hazards in order - photos are already base64 in JSON
-    if (hazards.length > 0) {
+    if (Array.isArray(hazards) && hazards.length > 0) {
       let photoIndex = 0;
       hazards = hazards.map((hazard: any, hazardIndex: number) => {
         const hazardWithPhotos = {
@@ -234,25 +237,39 @@ export class DocumentsController {
         return hazardWithPhotos;
       });
     }
-    
-    // Update document with base64 photos stored in database
-    const documentWithPhotos = {
-      ...updateDocumentDto,
-      hazards,
-      photos: savedPhotos.length > 0 ? savedPhotos : updateDocumentDto.photos
-    };
-    
-    console.log('✅ Final update data with base64 photos:', {
-      hazardsCount: hazards.length,
-      photosCount: savedPhotos.length,
-      hazardPhotosCount: savedHazardPhotos.length,
-      hazardWithPhotos: hazards.map((h: any) => ({
-        id: h.id,
-        photosCount: h.photos?.length || 0
-      }))
+
+    // Build update payload safely (omit undefineds, include only present fields)
+    const documentUpdate: any = { ...updateDocumentDto };
+    // Hazards: include only if provided; otherwise do NOT touch existing hazards
+    if (hazardsProvided) {
+      documentUpdate.hazards = hazards || [];
+    } else {
+      delete documentUpdate.hazards;
+    }
+    // Photos: prefer newly uploaded; else include provided if defined; else omit
+    if (savedPhotos.length > 0) {
+      documentUpdate.photos = savedPhotos;
+    } else if ((updateDocumentDto as any).photos === undefined) {
+      delete documentUpdate.photos;
+    }
+
+    // Omit undefined fields to avoid unsetting existing values
+    Object.keys(documentUpdate).forEach((k) => {
+      if (documentUpdate[k] === undefined) {
+        delete documentUpdate[k];
+      }
     });
-    
-    return this.documentsService.update(id, documentWithPhotos, userId);
+
+    // Log summary for diagnostics
+    console.log('✅ Final update payload summary:', {
+      includeHazards: hazardsProvided,
+      hazardsCount: Array.isArray(documentUpdate.hazards) ? documentUpdate.hazards.length : 'UNCHANGED',
+      photosProvided: (updateDocumentDto as any).photos !== undefined,
+      uploadedPhotos: savedPhotos.length,
+      hazardUploadedPhotos: savedHazardPhotos.length,
+    });
+
+    return this.documentsService.update(id, documentUpdate, userId);
     } catch (error) {
       console.error('❌ Error updating document:', error);
       throw error;

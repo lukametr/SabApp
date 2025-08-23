@@ -8,6 +8,7 @@ import { UpdateDocumentDto } from './dto/update-document.dto';
 import * as fs from 'fs';
 import * as path from 'path';
 import archiver from 'archiver';
+import { mergeHazards as mergeHazardsUtil } from './utils/merge-hazards';
 
 @Injectable()
 export class DocumentsService {
@@ -148,19 +149,41 @@ export class DocumentsService {
         throw new NotFoundException('დოკუმენტი ვერ მოიძებნა ან წვდომა არ გაქვთ');
       }
 
-      // Merge update data with preserved metadata
-      const updateData = {
+  // Use shared helper to deep-merge hazards if provided, preserving nested fields
+
+      // Build update data by preserving existing fields when not provided
+      const updateData: any = {
+        // Shallow fields from incoming (omit undefined below)
         ...updateDocumentDto,
         // Preserve metadata if not explicitly provided in update
-        authorId: updateDocumentDto.authorId || existingDocument.authorId,
-        createdAt: updateDocumentDto.createdAt || existingDocument.createdAt,
-        updatedAt: updateDocumentDto.updatedAt || new Date(),
+        authorId: updateDocumentDto.authorId ?? existingDocument.authorId,
+        createdAt: updateDocumentDto.createdAt ?? existingDocument.createdAt,
+        updatedAt: updateDocumentDto.updatedAt ?? new Date(),
         // Preserve assessments if not provided
-        assessmentA: updateDocumentDto.assessmentA !== undefined ? updateDocumentDto.assessmentA : existingDocument.assessmentA,
-        assessmentSh: updateDocumentDto.assessmentSh !== undefined ? updateDocumentDto.assessmentSh : existingDocument.assessmentSh,
-        assessmentR: updateDocumentDto.assessmentR !== undefined ? updateDocumentDto.assessmentR : existingDocument.assessmentR,
-        isFavorite: updateDocumentDto.isFavorite !== undefined ? updateDocumentDto.isFavorite : existingDocument.isFavorite,
+        assessmentA: updateDocumentDto.assessmentA ?? existingDocument.assessmentA,
+        assessmentSh: updateDocumentDto.assessmentSh ?? existingDocument.assessmentSh,
+        assessmentR: updateDocumentDto.assessmentR ?? existingDocument.assessmentR,
+        isFavorite: updateDocumentDto.isFavorite ?? existingDocument.isFavorite,
       };
+
+      // Dates: if undefined, keep existing
+      if (updateDocumentDto.date === undefined) updateData.date = existingDocument.date;
+      if (updateDocumentDto.time === undefined) updateData.time = existingDocument.time;
+
+      // Photos: if undefined, keep existing
+      if (updateDocumentDto.photos === undefined) updateData.photos = existingDocument.photos;
+
+      // Hazards: deep merge only if provided; else keep existing
+      if (updateDocumentDto.hazards !== undefined) {
+        updateData.hazards = mergeHazardsUtil(existingDocument.hazards as any[], updateDocumentDto.hazards as any[]);
+      } else {
+        updateData.hazards = existingDocument.hazards;
+      }
+
+      // Remove undefined to avoid unsetting
+      Object.keys(updateData).forEach(k => {
+        if (updateData[k] === undefined) delete updateData[k];
+      });
       
       const document = await this.documentModel
         .findOneAndUpdate(filter, updateData, { new: true })
