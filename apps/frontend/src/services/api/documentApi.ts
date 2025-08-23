@@ -99,78 +99,33 @@ export const documentApi = {
   },
 
   update: async (data: UpdateDocumentDto): Promise<Document> => {
-    const formData = new FormData();
-    
-    // Add text fields
-    if (data.evaluatorName) formData.append('evaluatorName', data.evaluatorName);
-    if (data.evaluatorLastName) formData.append('evaluatorLastName', data.evaluatorLastName);
-    if (data.objectName) formData.append('objectName', data.objectName);
-    if (data.workDescription) formData.append('workDescription', data.workDescription);
-    if (data.date) formData.append('date', data.date.toISOString());
-    if (data.time) formData.append('time', data.time.toISOString());
+    // Build JSON payload directly; hazards and photos stay as arrays
+    const updatePayload: any = {};
+    if (data.evaluatorName) updatePayload.evaluatorName = data.evaluatorName;
+    if (data.evaluatorLastName) updatePayload.evaluatorLastName = data.evaluatorLastName;
+    if (data.objectName) updatePayload.objectName = data.objectName;
+    if (data.workDescription) updatePayload.workDescription = data.workDescription;
+    if (data.date) updatePayload.date = data.date.toISOString();
+    if (data.time) updatePayload.time = data.time.toISOString();
 
-    // Process hazards - photos are already base64 encoded in photos array
-    const hazardPhotos: File[] = [];
-    if (data.hazards && data.hazards.length > 0) {
-      const processedHazards = data.hazards.map(hazard => {
-        const processedHazard = {
-          ...hazard,
-          reviewDate: hazard.reviewDate ? hazard.reviewDate.toISOString() : null, // Convert Date to ISO string or null
-          photos: hazard.photos || [] as string[] // Keep base64 photos as they are
-        };
-        
-        console.log('🔄 [API] Processing hazard for update:', {
-          id: hazard.id,
-          hazardIdentification: hazard.hazardIdentification || 'EMPTY',
-          affectedPersons: hazard.affectedPersons?.length || 0,
-          injuryDescription: hazard.injuryDescription || 'EMPTY',
-          existingControlMeasures: hazard.existingControlMeasures || 'EMPTY',
-          additionalControlMeasures: hazard.additionalControlMeasures || 'EMPTY',
-          requiredMeasures: hazard.requiredMeasures || 'EMPTY',
-          responsiblePerson: hazard.responsiblePerson || 'EMPTY',
-          initialRisk: hazard.initialRisk,
-          residualRisk: hazard.residualRisk,
-          reviewDate: hazard.reviewDate,
-          photosCount: hazard.photos?.length || 0
-        });
-        
-        // Legacy: Extract File objects from mediaFile if present (for compatibility)
-        if ((hazard as any).mediaFile) {
-          hazardPhotos.push((hazard as any).mediaFile);
-          console.log('📸 Added hazard photo from mediaFile for update:', (hazard as any).mediaFile.name);
-        }
-        
-        return processedHazard;
-      });
-
-      console.log('📋 Processed hazards for update:', processedHazards.length);
-      console.log('📸 Total hazard photos for update:', hazardPhotos.length);
-
-      // Add processed hazards data
-      formData.append('hazards', JSON.stringify(processedHazards));
-
-      // Add hazard photos
-      hazardPhotos.forEach((photo, index) => {
-        formData.append('hazardPhotos', photo);
-      });
+    if (Array.isArray(data.hazards)) {
+      updatePayload.hazards = data.hazards.map(hazard => ({
+        ...hazard,
+        reviewDate: hazard.reviewDate ? hazard.reviewDate.toISOString() : null,
+        photos: hazard.photos || []
+      }));
     }
 
-    // Add general photos if they exist
-    if (data.photos && data.photos.length > 0) {
-      data.photos.forEach((photo, _index) => {
-        // Universal check for File type (works in browser and Node build)
-        if ((photo as any) && typeof photo === 'object' && (photo as any).constructor && (photo as any).constructor.name === 'File') {
-          formData.append('photos', photo);
-        }
-      });
+    if (data.photos !== undefined) {
+      updatePayload.photos = data.photos; // base64 strings or URLs
     }
 
-    console.log('📋 Updating document with ID:', data.id);
-    const response = await api.patch(`/documents/${data.id}`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+    console.log('📋 Updating document with ID:', data.id, {
+      hazardsCount: Array.isArray(updatePayload.hazards) ? updatePayload.hazards.length : 'UNCHANGED',
+      photosCount: Array.isArray(updatePayload.photos) ? updatePayload.photos.length : 'UNCHANGED'
     });
+
+    const response = await api.patch(`/documents/${data.id}`, updatePayload);
     
     console.log('📋 Updated document response:', {
       id: response.data.id,

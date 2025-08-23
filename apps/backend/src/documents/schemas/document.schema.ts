@@ -64,7 +64,18 @@ class Hazard {
   @Prop({ required: false, default: null })
   reviewDate: Date;
 
-  @Prop({ type: [String], default: [] })
+  @Prop({ 
+    type: [String], 
+    default: [],
+    validate: {
+      validator: function(photos: string[]) {
+        if (!Array.isArray(photos)) return false;
+        const max = 5 * 1024 * 1024; // 5MB per photo (approx by string length)
+        return photos.every(p => typeof p === 'string' && p.length < max);
+      },
+      message: 'Photo size exceeds 5MB limit'
+    }
+  })
   photos: string[];
 }
 
@@ -116,7 +127,18 @@ export class Document extends MongoDocument {
   @Prop({ default: 0 })
   assessmentR: number;
 
-  @Prop({ type: [String], default: [] })
+  @Prop({ 
+    type: [String], 
+    default: [],
+    validate: {
+      validator: function(photos: string[]) {
+        if (!Array.isArray(photos)) return false;
+        const max = 5 * 1024 * 1024; // 5MB per photo (approx by string length)
+        return photos.every(p => typeof p === 'string' && p.length < max);
+      },
+      message: 'Photo size exceeds 5MB limit'
+    }
+  })
   photos: string[];
 
   // Download counters

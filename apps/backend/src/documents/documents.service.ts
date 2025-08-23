@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as mongoose from 'mongoose';
@@ -137,86 +137,57 @@ export class DocumentsService {
         throw new NotFoundException(`Invalid document ID: ${id}`);
       }
       
-      // Build filter - if userId provided, ensure document belongs to user
-      const filter: any = { _id: id };
-      if (userId) {
-        filter.authorId = userId;
-      }
-      
-      // Get existing document first to preserve metadata if not provided
-      const existingDocument = await this.documentModel.findOne(filter).exec();
-      if (!existingDocument) {
-        throw new NotFoundException('დოკუმენტი ვერ მოიძებნა ან წვდომა არ გაქვთ');
-      }
+      // 1) Load existing document
+      const existingDoc = await this.documentModel.findById(id);
+      if (!existingDoc) throw new NotFoundException();
 
-  // Use shared helper to deep-merge hazards if provided, preserving nested fields
+      // 2) Permission check
+      if (userId && existingDoc.authorId !== userId) throw new ForbiddenException();
 
-      // Build update data by preserving existing fields when not provided
-      const updateData: any = {
-        // Shallow fields from incoming (omit undefined below)
+      // 3) Prepare update payload (deep merge + special handling)
+      // Merge shallow fields first
+      const updatePayload: any = {
+        ...existingDoc.toObject(),
         ...updateDocumentDto,
-        // Preserve metadata if not explicitly provided in update
-        authorId: updateDocumentDto.authorId ?? existingDocument.authorId,
-        createdAt: updateDocumentDto.createdAt ?? existingDocument.createdAt,
-        updatedAt: updateDocumentDto.updatedAt ?? new Date(),
-        // Preserve assessments if not provided
-        assessmentA: updateDocumentDto.assessmentA ?? existingDocument.assessmentA,
-        assessmentSh: updateDocumentDto.assessmentSh ?? existingDocument.assessmentSh,
-        assessmentR: updateDocumentDto.assessmentR ?? existingDocument.assessmentR,
-        isFavorite: updateDocumentDto.isFavorite ?? existingDocument.isFavorite,
       };
 
-      // Dates: if undefined, keep existing
-      if (updateDocumentDto.date === undefined) updateData.date = existingDocument.date;
-      if (updateDocumentDto.time === undefined) updateData.time = existingDocument.time;
+      // Dates: only override if defined
+      if (updateDocumentDto.date === undefined) updatePayload.date = existingDoc.date;
+      if (updateDocumentDto.time === undefined) updatePayload.time = existingDoc.time;
 
-      // Photos: if undefined, keep existing
-      if (updateDocumentDto.photos === undefined) updateData.photos = existingDocument.photos;
+      // Hazards: keep existing if undefined, else replace with provided array
+      updatePayload.hazards = updateDocumentDto.hazards !== undefined
+        ? updateDocumentDto.hazards
+        : (existingDoc as any).hazards;
 
-      // Hazards: deep merge only if provided; else keep existing (never leave undefined)
-      if (updateDocumentDto.hazards !== undefined) {
-        const merged = mergeHazardsUtil(existingDocument.hazards as any[], updateDocumentDto.hazards as any[]);
-        // Normalize hazards to ensure required nested fields have safe defaults
-        updateData.hazards = (merged || []).map((h: any) => ({
-          id: h.id,
-          hazardIdentification: h.hazardIdentification ?? '',
-          affectedPersons: Array.isArray(h.affectedPersons) ? h.affectedPersons : [],
-          injuryDescription: h.injuryDescription ?? '',
-          existingControlMeasures: h.existingControlMeasures ?? '',
-          initialRisk: {
-            probability: h.initialRisk?.probability ?? 0,
-            severity: h.initialRisk?.severity ?? 0,
-            total: h.initialRisk?.total ?? 0,
-          },
-          additionalControlMeasures: h.additionalControlMeasures ?? '',
-          residualRisk: {
-            probability: h.residualRisk?.probability ?? 0,
-            severity: h.residualRisk?.severity ?? 0,
-            total: h.residualRisk?.total ?? 0,
-          },
-          requiredMeasures: h.requiredMeasures ?? '',
-          responsiblePerson: h.responsiblePerson ?? '',
-          reviewDate: h.reviewDate ?? null,
-          photos: Array.isArray(h.photos) ? h.photos : [],
-        }));
-      } else {
-        updateData.hazards = Array.isArray((existingDocument as any).hazards) ? (existingDocument as any).hazards : [];
+      // Photos: append provided photos to existing ones if provided, else keep existing
+      updatePayload.photos = updateDocumentDto.photos !== undefined
+        ? [ ...(existingDoc.photos || []), ...(updateDocumentDto.photos || []) ]
+        : existingDoc.photos;
+
+      // Preserve immutable metadata and increment updatedAt
+      updatePayload.authorId = existingDoc.authorId;
+      updatePayload.createdAt = (existingDoc as any).createdAt;
+      updatePayload.updatedAt = new Date();
+
+      // Optional: validate photo entries (basic check)
+      if (Array.isArray(updatePayload.photos)) {
+        const invalid = updatePayload.photos.find(p => typeof p !== 'string');
+        if (invalid) throw new BadRequestException('Invalid photo entry');
       }
 
-      // Remove undefined to avoid unsetting
-      Object.keys(updateData).forEach(k => {
-        if (updateData[k] === undefined) delete updateData[k];
-      });
-      
-      const document = await this.documentModel
-        .findOneAndUpdate(filter, updateData, { new: true, runValidators: true, context: 'query' })
-        .exec();
+      // 4) Save updated document
+      const document = await this.documentModel.findByIdAndUpdate(
+        id,
+        updatePayload,
+        { new: true, runValidators: true }
+      );
       
       if (!document) {
         throw new NotFoundException('დოკუმენტი ვერ მოიძებნა ან წვდომა არ გაქვთ');
       }
       
-      console.log('✅ Document updated successfully with metadata preserved:', {
+  console.log('✅ Document updated successfully with deep merge:', {
         id: document._id,
         authorId: document.authorId,
         createdAt: document.createdAt,

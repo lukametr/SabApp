@@ -97,26 +97,26 @@ export class UpdateDocumentDto {
   @Type(() => Date)
   time?: Date;
 
+  // Hazards must be provided as an array; do not parse JSON strings here
   @IsOptional()
-  @Transform(({ value }) => {
-    if (typeof value === 'string') {
-      try {
-        return JSON.parse(value);
-      } catch {
-  // If parsing fails, treat as not provided to avoid wiping hazards
-  return undefined;
-      }
-    }
-    return value;
-  })
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => HazardDto)
   hazards?: HazardDto[];
 
+  // Photos should be base64 data URLs or http(s) URLs
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
+  @Transform(({ value }) => {
+    if (Array.isArray(value)) {
+      return value.filter(photo =>
+        typeof photo === 'string' &&
+        (photo.startsWith('data:image/') || photo.startsWith('http'))
+      );
+    }
+    return value;
+  })
   photos?: string[];
 
   // Metadata fields for preserving document integrity
