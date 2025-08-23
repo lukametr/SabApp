@@ -36,31 +36,31 @@ class Hazard {
   @Prop({ required: true })
   hazardIdentification: string;
 
-  @Prop({ type: [String], required: true })
+  @Prop({ type: [String], required: false, default: [] })
   affectedPersons: string[];
 
-  @Prop({ required: true })
+  @Prop({ required: false, default: '' })
   injuryDescription: string;
 
-  @Prop({ required: true })
+  @Prop({ required: false, default: '' })
   existingControlMeasures: string;
 
   @Prop({ type: Risk, required: true, default: () => ({ probability: 0, severity: 0, total: 0 }) })
   initialRisk: Risk;
 
-  @Prop({ required: true })
+  @Prop({ required: false, default: '' })
   additionalControlMeasures: string;
 
   @Prop({ type: Risk, required: true, default: () => ({ probability: 0, severity: 0, total: 0 }) })
   residualRisk: Risk;
 
-  @Prop({ required: true })
+  @Prop({ required: false, default: '' })
   requiredMeasures: string;
 
-  @Prop({ required: true })
+  @Prop({ required: false, default: '' })
   responsiblePerson: string;
 
-  @Prop({ required: true })
+  @Prop({ required: false, default: null })
   reviewDate: Date;
 
   @Prop({ type: [String], default: [] })
@@ -96,7 +96,8 @@ export class Document extends MongoDocument {
   @Prop({ required: true })
   time: Date;
 
-  @Prop({ type: [Hazard], required: true })
+  // Ensure hazards always exists; default empty array prevents validator errors on legacy docs
+  @Prop({ type: [Hazard], required: true, default: [] })
   hazards: Hazard[];
 
   @Prop()

@@ -173,11 +173,11 @@ export class DocumentsService {
       // Photos: if undefined, keep existing
       if (updateDocumentDto.photos === undefined) updateData.photos = existingDocument.photos;
 
-      // Hazards: deep merge only if provided; else keep existing
+      // Hazards: deep merge only if provided; else keep existing (never leave undefined)
       if (updateDocumentDto.hazards !== undefined) {
         updateData.hazards = mergeHazardsUtil(existingDocument.hazards as any[], updateDocumentDto.hazards as any[]);
       } else {
-        updateData.hazards = existingDocument.hazards;
+        updateData.hazards = Array.isArray((existingDocument as any).hazards) ? (existingDocument as any).hazards : [];
       }
 
       // Remove undefined to avoid unsetting

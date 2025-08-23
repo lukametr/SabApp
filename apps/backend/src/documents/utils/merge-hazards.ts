@@ -24,6 +24,11 @@ export interface HazardLike {
 }
 
 export const mergeHazards = (current: HazardLike[] = [], incoming: HazardLike[] = []): HazardLike[] => {
+  const ensureRisk = (r?: Risk): Risk => ({
+    probability: r?.probability ?? 0,
+    severity: r?.severity ?? 0,
+    total: r?.total ?? 0,
+  });
   const byId = new Map<string, HazardLike>();
   // Index existing hazards by id (or synthesized index)
   current.forEach((h, idx) => {
@@ -39,7 +44,7 @@ export const mergeHazards = (current: HazardLike[] = [], incoming: HazardLike[] 
       byId.set(key, { ...h });
     } else {
       // Merge into existing, preserving nested risk fields and photos when not provided
-      const merged: HazardLike = {
+      const mergedBase: HazardLike = {
         ...existing,
         ...h,
         initialRisk: {
@@ -51,6 +56,12 @@ export const mergeHazards = (current: HazardLike[] = [], incoming: HazardLike[] 
           ...(h.residualRisk || {}),
         },
         photos: Array.isArray(h.photos) ? h.photos : existing.photos,
+      };
+      // normalize risks to ensure required fields present
+      const merged: HazardLike = {
+        ...mergedBase,
+        initialRisk: ensureRisk(mergedBase.initialRisk),
+        residualRisk: ensureRisk(mergedBase.residualRisk),
       };
       byId.set(key, merged);
     }
@@ -68,12 +79,18 @@ export const mergeHazardsAuthoritative = (current: HazardLike[] = [], incoming: 
   const currentById = new Map<string, HazardLike>();
   current.forEach((h, idx) => currentById.set(h.id || `existing_${idx}`, { ...h }));
 
+  const ensureRisk = (r?: Risk): Risk => ({
+    probability: r?.probability ?? 0,
+    severity: r?.severity ?? 0,
+    total: r?.total ?? 0,
+  });
+
   return incoming.map((h, idx) => {
     const key = h.id || `hazard_${Date.now()}_${idx}`;
     const existing = currentById.get(key);
     if (!existing) {
       // New hazard, ensure photos is array if provided
-      return {
+      const created: HazardLike = {
         ...h,
         // Default required strings to '' if omitted to satisfy schema validators on update
         hazardIdentification: h.hazardIdentification ?? '',
@@ -83,12 +100,13 @@ export const mergeHazardsAuthoritative = (current: HazardLike[] = [], incoming: 
         requiredMeasures: h.requiredMeasures ?? '',
         responsiblePerson: h.responsiblePerson ?? '',
         affectedPersons: Array.isArray(h.affectedPersons) ? h.affectedPersons : [],
-        initialRisk: { ...(h.initialRisk || {}) },
-        residualRisk: { ...(h.residualRisk || {}) },
+        initialRisk: ensureRisk(h.initialRisk),
+        residualRisk: ensureRisk(h.residualRisk),
         photos: Array.isArray(h.photos) ? h.photos : (h.photos ? [h.photos] : [])
       } as HazardLike;
+      return created;
     }
-    return {
+    const mergedBase: HazardLike = {
       ...existing,
       ...h,
       initialRisk: {
@@ -101,5 +119,11 @@ export const mergeHazardsAuthoritative = (current: HazardLike[] = [], incoming: 
       },
       photos: Array.isArray(h.photos) ? h.photos : existing.photos,
     } as HazardLike;
+    const merged: HazardLike = {
+      ...mergedBase,
+      initialRisk: ensureRisk(mergedBase.initialRisk),
+      residualRisk: ensureRisk(mergedBase.residualRisk),
+    };
+    return merged;
   });
 };

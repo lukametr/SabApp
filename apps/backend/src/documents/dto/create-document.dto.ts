@@ -20,9 +20,10 @@ class HazardDto {
   @IsString()
   hazardIdentification: string;
 
+  @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  affectedPersons: string[];
+  affectedPersons?: string[];
 
   @IsString()
   injuryDescription: string;
@@ -49,9 +50,10 @@ class HazardDto {
   @IsString()
   responsiblePerson: string;
 
+  @IsOptional()
   @IsDate()
   @Type(() => Date)
-  reviewDate: Date;
+  reviewDate?: Date;
 
   @IsArray()
   @IsString({ each: true })
