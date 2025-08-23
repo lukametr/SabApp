@@ -8,7 +8,7 @@ import { UpdateDocumentDto } from './dto/update-document.dto';
 import * as fs from 'fs';
 import * as path from 'path';
 import archiver from 'archiver';
-// import removed: deep merge via util not used in new update flow
+// Note: no imports from './utils/merge-hazards' are used in this service now.
 
 @Injectable()
 export class DocumentsService {
