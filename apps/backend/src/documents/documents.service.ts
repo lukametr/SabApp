@@ -8,7 +8,7 @@ import { UpdateDocumentDto } from './dto/update-document.dto';
 import * as fs from 'fs';
 import * as path from 'path';
 import archiver from 'archiver';
-import { mergeHazardsAuthoritative as mergeHazardsUtil } from './utils/merge-hazards';
+// import removed: deep merge via util not used in new update flow
 
 @Injectable()
 export class DocumentsService {
@@ -172,7 +172,7 @@ export class DocumentsService {
 
       // Optional: validate photo entries (basic check)
       if (Array.isArray(updatePayload.photos)) {
-        const invalid = updatePayload.photos.find(p => typeof p !== 'string');
+        const invalid = updatePayload.photos.find((p: unknown) => typeof p !== 'string');
         if (invalid) throw new BadRequestException('Invalid photo entry');
       }
 
