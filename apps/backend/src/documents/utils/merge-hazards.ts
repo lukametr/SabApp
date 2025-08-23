@@ -29,6 +29,25 @@ export const mergeHazards = (current: HazardLike[] = [], incoming: HazardLike[] 
     severity: r?.severity ?? 0,
     total: r?.total ?? 0,
   });
+  // Remove undefined fields so they don't overwrite existing values
+  const sanitize = (h: HazardLike): HazardLike => {
+    const out: any = {};
+    Object.keys(h || {}).forEach((k) => {
+      const v = (h as any)[k];
+      if (v !== undefined) out[k] = v;
+    });
+    if (h.initialRisk) {
+      out.initialRisk = Object.fromEntries(
+        Object.entries(h.initialRisk).filter(([, v]) => v !== undefined)
+      );
+    }
+    if (h.residualRisk) {
+      out.residualRisk = Object.fromEntries(
+        Object.entries(h.residualRisk).filter(([, v]) => v !== undefined)
+      );
+    }
+    return out as HazardLike;
+  };
   const byId = new Map<string, HazardLike>();
   // Index existing hazards by id (or synthesized index)
   current.forEach((h, idx) => {
@@ -36,7 +55,8 @@ export const mergeHazards = (current: HazardLike[] = [], incoming: HazardLike[] 
     byId.set(key, { ...h });
   });
 
-  incoming.forEach((h) => {
+  incoming.forEach((_h) => {
+    const h = sanitize(_h);
     const key = h.id || `hazard_${Date.now()}_${Math.random().toString(36).slice(2)}`;
     const existing = byId.get(key);
     if (!existing) {
@@ -84,8 +104,27 @@ export const mergeHazardsAuthoritative = (current: HazardLike[] = [], incoming: 
     severity: r?.severity ?? 0,
     total: r?.total ?? 0,
   });
+  const sanitize = (h: HazardLike): HazardLike => {
+    const out: any = {};
+    Object.keys(h || {}).forEach((k) => {
+      const v = (h as any)[k];
+      if (v !== undefined) out[k] = v;
+    });
+    if (h.initialRisk) {
+      out.initialRisk = Object.fromEntries(
+        Object.entries(h.initialRisk).filter(([, v]) => v !== undefined)
+      );
+    }
+    if (h.residualRisk) {
+      out.residualRisk = Object.fromEntries(
+        Object.entries(h.residualRisk).filter(([, v]) => v !== undefined)
+      );
+    }
+    return out as HazardLike;
+  };
 
-  return incoming.map((h, idx) => {
+  return incoming.map((_h, idx) => {
+    const h = sanitize(_h);
     const key = h.id || `hazard_${Date.now()}_${idx}`;
     const existing = currentById.get(key);
     if (!existing) {
