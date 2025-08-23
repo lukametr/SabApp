@@ -15,8 +15,7 @@ export class ReportService {
 
     // 0. მონაცემების ნორმალიზაცია - risks -> hazards
     let processedDocument = { ...document };
-    if (document.risks && !document.hazards) {
-      console.log('🔄 Converting risks to hazards format for Excel generation');
+  if (document.risks && !document.hazards) {
       processedDocument.hazards = document.risks.map((risk: any) => ({
         hazardIdentification: risk.riskName || risk.hazardIdentification || '',
         photos: risk.photos || [],
@@ -69,62 +68,74 @@ export class ReportService {
       : new Date().toLocaleTimeString('ka-GE', { hour: '2-digit', minute: '2-digit' }); // fallback to now
 
     const headerData = [
-      ['რისკის შეფასების ფორმა №1', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''], // A1:Q1
-      ['შეფასებლის სახელი და გვარი:', evaluatorName, '', '', '', '', '', '', '', 'თარიღი:', date, '', '', '', '', '', ''], // A2:I2 და J2:Q2 
-      ['ორგანიზაცია:', userOrganization, '', '', '', '', '', '', '', 'დრო:', time, '', '', '', '', '', ''], // A3:I3 და J3:Q3
-      ['პოზიცია:', userPosition, '', '', '', '', '', '', '', 'კონტაქტი:', userContact, '', '', '', '', '', ''], // A4:I4 და J4:Q4
-      ['სამუშაო ობიექტის დასახელება:', objectName, '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''], // A5:Q5
-      ['სამუშაოს აღწერა:', workDescription, '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''] // A6:Q6
+      ['რისკის შეფასების ფორმა №1', '', '', '', '', '', '', '', '', '', '', '', '', '', ''], // A1:O1 (15 სვეტი)
+      ['შეფასებლის სახელი და გვარი:', evaluatorName, '', '', '', '', '', '', '', 'თარიღი:', date, '', '', '', ''], // A2:I2 და J2:O2
+      ['ორგანიზაცია:', userOrganization, '', '', '', '', '', '', '', 'დრო:', time, '', '', '', ''], // A3:I3 და J3:O3
+      ['პოზიცია:', userPosition, '', '', '', '', '', '', '', 'კონტაქტი:', userContact, '', '', '', ''], // A4:I4 და J4:O4
+      ['სამუშაო ობიექტის დასახელება:', objectName, '', '', '', '', '', '', '', '', '', '', '', '', ''], // A5:O5
+      ['სამუშაოს აღწერა:', workDescription, '', '', '', '', '', '', '', '', '', '', '', '', ''] // A6:O6
     ];
 
-    // 2. ცხრილის სათაურები - 17 სვეტი
+    // 2. ცხრილის სათაურები - 15 სვეტი (თავიდან ამოღებულია "საწყისი რისკი" და "ნარჩენი რისკი" სვეტები)
     const tableHeaders = [
       [
-        'საფრთხე და იდენტიფიკაცია',
-        'ფოტო/ვიდეო მასალა',
-        'პოტენციურად დაზარალებული პირები',
-        'ტრავმის ხასიათი',
-        'მიმდინარე კონტროლის ღონისძიებები',
-        'საწყისი რისკი',
-        'ალბათობა',
-        'სიმძიმე',
-        'ნამრავლი',
-        'დამატებითი კონტროლის ღონისძიებები',
-        'ნარჩენი რისკი',
-        'ალბათობა',
-        'სიმძიმე',
-        'ნამრავლი',
-        'საჭირო ღონისძიებები',
-        'შესრულებაზე პასუხისმგებელი პირი',
-        'გადახედვის სავარაუდო თარიღი',
+        'საფრთხე და იდენტიფიკაცია',       // A
+        'ფოტო/ვიდეო მასალა',              // B
+        'პოტენციურად დაზარალებული პირები', // C
+        'ტრავმის ხასიათი',                 // D
+        'მიმდინარე კონტროლის ღონისძიებები', // E
+        'ალბათობა (საწყისი)',               // F
+        'სიმძიმე (საწყისი)',                // G
+        'ნამრავლი (საწყისი)',               // H
+        'დამატებითი კონტროლის ღონისძიებები',// I
+        'ალბათობა (ნარჩენი)',               // J
+        'სიმძიმე (ნარჩენი)',                // K
+        'ნამრავლი (ნარჩენი)',               // L
+        'საჭირო ღონისძიებები',              // M
+        'შესრულებაზე პასუხისმგებელი პირი',  // N
+        'გადახედვის სავარაუდო თარიღი',      // O
       ]
     ];
 
-    // 3. ცხრილის მონაცემები (hazards) - 17 სვეტი
+  // 3. ცხრილის მონაცემები (hazards) - 15 სვეტი
     const hazards = Array.isArray(processedDocument.hazards) ? processedDocument.hazards : [];
-    const tableRows = hazards.length > 0
-      ? hazards.map((hazard: any) => {
-          return [
-            hazard.hazardIdentification || '',  
-            '', // ფოტო სვეტი ცარიელი - ფოტო შემდეგ ჩაისვება
-            hazard.affectedPersons?.join(', ') || '',  
-            hazard.injuryDescription || '',     
-            hazard.existingControlMeasures || '',  
-            hazard.initialRisk?.total || '',    
-            hazard.initialRisk?.probability || '',    
-            hazard.initialRisk?.severity || '',       
-            hazard.initialRisk?.total || '',          
-            hazard.additionalControlMeasures || '',  
-            hazard.residualRisk?.total || '',   
-            hazard.residualRisk?.probability || '',   
-            hazard.residualRisk?.severity || '',      
-            hazard.residualRisk?.total || '',         
-            hazard.requiredMeasures || '',      
-            hazard.responsiblePerson || '',     
-            hazard.reviewDate ? new Date(hazard.reviewDate).toLocaleDateString('ka-GE') : ''  
-          ];
-        })
-      : Array(5).fill(null).map(() => Array(tableHeaders[0].length).fill(''));
+    // მრავალ ფოტოზე: თითო საფრთხეზე შეიძლება დაგვჭირდეს დამატებითი ცარიელი რიგები, რომ ფოტოები მოთავსდეს მხოლოდ B სვეტში
+    const rowsPerImage = 5;           // ვერტიკალური ინტერვალი თითო ფოტოზე (რიგები)
+    const imageHeightRows = 4;        // რამდენ რიგს ფარავს თითო ფოტო B სვეტში
+  const tableRows: any[] = [];
+
+    if (hazards.length > 0) {
+      for (const hazard of hazards) {
+        const photosCount = Array.isArray(hazard.photos) ? hazard.photos.length : 0;
+        const rowsNeeded = photosCount > 0 ? (imageHeightRows + (photosCount - 1) * rowsPerImage) : 1;
+
+        // პირველი row — რეალური მონაცემები
+        tableRows.push([
+          hazard.hazardIdentification || '',
+          '', // ფოტო სვეტი ცარიელი (ფოტოები ჩავარდება render-ისას)
+          hazard.affectedPersons?.join(', ') || '',
+          hazard.injuryDescription || '',
+          hazard.existingControlMeasures || '',
+          hazard.initialRisk?.probability ?? '',
+          hazard.initialRisk?.severity ?? '',
+          hazard.initialRisk?.total ?? '',
+          hazard.additionalControlMeasures || '',
+          hazard.residualRisk?.probability ?? '',
+          hazard.residualRisk?.severity ?? '',
+          hazard.residualRisk?.total ?? '',
+          hazard.requiredMeasures || '',
+          hazard.responsiblePerson || '',
+          hazard.reviewDate ? new Date(hazard.reviewDate).toLocaleDateString('ka-GE') : ''
+        ]);
+
+        // დამატებითი spacer რიგები — მხოლოდ ცარიელი ველები, რომ ფოტოებმა დაიკავონ B სვეტი ქვემოთაც
+        for (let r = 1; r < rowsNeeded; r++) {
+          tableRows.push(new Array(tableHeaders[0].length).fill(''));
+        }
+      }
+    } else {
+      for (let i = 0; i < 5; i++) tableRows.push(new Array(tableHeaders[0].length).fill(''));
+    }
 
     // 4. ყველა ერთად
     const fullSheetData = [
@@ -137,8 +148,8 @@ export class ReportService {
     // 5. Worksheet-ში ჩასმა
     worksheet.addRows(fullSheetData);
 
-    // 6. ფოტოების ჩასმის ფუნქცია - გაუმჯობესებული ზომებითა და ორიენტაციით
-    const addImageToWorksheet = async (base64Data: string, position: { row: number, photoIndex?: number }) => {
+  // 6. ფოტოების ჩასმის ფუნქცია - ჩარჩოში ჩატევა (B სვეტი) და არ გასცდეს საზღვრებს
+  const addImageToWorksheet = async (base64Data: string, position: { row: number, photoIndex: number }) => {
       try {
         // base64 სტრინგიდან ბაფერის შექმნა
         const matches = base64Data.match(/^data:([^;]+);base64,(.+)$/);
@@ -160,26 +171,36 @@ export class ReportService {
 
           // ფოტოს ჩამატება workbook-ში - Node.js Buffer ტიპისთვის
           const imageId = workbook.addImage({
-            buffer: imageBuffer,
+            buffer: imageBuffer as any,
             extension: extension,
-          });
+          } as any);
 
-          // B სვეტში ფოტოების განლაგება უკეთესი spacing-ით
-          const photoRow = position.row + (position.photoIndex || 0) * 5; // 5 row spacing for better fit
-          
-          // ფოტოს ჩამატება range სინტაქსით - უკეთესი ზომებით
-          const startCell = `B${photoRow}`;
-          const endCell = `B${photoRow + 3}`; // 4 რიგის სიმაღლე
-          const range = `${startCell}:${endCell}`;
-          
-          worksheet.addImage(imageId, range);
+          // სვეტი B-ის სიგანის პიქსელებში მისაღები შეფასება (~7px ერთეულზე)
+          const colB = worksheet.getColumn(2); // B
+          const colWidth = (colB.width || 20) * 7; // approx pixels
+          const pxMargin = 6; // მცირე შიდა მარჯანი
+          const targetWidth = Math.max(40, Math.floor(colWidth - pxMargin));
 
-          // Row height-ის ოპტიმალური მორგება ფოტოების გამოსაჩენად
-          for (let i = 0; i < 4; i++) {
-            worksheet.getRow(photoRow + i).height = 75; // optimized height
+          // ვთვლით იმ რიგის საწყისს (1-based to 0-based)
+          const photoRowStart = position.row + position.photoIndex * rowsPerImage; // 1-based
+
+          // დავადუზოთ ზონა B{start}:B{start+imageHeightRows-1} — ორი-უჯრედიანი ანქორი, რომ არ გასცდეს B სვეტს
+          const startCell = `B${photoRowStart}`;
+          const endCell = `B${photoRowStart + (imageHeightRows - 1)}`;
+          worksheet.addImage(imageId, {
+            tl: { col: 1, row: photoRowStart - 1 },
+            ext: { width: targetWidth, height: 220 }, // ფიქსირებული მაღალი, რომ QR/ფოტოები ჩაეტიოს
+            editAs: 'oneCell'
+          } as any);
+
+          // პარალელურად, მინიმალური row height იმ დიაპაზონზე
+          for (let i = 0; i < imageHeightRows; i++) {
+            const r = worksheet.getRow(photoRowStart + i);
+            const pxToPoints = (px: number) => px * 0.75; // 96dpi → points
+            r.height = Math.max(r.height || 0, pxToPoints(60));
           }
 
-          console.log(`✅ Added image in B column at row ${photoRow} with range ${range}`);
+          console.log(`✅ Added image in B column at ${startCell}:${endCell}`);
         } else {
           console.error('❌ Invalid base64 image format');
         }
@@ -188,67 +209,58 @@ export class ReportService {
       }
     };
 
-    // 7. ფოტოების ჩასმა hazards-ისთვის - ფიქსირებული B სვეტში
+    // 7. ფოტოების ჩასმა hazards-ისთვის - ფიქსირებული B სვეტში, spacer რიგებით
     if (hazards.length > 0) {
       const headerRowsCount = headerData.length + 1; // header rows + empty row
       const tableHeaderRow = headerRowsCount + 1; // table header row
       const dataStartRow = tableHeaderRow + 1; // მონაცემების დაწყების სტრიქონი (სწორი)
-      
+
+      // ავაგოთ თითო საფრთხის საწყისი რიგის ინდექსი (worksheet-ში), tableRows-ის სიგრძე ვიცით
+      let cursor = dataStartRow;
       for (let i = 0; i < hazards.length; i++) {
         const hazard = hazards[i];
-        const currentExcelRow = dataStartRow + i; // Excel row number (1-based)
-        
-        if (hazard.photos && hazard.photos.length > 0) {
-          console.log(`📸 Adding ${hazard.photos.length} photos for hazard ${i + 1} in B column`);
-          
-          // სტრიქონის სიმაღლის გაზრდა ფოტოებისთვის
-          const photosCount = hazard.photos.length;
-          const totalHeight = Math.max(100, photosCount * 90); // ოპტიმალური spacing
-          worksheet.getRow(currentExcelRow).height = totalHeight;
-          
-          // ყველა ფოტოს ჩამატება ვერტიკალურად B სვეტში
-          for (let photoIndex = 0; photoIndex < hazard.photos.length; photoIndex++) {
-            const photo = hazard.photos[photoIndex];
-            
-            await addImageToWorksheet(photo, { 
-              row: currentExcelRow, // ბაზისური row
-              photoIndex: photoIndex // ვერტიკალური spacing (5-row intervals)
-            });
+        const photosCount = Array.isArray(hazard.photos) ? hazard.photos.length : 0;
+        const rowsNeeded = photosCount > 0 ? (imageHeightRows + (photosCount - 1) * rowsPerImage) : 1;
+
+        // შევინახოთ საწყისი row — არაა საჭირო ცალკე მასივი, პირდაპირ cursor-ით ვიმუშავებთ
+        if (photosCount > 0) {
+          console.log(`📸 Adding ${photosCount} photos for hazard ${i + 1} in B column (rowsNeeded=${rowsNeeded})`);
+          for (let p = 0; p < photosCount; p++) {
+            await addImageToWorksheet(hazard.photos[p], { row: cursor, photoIndex: p });
           }
         }
+        cursor += rowsNeeded; // შემდეგი საფრთხე იწყება ამდენი რიგის შემდეგ
       }
     }
 
     // 8. Merge-ები - სწორი ფორმატირებისთვის (6 header rows ახლა)
-    worksheet.mergeCells('A1:Q1'); // სათაური spans all 17 columns
+  worksheet.mergeCells('A1:O1'); // სათაური spans all 15 columns
     worksheet.mergeCells('A2:I2'); // შეფასებლის სახელი და გვარი
-    worksheet.mergeCells('J2:Q2'); // თარიღი
+  worksheet.mergeCells('J2:O2'); // თარიღი
     worksheet.mergeCells('A3:I3'); // ორგანიზაცია
-    worksheet.mergeCells('J3:Q3'); // დრო
+  worksheet.mergeCells('J3:O3'); // დრო
     worksheet.mergeCells('A4:I4'); // პოზიცია
-    worksheet.mergeCells('J4:Q4'); // კონტაქტი
-    worksheet.mergeCells('A5:Q5'); // სამუშაო ობიექტი spans all columns
-    worksheet.mergeCells('A6:Q6'); // სამუშაოს აღწერა spans all columns 
+  worksheet.mergeCells('J4:O4'); // კონტაქტი
+  worksheet.mergeCells('A5:O5'); // სამუშაო ობიექტი spans all columns
+  worksheet.mergeCells('A6:O6'); // სამუშაოს აღწერა spans all columns 
     
     // 9. სვეტების სიგანის მორგება - 17 სვეტი
     worksheet.columns = [
       { width: 25 }, // A - საფრთხე და იდენტიფიკაცია
-      { width: 20 }, // B - ფოტო (გაფართოვებული ფოტოებისთვის)
+      { width: 20 }, // B - ფოტო
       { width: 25 }, // C - პოტენციურად დაზარალებული პირები
       { width: 20 }, // D - ტრავმის ხასიათი
       { width: 25 }, // E - მიმდინარე კონტროლის ღონისძიებები
-      { width: 15 }, // F - საწყისი რისკი
-      { width: 12 }, // G - ალბათობა
-      { width: 12 }, // H - სიმძიმე
-      { width: 12 }, // I - ნამრავლი
-      { width: 25 }, // J - დამატებითი კონტროლის ღონისძიებები
-      { width: 15 }, // K - ნარჩენი რისკი
-      { width: 12 }, // L - ალბათობა
-      { width: 12 }, // M - სიმძიმე
-      { width: 12 }, // N - ნამრავლი
-      { width: 25 }, // O - საჭირო ღონისძიებები
-      { width: 25 }, // P - შესრულებაზე პასუხისმგებელი პირი
-      { width: 20 }, // Q - გადახედვის სავარაუდო თარიღი
+      { width: 12 }, // F - ალბათობა (საწყისი)
+      { width: 12 }, // G - სიმძიმე (საწყისი)
+      { width: 12 }, // H - ნამრავლი (საწყისი)
+      { width: 25 }, // I - დამატებითი კონტროლის ღონისძიებები
+      { width: 12 }, // J - ალბათობა (ნარჩენი)
+      { width: 12 }, // K - სიმძიმე (ნარჩენი)
+      { width: 12 }, // L - ნამრავლი (ნარჩენი)
+      { width: 25 }, // M - საჭირო ღონისძიებები
+      { width: 25 }, // N - შესრულებაზე პასუხისმგებელი პირი
+      { width: 20 }, // O - გადახედვის სავარაუდო თარიღი
     ];
 
     // 10. სტილები - header ინფორმაცია
