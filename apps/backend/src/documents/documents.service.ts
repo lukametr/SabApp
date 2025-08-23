@@ -8,7 +8,7 @@ import { UpdateDocumentDto } from './dto/update-document.dto';
 import * as fs from 'fs';
 import * as path from 'path';
 import archiver from 'archiver';
-import { mergeHazards as mergeHazardsUtil } from './utils/merge-hazards';
+import { mergeHazardsAuthoritative as mergeHazardsUtil } from './utils/merge-hazards';
 
 @Injectable()
 export class DocumentsService {

@@ -60,3 +60,33 @@ export const mergeHazards = (current: HazardLike[] = [], incoming: HazardLike[] 
 };
 
 export default mergeHazards;
+
+// Authoritative merge: returns exactly the incoming hazards list length,
+// deep-merging fields with existing when ids match. Hazards not present in
+// incoming are removed. Useful to avoid duplication and allow deletions.
+export const mergeHazardsAuthoritative = (current: HazardLike[] = [], incoming: HazardLike[] = []): HazardLike[] => {
+  const currentById = new Map<string, HazardLike>();
+  current.forEach((h, idx) => currentById.set(h.id || `existing_${idx}`, { ...h }));
+
+  return incoming.map((h, idx) => {
+    const key = h.id || `hazard_${Date.now()}_${idx}`;
+    const existing = currentById.get(key);
+    if (!existing) {
+      // New hazard, ensure photos is array if provided
+      return { ...h, photos: Array.isArray(h.photos) ? h.photos : (h.photos ? [h.photos] : []) } as HazardLike;
+    }
+    return {
+      ...existing,
+      ...h,
+      initialRisk: {
+        ...(existing.initialRisk || {}),
+        ...(h.initialRisk || {}),
+      },
+      residualRisk: {
+        ...(existing.residualRisk || {}),
+        ...(h.residualRisk || {}),
+      },
+      photos: Array.isArray(h.photos) ? h.photos : existing.photos,
+    } as HazardLike;
+  });
+};

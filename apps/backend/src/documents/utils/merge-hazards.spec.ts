@@ -1,4 +1,4 @@
-import { mergeHazards, HazardLike } from './merge-hazards';
+import { mergeHazards, mergeHazardsAuthoritative, HazardLike } from './merge-hazards';
 
 describe('mergeHazards', () => {
   it('preserves existing fields when incoming hazard omits them', () => {
@@ -60,5 +60,32 @@ describe('mergeHazards', () => {
     const incoming: HazardLike[] = [{ id: 'h1', photos: ['photoB'] }];
     const merged = mergeHazards(current, incoming);
     expect(merged[0].photos).toEqual(['photoB']);
+  });
+
+  describe('mergeHazardsAuthoritative', () => {
+    it('does not duplicate hazards and respects incoming count/order', () => {
+      const current: HazardLike[] = [
+        { id: 'h1', hazardIdentification: 'Old 1' },
+        { id: 'h2', hazardIdentification: 'Old 2' },
+      ];
+      const incoming: HazardLike[] = [
+        { id: 'h1', hazardIdentification: 'New 1' },
+        { id: 'h3', hazardIdentification: 'New 3' },
+      ];
+      const merged = mergeHazardsAuthoritative(current, incoming);
+      expect(merged).toHaveLength(2);
+      expect(merged[0].id).toBe('h1');
+      expect(merged[0].hazardIdentification).toBe('New 1');
+      expect(merged[1].id).toBe('h3');
+      // h2 was removed because it is not present in incoming
+      expect(merged.find(h => h.id === 'h2')).toBeUndefined();
+    });
+
+    it('deep-merges nested risks when ids match', () => {
+      const current: HazardLike[] = [{ id: 'h1', initialRisk: { probability: 1, severity: 2, total: 3 } }];
+      const incoming: HazardLike[] = [{ id: 'h1', initialRisk: { severity: 5 } }];
+      const merged = mergeHazardsAuthoritative(current, incoming);
+      expect(merged[0].initialRisk).toEqual({ probability: 1, severity: 5, total: 3 });
+    });
   });
 });
