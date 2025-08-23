@@ -322,6 +322,12 @@ export class DocumentsController {
       }
 
       const buffer = await this.documentsService.getDocumentFile(id);
+      // increment ZIP download counter (legacy zip of photos or file)
+      try {
+        await this.documentsService.incrementDownloadCounter(id, 'zip');
+      } catch (e) {
+        console.warn('⚠️ Failed to increment ZIP download counter:', e?.message);
+      }
       
       // Create descriptive filename
       const sanitizedName = document.objectName 
@@ -378,6 +384,12 @@ export class DocumentsController {
       };
       
       const excelBuffer = await this.reportService.generateExcelReport(documentWithUserInfo);
+      // increment Excel download counter
+      try {
+        await this.documentsService.incrementDownloadCounter(id, 'excel');
+      } catch (e) {
+        console.warn('⚠️ Failed to increment Excel download counter:', e?.message);
+      }
       
       const fileName = `უსაფრთხოების-შეფასება-${document.objectName}-${new Date().toISOString().split('T')[0]}.xlsx`;
       
@@ -408,6 +420,12 @@ export class DocumentsController {
         'Content-Disposition': `attachment; filename="${encodeURIComponent(fileName)}"`,
       });
       res.send(pdfBuffer);
+      // increment PDF download counter
+      try {
+        await this.documentsService.incrementDownloadCounter(id, 'pdf');
+      } catch (e) {
+        console.warn('⚠️ Failed to increment PDF download counter:', e?.message);
+      }
       
       console.log(`📄 PDF რეპორტი გენერირდა დოკუმენტისთვის: ${id}`);
     } catch (error) {

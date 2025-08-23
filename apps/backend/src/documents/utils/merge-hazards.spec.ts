@@ -1,5 +1,46 @@
 import { mergeHazards, mergeHazardsAuthoritative, HazardLike } from './merge-hazards';
 
+describe('mergeHazardsAuthoritative', () => {
+  it('merges existing by id and applies risk defaults and photos preservation', () => {
+    const current = [
+      {
+        id: 'h1',
+        hazardIdentification: 'old',
+        initialRisk: { probability: 5, severity: 5, total: 25 },
+        residualRisk: { probability: 3, severity: 3, total: 9 },
+        photos: ['data:image/png;base64,OLD'],
+      },
+    ];
+    const incoming = [
+      {
+        id: 'h1',
+        hazardIdentification: 'new',
+        // missing risks should keep fields merged and defaulted
+        photos: undefined,
+      } as any,
+      {
+        hazardIdentification: 'added',
+        // new item without risks must get defaults
+      } as any,
+    ];
+
+    const merged = mergeHazardsAuthoritative(current as any, incoming as any);
+    expect(merged).toHaveLength(2);
+    const m0 = merged[0];
+    expect(m0.id).toBe('h1');
+    expect(m0.hazardIdentification).toBe('new');
+    expect(m0.initialRisk).toEqual({ probability: 5, severity: 5, total: 25 });
+    expect(m0.residualRisk).toEqual({ probability: 3, severity: 3, total: 9 });
+    expect(m0.photos).toEqual(['data:image/png;base64,OLD']);
+
+    const m1 = merged[1];
+    expect(m1.hazardIdentification).toBe('added');
+    expect(m1.initialRisk).toEqual({ probability: 0, severity: 0, total: 0 });
+    expect(m1.residualRisk).toEqual({ probability: 0, severity: 0, total: 0 });
+    expect(Array.isArray(m1.photos)).toBe(true);
+  });
+});
+
 describe('mergeHazards', () => {
   it('preserves existing fields when incoming hazard omits them', () => {
     const current: HazardLike[] = [{

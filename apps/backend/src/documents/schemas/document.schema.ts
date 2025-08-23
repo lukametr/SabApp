@@ -118,6 +118,16 @@ export class Document extends MongoDocument {
   @Prop({ type: [String], default: [] })
   photos: string[];
 
+  // Download counters
+  @Prop({ default: 0 })
+  downloadZipCount: number;
+
+  @Prop({ default: 0 })
+  downloadExcelCount: number;
+
+  @Prop({ default: 0 })
+  downloadPdfCount: number;
+
   // TypeScript types for timestamp fields
   createdAt: Date;
   updatedAt: Date;

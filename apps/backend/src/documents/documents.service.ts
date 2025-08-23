@@ -312,6 +312,22 @@ export class DocumentsService {
     });
   }
 
+  async incrementDownloadCounter(id: string, type: 'zip' | 'excel' | 'pdf'): Promise<void> {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return; // ignore silently for invalid ids
+    }
+    const inc: any = {};
+    switch (type) {
+      case 'zip':
+        inc.downloadZipCount = 1; break;
+      case 'excel':
+        inc.downloadExcelCount = 1; break;
+      case 'pdf':
+        inc.downloadPdfCount = 1; break;
+    }
+    await this.documentModel.updateOne({ _id: id }, { $inc: inc }).exec();
+  }
+
   async deletePhoto(id: string, photoName: string): Promise<Document> {
     const document = await this.documentModel.findById(id).exec();
     if (!document) {
