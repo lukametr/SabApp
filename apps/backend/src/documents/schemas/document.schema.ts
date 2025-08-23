@@ -33,7 +33,8 @@ class Hazard {
   @Prop({ required: false })
   id?: string;
 
-  @Prop({ required: true })
+  // Allow partial hazard drafts during edits; default empty string
+  @Prop({ required: false, default: '' })
   hazardIdentification: string;
 
   @Prop({ type: [String], required: false, default: [] })

@@ -175,7 +175,30 @@ export class DocumentsService {
 
       // Hazards: deep merge only if provided; else keep existing (never leave undefined)
       if (updateDocumentDto.hazards !== undefined) {
-        updateData.hazards = mergeHazardsUtil(existingDocument.hazards as any[], updateDocumentDto.hazards as any[]);
+        const merged = mergeHazardsUtil(existingDocument.hazards as any[], updateDocumentDto.hazards as any[]);
+        // Normalize hazards to ensure required nested fields have safe defaults
+        updateData.hazards = (merged || []).map((h: any) => ({
+          id: h.id,
+          hazardIdentification: h.hazardIdentification ?? '',
+          affectedPersons: Array.isArray(h.affectedPersons) ? h.affectedPersons : [],
+          injuryDescription: h.injuryDescription ?? '',
+          existingControlMeasures: h.existingControlMeasures ?? '',
+          initialRisk: {
+            probability: h.initialRisk?.probability ?? 0,
+            severity: h.initialRisk?.severity ?? 0,
+            total: h.initialRisk?.total ?? 0,
+          },
+          additionalControlMeasures: h.additionalControlMeasures ?? '',
+          residualRisk: {
+            probability: h.residualRisk?.probability ?? 0,
+            severity: h.residualRisk?.severity ?? 0,
+            total: h.residualRisk?.total ?? 0,
+          },
+          requiredMeasures: h.requiredMeasures ?? '',
+          responsiblePerson: h.responsiblePerson ?? '',
+          reviewDate: h.reviewDate ?? null,
+          photos: Array.isArray(h.photos) ? h.photos : [],
+        }));
       } else {
         updateData.hazards = Array.isArray((existingDocument as any).hazards) ? (existingDocument as any).hazards : [];
       }
