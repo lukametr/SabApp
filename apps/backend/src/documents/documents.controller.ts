@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete, UseInterceptors, Patch, Res, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, UseInterceptors, Patch, Res, UseGuards, Request, BadRequestException } from '@nestjs/common';
 import { Response } from 'express';
 import { DocumentsService } from './documents.service';
 import { ReportService } from './report.service';
@@ -32,12 +32,12 @@ export class DocumentsController {
       // Validate required fields
       if (!createDocumentDto.evaluatorName || !createDocumentDto.evaluatorLastName || 
           !createDocumentDto.objectName || !createDocumentDto.workDescription) {
-        throw new Error('Required fields are missing');
+        throw new BadRequestException('Required fields are missing');
       }
       
       // Validate dates
       if (!createDocumentDto.date || !createDocumentDto.time) {
-        throw new Error('Date and time are required');
+        throw new BadRequestException('Date and time are required');
       }
     
     // Create document directly; interceptor has already processed photos/hazards
@@ -86,7 +86,7 @@ export class DocumentsController {
       
       // Validate ID
       if (!id || id.trim() === '') {
-        throw new Error('Document ID is required');
+        throw new BadRequestException('Document ID is required');
       }
     
     // Build update payload directly from DTO; interceptor handles photos/hazards processing

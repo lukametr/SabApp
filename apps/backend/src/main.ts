@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, BadRequestException } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import compression from 'compression';
@@ -143,12 +143,16 @@ async function bootstrap() {
     skipMissingProperties: false, // Don't skip validation for missing properties
     validationError: { target: false, value: false },
     exceptionFactory: (errors) => {
-      console.error('📋 Validation errors:', errors.map(error => ({
+      const simplified = errors.map(error => ({
         property: error.property,
         value: error.value,
         constraints: error.constraints
-      })));
-      return errors;
+      }));
+      console.error('📋 Validation errors:', simplified);
+      return new BadRequestException({
+        message: 'Validation failed',
+        errors: simplified,
+      });
     }
   }));
 
