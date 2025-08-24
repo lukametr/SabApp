@@ -307,50 +307,6 @@ export class DocumentsService {
     await this.documentModel.updateOne({ _id: id }, { $inc: inc }).exec();
   }
 
-  async deletePhoto(id: string, photoName: string): Promise<Document> {
-    const document = await this.documentModel.findById(id).exec();
-    if (!document) {
-      throw new NotFoundException(`Document with ID ${id} not found`);
-    }
-
-    // წავშალოთ ფაილი
-    const filePath = path.join(process.cwd(), 'uploads', 'photos', photoName);
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
-
-    // განვაახლოთ დოკუმენტი
-    document.photos = document.photos.filter(photo => {
-      // შევადაროთ მხოლოდ ფაილის სახელი, არა სრული path
-      const photoFileName = photo.split('/').pop();
-      return photoFileName !== photoName;
-    });
-    return document.save();
-  }
-
-  async getPhoto(id: string, photoName: string): Promise<Buffer> {
-    const document = await this.documentModel.findById(id).exec();
-    if (!document) {
-      throw new NotFoundException(`Document with ID ${id} not found`);
-    }
-
-    const photoExists = document.photos.some(photo => {
-      const photoFileName = photo.split('/').pop();
-      return photoFileName === photoName;
-    });
-
-    if (!photoExists) {
-      throw new NotFoundException(`Photo ${photoName} not found in document`);
-    }
-
-    const filePath = path.join(process.cwd(), 'uploads', 'photos', photoName);
-    if (!fs.existsSync(filePath)) {
-      throw new NotFoundException(`Photo file not found at path: ${filePath}`);
-    }
-
-    return fs.readFileSync(filePath);
-  }
-
   async createZip(files: Express.Multer.File[]): Promise<Buffer> {
     return new Promise((resolve, reject) => {
       const chunks: Buffer[] = [];
@@ -373,4 +329,32 @@ export class DocumentsService {
   }
 
   // Legacy ZIP method removed; getDocumentFile now supports both file paths and base64 inline
+
+  async deletePhoto(id: string, photoIndex: number): Promise<Document> {
+    const document = await this.documentModel.findById(id).exec();
+    if (!document) {
+      throw new NotFoundException(`Document with ID ${id} not found`);
+    }
+
+    // წავშალოთ photo მასივიდან ინდექსით
+    if (document.photos && document.photos[photoIndex]) {
+      document.photos.splice(photoIndex, 1);
+    }
+    
+    return document.save();
+  }
+
+  async getPhoto(id: string, photoIndex: number): Promise<string> {
+    const document = await this.documentModel.findById(id).exec();
+    if (!document) {
+      throw new NotFoundException(`Document with ID ${id} not found`);
+    }
+
+    if (!document.photos || !document.photos[photoIndex]) {
+      throw new NotFoundException(`Photo at index ${photoIndex} not found`);
+    }
+
+    // დავაბრუნოთ base64 string
+    return document.photos[photoIndex];
+  }
 }

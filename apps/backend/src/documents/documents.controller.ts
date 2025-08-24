@@ -392,4 +392,32 @@ export class DocumentsController {
       res.status(500).json({ message: 'Excel რეპორტის გენერაცია ვერ მოხერხდა', error: error.message });
     }
   }
+
+  @Delete(':id/photos/:photoIndex')
+  async deletePhoto(
+    @Param('id') id: string,
+    @Param('photoIndex') photoIndex: string,
+  ): Promise<Document> {
+    return this.documentsService.deletePhoto(id, parseInt(photoIndex));
+  }
+
+  @Get(':id/photos/:photoIndex')
+  async getPhoto(
+    @Param('id') id: string,
+    @Param('photoIndex') photoIndex: string,
+    @Res() res: Response,
+  ): Promise<void> {
+    const base64Photo = await this.documentsService.getPhoto(id, parseInt(photoIndex));
+    
+    // გადავაქციოთ base64 binary-ად და გავაგზავნოთ
+    const matches = base64Photo.match(/^data:([^;]+);base64,(.+)$/);
+    if (matches) {
+      const mimeType = matches[1];
+      const buffer = Buffer.from(matches[2], 'base64');
+      res.setHeader('Content-Type', mimeType);
+      res.send(buffer);
+    } else {
+      res.status(400).send('Invalid photo format');
+    }
+  }
 }

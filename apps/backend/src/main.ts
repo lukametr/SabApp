@@ -1,6 +1,5 @@
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import { join } from 'path';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -103,11 +102,6 @@ async function bootstrap() {
   
   // Compression
   app.use(compression());
-
-  // Static files for uploads
-  app.useStaticAssets(join(__dirname, '..', '..', 'uploads'), {
-    prefix: '/uploads/',
-  });
 
   // CORS კონფიგურაცია
   const corsOrigin = process.env.CORS_ORIGIN || '*';
