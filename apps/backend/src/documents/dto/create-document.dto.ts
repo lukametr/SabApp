@@ -55,9 +55,10 @@ class HazardDto {
   @Type(() => Date)
   reviewDate?: Date;
 
+  @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  photos: string[];
+  photos?: string[];
 }
 
 export class CreateDocumentDto {
