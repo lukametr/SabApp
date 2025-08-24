@@ -50,8 +50,9 @@ export class PhotoUploadInterceptor implements NestInterceptor {
 
       // hazards photos
       if (Array.isArray(body.hazards)) {
-        const hazardPhotosCount = body.hazards.reduce((count, hazard) => 
-          count + (hazard?.photos?.length || 0), 0
+        const hazardPhotosCount = (body.hazards as any[]).reduce(
+          (count: number, hazard: any) => count + (Array.isArray(hazard?.photos) ? hazard.photos.length : 0),
+          0
         );
         console.log(`📸 Processing ${hazardPhotosCount} hazard photos`);
         body.hazards = body.hazards.map((hazard: any) => {
