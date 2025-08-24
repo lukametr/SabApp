@@ -28,6 +28,15 @@ export class DocumentsController {
       console.log('📋 Creating document for user:', userId || 'anonymous');
   console.log('📋 Received document data:', createDocumentDto);
   // Files interceptor removed; photos expected as base64 strings in DTO
+  console.log('📝 Received document data:', {
+    hasPhotos: !!createDocumentDto.photos?.length,
+    photosCount: createDocumentDto.photos?.length || 0,
+    hazardsCount: Array.isArray(createDocumentDto.hazards) ? createDocumentDto.hazards.length : 0,
+    hazardPhotosCount: Array.isArray(createDocumentDto.hazards)
+      ? createDocumentDto.hazards.reduce((acc: number, h: any) => acc + ((h.photos?.length) || 0), 0)
+      : 0,
+    firstPhotoSample: createDocumentDto.photos?.[0]?.substring(0, 50)
+  });
       
       // Validate required fields
       if (!createDocumentDto.evaluatorName || !createDocumentDto.evaluatorLastName || 

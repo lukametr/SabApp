@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
-import { ValidationPipe, BadRequestException } from '@nestjs/common';
+import { ValidationPipe, BadRequestException, RequestMethod } from '@nestjs/common';
 import { json, urlencoded } from 'express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
@@ -54,9 +54,12 @@ async function bootstrap() {
   app.use(json({ limit: '50mb' }));
   app.use(urlencoded({ limit: '50mb', extended: true }));
 
-  // Set global prefix for all API routes
+  // Set global prefix for all API routes, but keep /health and /docs at root
   app.setGlobalPrefix('api', {
-    exclude: ['/health', '/docs'],
+    exclude: [
+      { path: 'health', method: RequestMethod.ALL },
+      { path: 'docs', method: RequestMethod.ALL },
+    ],
   });
 
   // Request logging middleware
@@ -175,14 +178,12 @@ async function bootstrap() {
   try {
     const portEnv = process.env.PORT;
     if (!portEnv) {
-      console.error('❌ PORT env var missing');
-      process.exit(1);
+      console.warn('⚠️  PORT env var missing, defaulting to 3001');
     }
-
-    const port = parseInt(portEnv, 10);
+    const port = parseInt(portEnv || '3001', 10);
     if (isNaN(port)) {
-      console.error('❌ Invalid PORT value:', portEnv);
-      process.exit(1);
+      console.warn('⚠️  Invalid PORT value, defaulting to 3001:', portEnv);
+      
     }
 
     // Error handling
