@@ -4,6 +4,7 @@ import { DocumentsService } from './documents.service';
 import { ReportService } from './report.service';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
+import { Document } from './schemas/document.schema';
 import { existsSync } from 'fs';
 import { exec } from 'child_process';
 import { promisify } from 'util';
