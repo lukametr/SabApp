@@ -19,18 +19,7 @@ export const documentApi = {
   },
 
   create: async (data: CreateDocumentDto): Promise<Document> => {
-    const formData = new FormData();
-    
-    // Add text fields
-    formData.append('evaluatorName', data.evaluatorName);
-    formData.append('evaluatorLastName', data.evaluatorLastName);
-    formData.append('objectName', data.objectName);
-    formData.append('workDescription', data.workDescription);
-    formData.append('date', data.date.toISOString());
-    formData.append('time', data.time.toISOString());
-
     // Process hazards - photos are already base64 encoded in photos array
-    const hazardPhotos: File[] = [];
     const processedHazards = data.hazards.map(hazard => {
       const processedHazard = {
         ...hazard,
@@ -41,51 +30,32 @@ export const documentApi = {
       console.log('🔄 [API] Processing hazard for create:', {
         id: hazard.id,
         hazardIdentification: hazard.hazardIdentification || 'EMPTY',
-        affectedPersons: hazard.affectedPersons?.length || 0,
-        injuryDescription: hazard.injuryDescription || 'EMPTY',
-        existingControlMeasures: hazard.existingControlMeasures || 'EMPTY',
-        additionalControlMeasures: hazard.additionalControlMeasures || 'EMPTY',
-        requiredMeasures: hazard.requiredMeasures || 'EMPTY',
-        responsiblePerson: hazard.responsiblePerson || 'EMPTY',
-        initialRisk: hazard.initialRisk,
-        residualRisk: hazard.residualRisk,
-        reviewDate: hazard.reviewDate,
         photosCount: hazard.photos?.length || 0
       });
-      
-      // Legacy: Extract File objects from mediaFile if present (for compatibility)
-      if ((hazard as any).mediaFile) {
-        hazardPhotos.push((hazard as any).mediaFile);
-        console.log('📸 Added hazard photo from mediaFile:', (hazard as any).mediaFile.name);
-      }
       
       return processedHazard;
     });
 
-    console.log('📋 Processed hazards:', processedHazards.length);
-    console.log('📸 Total hazard photos:', hazardPhotos.length);
+    // Build JSON payload directly like update does
+    const createPayload = {
+      evaluatorName: data.evaluatorName,
+      evaluatorLastName: data.evaluatorLastName,
+      objectName: data.objectName,
+      workDescription: data.workDescription,
+      date: data.date.toISOString(),
+      time: data.time.toISOString(),
+      hazards: processedHazards,
+      photos: data.photos || []
+    };
 
-    // Add processed hazards data
-    formData.append('hazards', JSON.stringify(processedHazards));
-
-    // Add hazard photos
-    hazardPhotos.forEach((photo, index) => {
-      formData.append('hazardPhotos', photo);
+    console.log('📋 Creating document with payload:', {
+      hazardsCount: processedHazards.length,
+      photosCount: createPayload.photos.length
     });
 
-    // Add general photos if they exist
-    if (data.photos && data.photos.length > 0) {
-      data.photos.forEach((photo, _index) => {
-        // Universal check for File type (works in browser and Node build)
-        if ((photo as any) && typeof photo === 'object' && (photo as any).constructor && (photo as any).constructor.name === 'File') {
-          formData.append('photos', photo);
-        }
-      });
-    }
-
-    const response = await api.post('/documents', formData, {
+    const response = await api.post('/documents', createPayload, {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        'Content-Type': 'application/json',
       },
     });
     

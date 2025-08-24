@@ -57,7 +57,10 @@ class HazardDto {
   responsiblePerson?: string;
 
   @IsOptional()
-  @Transform(({ value }) => (value === null || value === '' ? undefined : (typeof value === 'string' || typeof value === 'number') ? new Date(value) : value))
+  @Transform(({ value }) => {
+    if (value === null || value === '' || value === undefined) return undefined;
+    return new Date(value);
+  })
   @IsDate()
   @Type(() => Date)
   reviewDate?: Date;
@@ -86,52 +89,52 @@ export class UpdateDocumentDto {
   workDescription?: string;
 
   @IsOptional()
-  @Transform(({ value }) => value ? new Date(value) : undefined)
+  @Transform(({ value }) => {
+    if (!value || value === '') return undefined;
+    return new Date(value);
+  })
   @IsDate()
   @Type(() => Date)
   date?: Date;
 
   @IsOptional()
-  @Transform(({ value }) => value ? new Date(value) : undefined)
+  @Transform(({ value }) => {
+    if (!value || value === '') return undefined;
+    return new Date(value);
+  })
   @IsDate()
   @Type(() => Date)
   time?: Date;
 
-  // Hazards must be provided as an array; do not parse JSON strings here
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => HazardDto)
   hazards?: HazardDto[];
 
-  // Photos should be base64 data URLs or http(s) URLs
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  @Transform(({ value }) => {
-    if (Array.isArray(value)) {
-      return value.filter(photo =>
-        typeof photo === 'string' &&
-        (photo.startsWith('data:image/') || photo.startsWith('http'))
-      );
-    }
-    return value;
-  })
   photos?: string[];
 
-  // Metadata fields for preserving document integrity
   @IsOptional()
   @IsString()
   authorId?: string;
 
   @IsOptional()
-  @Transform(({ value }) => value ? new Date(value) : undefined)
+  @Transform(({ value }) => {
+    if (!value || value === '') return undefined;
+    return new Date(value);
+  })
   @IsDate()
   @Type(() => Date)
   createdAt?: Date;
 
   @IsOptional()
-  @Transform(({ value }) => value ? new Date(value) : undefined)
+  @Transform(({ value }) => {
+    if (!value || value === '') return undefined;
+    return new Date(value);
+  })
   @IsDate()
   @Type(() => Date)
   updatedAt?: Date;
@@ -147,4 +150,4 @@ export class UpdateDocumentDto {
 
   @IsOptional()
   assessmentR?: number;
-} 
+}

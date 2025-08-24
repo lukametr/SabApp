@@ -1,5 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete, UseInterceptors, UploadedFiles, Patch, Res, UseGuards, Request } from '@nestjs/common';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { Controller, Get, Post, Body, Param, Delete, UseInterceptors, Patch, Res, UseGuards, Request } from '@nestjs/common';
 import { Response } from 'express';
 import { DocumentsService } from './documents.service';
 import { ReportService } from './report.service';
@@ -10,6 +9,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { SubscriptionGuard } from '../auth/guards/subscription.guard';
+import { PhotoUploadInterceptor } from './interceptors/photo-upload.interceptor';
 
 @Controller('documents')
 export class DocumentsController {
@@ -20,16 +20,13 @@ export class DocumentsController {
 
   @Post()
   @UseGuards(JwtAuthGuard, SubscriptionGuard)
-  @UseInterceptors(FileFieldsInterceptor([
-    { name: 'photos', maxCount: 10 },
-    { name: 'hazardPhotos', maxCount: 50 }
-  ]))
-  async create(@Body() createDocumentDto: CreateDocumentDto, @UploadedFiles() files: any, @Request() req: any) {
+  @UseInterceptors(PhotoUploadInterceptor)
+  async create(@Body() createDocumentDto: CreateDocumentDto, @Request() req: any) {
     try {
       const userId = req.user?.id || req.user?.sub; // Get user ID from JWT token
       console.log('📋 Creating document for user:', userId || 'anonymous');
-      console.log('📋 Received document data:', createDocumentDto);
-      console.log('📸 Received files:', files);
+  console.log('📋 Received document data:', createDocumentDto);
+  // Files interceptor removed; photos expected as base64 strings in DTO
       
       // Validate required fields
       if (!createDocumentDto.evaluatorName || !createDocumentDto.evaluatorLastName || 
@@ -42,89 +39,15 @@ export class DocumentsController {
         throw new Error('Date and time are required');
       }
     
-    // Parse hazards from string if it's a string
-    let hazards = [];
-    if (createDocumentDto.hazards) {
-      if (typeof createDocumentDto.hazards === 'string') {
-        try {
-          hazards = JSON.parse(createDocumentDto.hazards);
-          console.log('📋 Parsed hazards from string:', hazards.length);
-          console.log('📋 First hazard structure:', JSON.stringify(hazards[0], null, 2));
-        } catch (error) {
-          console.error('❌ Error parsing hazards:', error);
-          hazards = [];
-        }
-      } else {
-        hazards = createDocumentDto.hazards;
-        console.log('📋 Received hazards as array:', hazards.length);
-      }
-    }
-    
-    // Convert files to base64 and store in database
-    const savedPhotos: string[] = [];
-    const savedHazardPhotos: string[] = [];
-    
-    if (files && files.photos) {
-      console.log('📸 Processing', files.photos.length, 'document photos');
-      for (const file of files.photos) {
-        const base64Data = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
-        savedPhotos.push(base64Data);
-      }
-    }
-    
-    if (files && files.hazardPhotos) {
-      console.log('📸 Processing', files.hazardPhotos.length, 'hazard photos');
-      for (const file of files.hazardPhotos) {
-        const base64Data = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
-        savedHazardPhotos.push(base64Data);
-      }
-    }
-    
-    // Add base64 photos to hazards in order - photos are already base64 in JSON
-    if (hazards.length > 0) {
-      let photoIndex = 0;
-      hazards = hazards.map((hazard: any, hazardIndex: number) => {
-        const hazardWithPhotos = {
-          ...hazard,
-          id: hazard.id || `hazard_${Date.now()}_${hazardIndex}`, // Ensure unique ID
-          photos: hazard.photos || [] // Photos are already base64 from frontend
-        };
-        
-        // Legacy: Add uploaded files to existing photos (if any file uploads)
-        if (photoIndex < savedHazardPhotos.length) {
-          hazardWithPhotos.photos.push(savedHazardPhotos[photoIndex]);
-          console.log('📸 Added uploaded file to hazard:', hazardWithPhotos.id, 'at index', photoIndex);
-          photoIndex++;
-        }
-        
-        console.log('✅ Final hazard with photos:', {
-          id: hazardWithPhotos.id,
-          hazardIdentification: hazardWithPhotos.hazardIdentification || 'EMPTY',
-          photosCount: hazardWithPhotos.photos?.length || 0,
-          hasAllFields: !!(hazardWithPhotos.hazardIdentification && 
-                           hazardWithPhotos.affectedPersons && 
-                           hazardWithPhotos.injuryDescription)
-        });
-        
-        return hazardWithPhotos;
-      });
-    }
-    
-    // Create document with base64 photos stored in database
+    // Create document directly; interceptor has already processed photos/hazards
     const documentWithPhotos = {
       ...createDocumentDto,
-      hazards,
-      photos: savedPhotos
+      photos: createDocumentDto.photos || []
     };
     
-    console.log('✅ Final document data with base64 photos:', {
-      hazardsCount: hazards.length,
-      photosCount: savedPhotos.length,
-      hazardPhotosCount: savedHazardPhotos.length,
-      hazardWithPhotos: hazards.map((h: any) => ({
-        id: h.id,
-        photosCount: h.photos?.length || 0
-      }))
+    console.log('✅ Final document data:', {
+      hazardsCount: Array.isArray(createDocumentDto.hazards) ? createDocumentDto.hazards.length : 0,
+      photosCount: Array.isArray(createDocumentDto.photos) ? createDocumentDto.photos.length : 0
     });
     
     return this.documentsService.create(documentWithPhotos, userId);
@@ -152,114 +75,22 @@ export class DocumentsController {
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, SubscriptionGuard)
-  @UseInterceptors(FileFieldsInterceptor([
-    { name: 'photos', maxCount: 10 },
-    { name: 'hazardPhotos', maxCount: 50 }
-  ]))
-  async update(@Param('id') id: string, @Body() updateDocumentDto: UpdateDocumentDto, @UploadedFiles() files: any, @Request() req: any) {
+  @UseInterceptors(PhotoUploadInterceptor)
+  async update(@Param('id') id: string, @Body() updateDocumentDto: UpdateDocumentDto, @Request() req: any) {
     try {
       const userId = req.user?.id || req.user?.sub; // Get user ID from JWT token
       console.log('📋 Updating document:', id, 'for user:', userId || 'anonymous');
       console.log('📋 Update data:', updateDocumentDto);
-      console.log('📸 Received files for update:', files);
+  // Files interceptor removed; photos expected as base64 strings in DTO
       
       // Validate ID
       if (!id || id.trim() === '') {
         throw new Error('Document ID is required');
       }
     
-    // Parse hazards only if provided; never default to empty (prevents accidental wipe)
-    let hazards: any[] | undefined = undefined;
-    const hazardsProvided = (updateDocumentDto as any).hazards !== undefined;
-    if (hazardsProvided) {
-      let parsed: any[] | undefined = undefined;
-      if (typeof updateDocumentDto.hazards === 'string') {
-        try {
-          parsed = JSON.parse(updateDocumentDto.hazards as any);
-          console.log('📋 Parsed hazards from string:', Array.isArray(parsed) ? parsed.length : 0);
-        } catch (error) {
-          console.error('❌ Error parsing hazards (leaving existing hazards intact):', error);
-          parsed = undefined; // do not wipe hazards on parse error
-        }
-      } else if (Array.isArray(updateDocumentDto.hazards)) {
-        parsed = updateDocumentDto.hazards as any[];
-        console.log('📋 Received hazards as array:', parsed.length);
-      } else if (updateDocumentDto.hazards == null) {
-        parsed = undefined;
-      }
-      hazards = parsed as any[] | undefined;
-    }
-    
-    // Convert files to base64 and store in database
-    const savedPhotos: string[] = [];
-    const savedHazardPhotos: string[] = [];
-    
-    if (files && files.photos) {
-      console.log('📸 Processing', files.photos.length, 'document photos');
-      for (const file of files.photos) {
-        const base64Data = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
-        savedPhotos.push(base64Data);
-      }
-    }
-    
-    if (files && files.hazardPhotos) {
-      console.log('📸 Processing', files.hazardPhotos.length, 'hazard photos');
-      for (const file of files.hazardPhotos) {
-        const base64Data = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
-        savedHazardPhotos.push(base64Data);
-      }
-    }
-    
-    // Add base64 photos to hazards in order - photos are already base64 in JSON
-  if (Array.isArray(hazards) && hazards.length > 0) {
-      let photoIndex = 0;
-      hazards = hazards.map((hazard: any, hazardIndex: number) => {
-        const hazardWithPhotos = {
-          ...hazard,
-          id: hazard.id || `hazard_${Date.now()}_${hazardIndex}`, // Ensure unique ID
-          photos: hazard.photos || [] as string[]
-        };
-        
-        // Legacy: Add one photo per hazard if available (if any file uploads)
-        if (photoIndex < savedHazardPhotos.length) {
-          hazardWithPhotos.photos.push(savedHazardPhotos[photoIndex]);
-          console.log('📸 Added photo to hazard:', hazardWithPhotos.id, 'at index', photoIndex);
-          photoIndex++;
-        }
-        
-        console.log('✅ Final updated hazard with photos:', {
-          id: hazardWithPhotos.id,
-          hazardIdentification: hazardWithPhotos.hazardIdentification || 'EMPTY',
-          photosCount: hazardWithPhotos.photos?.length || 0,
-          hasAllFields: !!(hazardWithPhotos.hazardIdentification && 
-                           hazardWithPhotos.affectedPersons && 
-                           hazardWithPhotos.injuryDescription)
-        });
-        
-        return hazardWithPhotos;
-      });
-    }
-
-    // Build update payload safely (omit undefineds, include only present fields)
+    // Build update payload directly from DTO; interceptor handles photos/hazards processing
     const documentUpdate: any = { ...updateDocumentDto };
-    // Hazards: include only if provided; otherwise do NOT touch existing hazards
-    if (hazardsProvided) {
-      if (Array.isArray(hazards)) {
-        documentUpdate.hazards = hazards;
-      } else {
-        // hazards parse failed or was null: do not include to keep existing
-        delete documentUpdate.hazards;
-      }
-    } else {
-      delete documentUpdate.hazards;
-    }
-    // Photos: prefer newly uploaded; else include provided if defined; else omit
-    if (savedPhotos.length > 0) {
-      documentUpdate.photos = savedPhotos;
-    } else if ((updateDocumentDto as any).photos === undefined) {
-      delete documentUpdate.photos;
-    }
-
+    
     // Omit undefined fields to avoid unsetting existing values
     Object.keys(documentUpdate).forEach((k) => {
       if (documentUpdate[k] === undefined) {
@@ -267,13 +98,10 @@ export class DocumentsController {
       }
     });
 
-    // Log summary for diagnostics
     console.log('✅ Final update payload summary:', {
-      includeHazards: hazardsProvided,
-      hazardsCount: Array.isArray(documentUpdate.hazards) ? documentUpdate.hazards.length : 'UNCHANGED',
-      photosProvided: (updateDocumentDto as any).photos !== undefined,
-      uploadedPhotos: savedPhotos.length,
-      hazardUploadedPhotos: savedHazardPhotos.length,
+      fieldsCount: Object.keys(documentUpdate).length,
+      hasHazards: documentUpdate.hazards !== undefined,
+      hasPhotos: documentUpdate.photos !== undefined
     });
 
     return this.documentsService.update(id, documentUpdate, userId);

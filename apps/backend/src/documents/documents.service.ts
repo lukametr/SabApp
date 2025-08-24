@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as mongoose from 'mongoose';
@@ -111,93 +111,39 @@ export class DocumentsService {
     return deletedDocument.toJSON() as Document;
   }
 
-  async update(id: string, updateDocumentDto: UpdateDocumentDto, userId?: string): Promise<Document> {
-    try {
-      console.log('📋 Updating document in service:', id, {
-        userId: userId || 'anonymous',
-        hazardsCount: updateDocumentDto.hazards?.length || 0,
-        photosCount: updateDocumentDto.photos?.length || 0,
-        preserveMetadata: !!(updateDocumentDto.authorId || updateDocumentDto.createdAt)
-      });
-      
-      // Validation: check if hazards array is provided and not empty during update
-      if (updateDocumentDto.hazards !== undefined) {
-        console.log('📋 Hazards validation:', {
-          isArray: Array.isArray(updateDocumentDto.hazards),
-          length: updateDocumentDto.hazards.length,
-          hazards: updateDocumentDto.hazards.map(h => ({ id: h.id, hazardId: h.hazardIdentification }))
-        });
-        
-        if (!Array.isArray(updateDocumentDto.hazards)) {
-          throw new Error('Hazards must be an array');
-        }
-      }
-      
-      if (!mongoose.Types.ObjectId.isValid(id)) {
-        throw new NotFoundException(`Invalid document ID: ${id}`);
-      }
-      
-      // 1) Load existing document
-      const existingDoc = await this.documentModel.findById(id);
-      if (!existingDoc) throw new NotFoundException();
-
-      // 2) Permission check
-      if (userId && existingDoc.authorId !== userId) throw new ForbiddenException();
-
-      // 3) Prepare update payload (deep merge + special handling)
-      // Merge shallow fields first
-      const updatePayload: any = {
-        ...existingDoc.toObject(),
-        ...updateDocumentDto,
-      };
-
-      // Dates: only override if defined
-      if (updateDocumentDto.date === undefined) updatePayload.date = existingDoc.date;
-      if (updateDocumentDto.time === undefined) updatePayload.time = existingDoc.time;
-
-      // Hazards: keep existing if undefined, else replace with provided array
-      updatePayload.hazards = updateDocumentDto.hazards !== undefined
-        ? updateDocumentDto.hazards
-        : (existingDoc as any).hazards;
-
-      // Photos: append provided photos to existing ones if provided, else keep existing
-      updatePayload.photos = updateDocumentDto.photos !== undefined
-        ? [ ...(existingDoc.photos || []), ...(updateDocumentDto.photos || []) ]
-        : existingDoc.photos;
-
-      // Preserve immutable metadata and increment updatedAt
-      updatePayload.authorId = existingDoc.authorId;
-      updatePayload.createdAt = (existingDoc as any).createdAt;
-      updatePayload.updatedAt = new Date();
-
-      // Optional: validate photo entries (basic check)
-      if (Array.isArray(updatePayload.photos)) {
-        const invalid = updatePayload.photos.find((p: unknown) => typeof p !== 'string');
-        if (invalid) throw new BadRequestException('Invalid photo entry');
-      }
-
-      // 4) Save updated document
-      const document = await this.documentModel.findByIdAndUpdate(
-        id,
-        updatePayload,
-        { new: true, runValidators: true }
-      );
-      
-      if (!document) {
-        throw new NotFoundException('დოკუმენტი ვერ მოიძებნა ან წვდომა არ გაქვთ');
-      }
-      
-  console.log('✅ Document updated successfully with deep merge:', {
-        id: document._id,
-        authorId: document.authorId,
-        createdAt: document.createdAt,
-        updatedAt: document.updatedAt
-      });
-      return document.toJSON() as Document;
-    } catch (error) {
-      console.error('❌ Error updating document:', error);
-      throw error;
+  async update(id: string, updateDocumentDto: UpdateDocumentDto, _userId?: string): Promise<Document> {
+    // მოვიძიოთ არსებული დოკუმენტი
+    const existingDoc = await this.documentModel.findById(id);
+    if (!existingDoc) {
+      throw new NotFoundException(`Document with ID ${id} not found`);
     }
+
+    // გავფილტროთ undefined მნიშვნელობები
+    const updateData: any = {};
+    Object.keys(updateDocumentDto).forEach((key) => {
+      const value = (updateDocumentDto as any)[key];
+      if (value !== undefined) {
+        (updateData as any)[key] = value;
+      }
+    });
+
+    // დავამატოთ updatedAt თარიღი
+    updateData.updatedAt = new Date();
+
+    // შევასრულოთ partial update - განახლდება მხოლოდ გადმოცემული ფილდები
+    const updated = await this.documentModel
+      .findByIdAndUpdate(
+        id,
+        { $set: updateData },
+        { new: true, runValidators: true }
+      )
+      .exec();
+
+    if (!updated) {
+      throw new NotFoundException('დოკუმენტი ვერ მოიძებნა ან წვდომა არ გაქვთ');
+    }
+
+    return updated.toJSON() as Document;
   }
 
   async toggleFavorite(id: string): Promise<Document> {
@@ -233,15 +179,54 @@ export class DocumentsService {
       throw new NotFoundException(`Document with ID ${id} not found`);
     }
 
-    // Check if document has any photos (document photos or hazard photos)
-    const hasDocumentPhotos = document.photos && document.photos.length > 0;
-    const hasHazardPhotos = document.hazards && document.hazards.some(hazard => hazard.photos && hazard.photos.length > 0);
+  // Check if document has any photos (document photos or hazard photos)
+  const hasDocumentPhotos = document.photos && document.photos.length > 0;
+  const hasHazardPhotos = document.hazards && document.hazards.some(hazard => hazard.photos && hazard.photos.length > 0);
 
     console.log(`🔍 Document ${id} - hasDocumentPhotos: ${hasDocumentPhotos}, hasHazardPhotos: ${hasHazardPhotos}`);
 
-    // Handle new documents with base64 photos (document photos or hazard photos)
+    // If we have photos, decide whether they are file paths or base64 and build a ZIP accordingly
     if (hasDocumentPhotos || hasHazardPhotos) {
-      return this.createDocumentZipFromBase64(document);
+      const archive = archiver('zip', { zlib: { level: 9 } });
+
+      // Helper to add a photo entry which can be base64 or /uploads path
+      const addPhoto = (photo: string, namePrefix: string, index: number) => {
+        try {
+          if (typeof photo !== 'string') return;
+          if (photo.startsWith('/uploads/')) {
+            const filePath = path.join(process.cwd(), photo.replace(/^\/+/, ''));
+            if (fs.existsSync(filePath)) {
+              archive.file(filePath, { name: `${namePrefix}-${index + 1}${path.extname(filePath)}` });
+            }
+            return;
+          }
+          const matches = photo.match(/^data:([^;]+);base64,(.+)$/);
+          if (matches) {
+            const mimeType = matches[1];
+            const base64Data = matches[2];
+            const buffer = Buffer.from(base64Data, 'base64');
+            const extension = (mimeType.split('/')[1] || 'jpg').split(';')[0];
+            archive.append(buffer, { name: `${namePrefix}-${index + 1}.${extension}` });
+          }
+        } catch (e) {
+          // ignore single photo failure
+        }
+      };
+
+      // Document photos
+      (document.photos || []).forEach((p: any, i: number) => addPhoto(p, 'document-photo', i));
+      // Hazard photos
+      (document.hazards || []).forEach((h: any, hi: number) => {
+        (h.photos || []).forEach((p: any, pi: number) => addPhoto(p, `hazard-${hi + 1}-photo`, pi));
+      });
+
+      archive.finalize();
+      return new Promise((resolve, reject) => {
+        const chunks: Buffer[] = [];
+        archive.on('data', (chunk: Buffer) => chunks.push(chunk));
+        archive.on('end', () => resolve(Buffer.concat(chunks)));
+        archive.on('error', (err: Error) => reject(err));
+      });
     }
 
     // Handle old documents with file paths (legacy support)
@@ -329,13 +314,17 @@ export class DocumentsService {
     }
 
     // წავშალოთ ფაილი
-    const filePath = path.join(process.cwd(), 'uploads', photoName);
+    const filePath = path.join(process.cwd(), 'uploads', 'photos', photoName);
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }
 
     // განვაახლოთ დოკუმენტი
-    document.photos = document.photos.filter(photo => photo !== photoName);
+    document.photos = document.photos.filter(photo => {
+      // შევადაროთ მხოლოდ ფაილის სახელი, არა სრული path
+      const photoFileName = photo.split('/').pop();
+      return photoFileName !== photoName;
+    });
     return document.save();
   }
 
@@ -345,11 +334,16 @@ export class DocumentsService {
       throw new NotFoundException(`Document with ID ${id} not found`);
     }
 
-    if (!document.photos.includes(photoName)) {
+    const photoExists = document.photos.some(photo => {
+      const photoFileName = photo.split('/').pop();
+      return photoFileName === photoName;
+    });
+
+    if (!photoExists) {
       throw new NotFoundException(`Photo ${photoName} not found in document`);
     }
 
-    const filePath = path.join(process.cwd(), 'uploads', photoName);
+    const filePath = path.join(process.cwd(), 'uploads', 'photos', photoName);
     if (!fs.existsSync(filePath)) {
       throw new NotFoundException(`Photo file not found at path: ${filePath}`);
     }
@@ -378,82 +372,5 @@ export class DocumentsService {
     });
   }
 
-  private async createDocumentZipFromBase64(document: any): Promise<Buffer> {
-    const archive = archiver('zip', {
-      zlib: { level: 9 }
-    });
-
-    // Create document info as JSON
-    const documentInfo = {
-      id: document._id,
-      evaluatorName: document.evaluatorName,
-      evaluatorLastName: document.evaluatorLastName,
-      objectName: document.objectName,
-      workDescription: document.workDescription,
-      date: document.date,
-      time: document.time,
-      hazardsCount: document.hazards?.length || 0,
-      photosCount: document.photos?.length || 0
-    };
-
-    // Add document info as JSON file
-    archive.append(JSON.stringify(documentInfo, null, 2), { name: 'document-info.json' });
-
-    // Add document photos
-    if (document.photos && document.photos.length > 0) {
-      document.photos.forEach((base64Photo: string, index: number) => {
-        try {
-          // Extract base64 data and mime type
-          const matches = base64Photo.match(/^data:([^;]+);base64,(.+)$/);
-          if (matches) {
-            const mimeType = matches[1];
-            const base64Data = matches[2];
-            const buffer = Buffer.from(base64Data, 'base64');
-            
-            // Determine file extension
-            const extension = mimeType.split('/')[1] || 'jpg';
-            const fileName = `document-photo-${index + 1}.${extension}`;
-            
-            archive.append(buffer, { name: fileName });
-          }
-        } catch (error) {
-          console.error('Error processing document photo:', error);
-        }
-      });
-    }
-
-    // Add hazard photos
-    if (document.hazards && document.hazards.length > 0) {
-      document.hazards.forEach((hazard: any, hazardIndex: number) => {
-        if (hazard.photos && hazard.photos.length > 0) {
-          hazard.photos.forEach((base64Photo: string, photoIndex: number) => {
-            try {
-              const matches = base64Photo.match(/^data:([^;]+);base64,(.+)$/);
-              if (matches) {
-                const mimeType = matches[1];
-                const base64Data = matches[2];
-                const buffer = Buffer.from(base64Data, 'base64');
-                
-                const extension = mimeType.split('/')[1] || 'jpg';
-                const fileName = `hazard-${hazardIndex + 1}-photo-${photoIndex + 1}.${extension}`;
-                
-                archive.append(buffer, { name: fileName });
-              }
-            } catch (error) {
-              console.error('Error processing hazard photo:', error);
-            }
-          });
-        }
-      });
-    }
-
-    archive.finalize();
-
-    return new Promise((resolve, reject) => {
-      const chunks: Buffer[] = [];
-      archive.on('data', (chunk: Buffer) => chunks.push(chunk));
-      archive.on('end', () => resolve(Buffer.concat(chunks)));
-      archive.on('error', (err: Error) => reject(err));
-    });
-  }
+  // Legacy ZIP method removed; getDocumentFile now supports both file paths and base64 inline
 }
