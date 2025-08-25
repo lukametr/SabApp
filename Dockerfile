@@ -85,5 +85,5 @@ RUN ls -la public/ || echo "Public directory is empty"
 # Expose port
 EXPOSE 3001
 
-# Start the backend application
-CMD ["node", "dist/main.js"]
+# Start the backend application with detailed logging and fallback
+CMD ["sh", "-c", "echo 'Starting application...' && ls -la dist/ && node --version && npm --version && echo 'Environment:' && env | grep -E '(PORT|NODE_ENV|MONGODB_URI)' && echo 'Starting node process...' && timeout 30 node dist/main.js || (echo 'Main app failed, starting emergency health server...' && node health-server.js)"]

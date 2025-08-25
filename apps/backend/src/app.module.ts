@@ -57,7 +57,7 @@ import { SubscriptionModule } from './subscription/subscription.module';
     }),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'),
-      exclude: ['/api/(.*)', '/health', '/docs'],
+      exclude: ['/api*', '/health*', '/docs*'],
     }),
     DocumentsModule,
     AuthModule,

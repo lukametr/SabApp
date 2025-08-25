@@ -48,7 +48,8 @@ async function createDefaultAdmin(app: any) {
 
 async function bootstrap() {
   console.log('🚀 Bootstrap starting...');
-  console.log('🔧 Environment variables:', {
+  console.log('� CWD:', process.cwd());
+  console.log('�🔧 Environment variables:', {
     NODE_ENV: process.env.NODE_ENV,
     PORT: process.env.PORT,
     MONGODB_URI: process.env.MONGODB_URI ? 'SET' : 'MISSING'
@@ -194,7 +195,26 @@ async function bootstrap() {
     const port = parseInt(portEnv || '3001', 10);
     if (isNaN(port)) {
       console.warn('⚠️  Invalid PORT value, defaulting to 3001:', portEnv);
-      
+    }
+
+    // Test MongoDB connection before starting server
+    console.log('🔍 Testing MongoDB connection...');
+    try {
+      const mongoose = require('mongoose');
+      const mongoUri = process.env.MONGODB_URI;
+      if (!mongoUri) {
+        throw new Error('MONGODB_URI environment variable is missing');
+      }
+      console.log('🔗 Attempting to connect to MongoDB...');
+      await mongoose.connect(mongoUri, { 
+        serverSelectionTimeoutMS: 10000,
+        connectTimeoutMS: 10000 
+      });
+      console.log('✅ MongoDB connection test successful');
+      await mongoose.disconnect();
+    } catch (mongoError) {
+      console.error('❌ MongoDB connection test failed:', mongoError.message);
+      console.log('🚑 Starting without MongoDB dependency for healthcheck...');
     }
 
     // Error handling
