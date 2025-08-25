@@ -210,25 +210,7 @@ async function bootstrap() {
       console.warn('⚠️  Invalid PORT value, defaulting to 3001:', portEnv);
     }
 
-    // Test MongoDB connection before starting server
-    console.log('🔍 Testing MongoDB connection...');
-    try {
-      const mongoose = require('mongoose');
-      const mongoUri = process.env.MONGODB_URI;
-      if (!mongoUri) {
-        throw new Error('MONGODB_URI environment variable is missing');
-      }
-      console.log('🔗 Attempting to connect to MongoDB...');
-      await mongoose.connect(mongoUri, { 
-        serverSelectionTimeoutMS: 10000,
-        connectTimeoutMS: 10000 
-      });
-      console.log('✅ MongoDB connection test successful');
-      await mongoose.disconnect();
-    } catch (mongoError) {
-      console.error('❌ MongoDB connection test failed:', mongoError.message);
-      console.log('🚑 Starting without MongoDB dependency for healthcheck...');
-    }
+  // NOTE: Avoid manual mongoose connect/disconnect here to not interfere with Nest's managed connection
 
     // Error handling
     process.on('uncaughtException', (error) => {
