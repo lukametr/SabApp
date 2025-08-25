@@ -213,6 +213,21 @@ export class DebugController {
     };
   }
 
+  @Get('check-admin')
+  async checkAdmin() {
+    const adminUser = await this.usersService.findByEmail('admin@saba.com');
+    return {
+      exists: !!adminUser,
+      id: adminUser?._id,
+      email: adminUser?.email,
+      hasPassword: !!adminUser?.password,
+      passwordLength: adminUser?.password?.length || 0,
+      authProvider: adminUser?.authProvider,
+      role: adminUser?.role,
+      isEmailVerified: adminUser?.isEmailVerified,
+    };
+  }
+
   @Post('oauth-token-exchange-test')
   async testTokenExchange(@Body() body: { code?: string } = {}) {
     const clientId = process.env.GOOGLE_CLIENT_ID;

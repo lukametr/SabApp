@@ -17,7 +17,13 @@ async function createDefaultAdmin(app: any) {
     // Check if admin already exists
     const existingAdmin = await usersService.findByEmail('admin@saba.com');
     if (existingAdmin) {
-      console.log('✅ Admin user already exists');
+      console.log('✅ Admin user already exists', {
+        id: existingAdmin._id,
+        email: existingAdmin.email,
+        hasPassword: !!existingAdmin.password,
+        authProvider: existingAdmin.authProvider,
+        role: existingAdmin.role,
+      });
       return;
     }
 
@@ -31,7 +37,9 @@ async function createDefaultAdmin(app: any) {
       position: 'System Administrator'
     };
 
-    const admin = await usersService.createEmailUser(adminData);
+  console.log('🛠️ Creating admin user document...');
+  const admin = await usersService.createEmailUser(adminData);
+  console.log('🛠️ Admin user saved:', { id: admin.id, email: admin.email });
     
     // Update role to ADMIN after creation
     await usersService.updateUserRole(admin.id, UserRole.ADMIN);
@@ -41,7 +49,11 @@ async function createDefaultAdmin(app: any) {
     console.log('👑 Role: ADMIN');
     
   } catch (error) {
-    console.error('❌ Error creating default admin user:', error.message);
+    console.error('❌ Error creating default admin user:', {
+      message: error.message,
+      name: error.name,
+      stack: error.stack,
+    });
     // Don't fail startup if admin creation fails
   }
 }

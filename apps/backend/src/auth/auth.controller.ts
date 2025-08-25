@@ -209,7 +209,20 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Successfully authenticated', type: AuthResponseDto })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async login(@Body() loginDto: any): Promise<AuthResponseDto> {
-    return this.authService.loginWithEmail(loginDto);
+    console.log('🔐 Login attempt for:', loginDto?.email);
+    try {
+      const result = await this.authService.loginWithEmail(loginDto);
+      console.log('✅ Login successful for:', loginDto?.email);
+      return result;
+    } catch (error: any) {
+      console.error('❌ Login failed:', {
+        email: loginDto?.email,
+        message: error?.message,
+        code: error?.response?.code,
+        status: error?.status,
+      });
+      throw error;
+    }
   }
 
   @Get('profile')

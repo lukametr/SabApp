@@ -204,8 +204,12 @@ export class UsersService {
 
       // Hash the password
       const saltRounds = 10;
+      if (!userData.password || userData.password.length < 4) {
+        throw new Error('Invalid password for hashing');
+      }
+      console.log('🔒 Password hashing starting...', { inputLength: userData.password.length });
       const hashedPassword = await bcrypt.hash(userData.password, saltRounds);
-      console.log('🔒 Password hashed');
+      console.log('🔒 Password hashed', { hashPrefix: hashedPassword.substring(0, 7), length: hashedPassword.length });
 
       console.log('🔧 Creating new user document...');
       const now = new Date();
