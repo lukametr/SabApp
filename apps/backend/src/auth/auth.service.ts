@@ -11,6 +11,23 @@ import { GoogleAuthDto, GoogleUserInfo, AuthResponseDto } from '../users/dto/goo
 @Injectable()
 export class AuthService {
   private googleClient: OAuth2Client;
+  // Centralized JWT signing to ensure consistent error handling and messages
+  private signToken(payload: Record<string, any>): string {
+    try {
+      // Leverage JwtModule configuration (secret and expiresIn) from AuthModule
+      return this.jwtService.sign(payload);
+    } catch (err: any) {
+      const msg = err?.message || String(err);
+      console.error('❌ JWT signing failed:', msg);
+      if (msg.includes('secretOrPrivateKey') || msg.includes('secret or private key')) {
+        throw new BadRequestException({
+          message: 'Authentication unavailable: JWT secret not configured',
+          code: 'JWT_SECRET_MISSING',
+        });
+      }
+      throw err;
+    }
+  }
 
   constructor(
     private usersService: UsersService,
@@ -20,6 +37,7 @@ export class AuthService {
     const googleClientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
     console.log('≡ƒöº Auth Service - Google Client ID configured:', !!googleClientId);
     console.log('≡ƒöº Auth Service - Google Client ID length:', googleClientId?.length || 0);
+  console.log('🔐 Auth Service - JWT secret configured:', !!this.configService.get<string>('JWT_SECRET'));
     
     this.googleClient = new OAuth2Client(googleClientId);
   }
@@ -172,10 +190,7 @@ export class AuthService {
         isEmailVerified: user.isEmailVerified || true,
       };
 
-      const accessToken = this.jwtService.sign(payload, {
-        secret: this.configService.get<string>('JWT_SECRET'),
-        expiresIn: this.configService.get<string>('JWT_EXPIRES_IN', '7d'),
-      });
+  const accessToken = this.signToken(payload);
 
       console.log('≡ƒöº Google OAuth callback - JWT token generated successfully');
       console.log('≡ƒöº JWT payload:', {
@@ -308,7 +323,7 @@ export class AuthService {
         isEmailVerified: user.isEmailVerified,
       };
 
-      const access_token = this.jwtService.sign(payload);
+  const access_token = this.signToken(payload);
 
       console.log('≡ƒöº Google OAuth callback - JWT token generated successfully');
       console.log('≡ƒöº JWT payload:', payload);
@@ -506,10 +521,7 @@ export class AuthService {
       };
 
       console.log('🔐 Email Login - Generating JWT token...');
-      const accessToken = this.jwtService.sign(payload, {
-        secret: this.configService.get<string>('JWT_SECRET'),
-        expiresIn: this.configService.get<string>('JWT_EXPIRES_IN', '7d'),
-      });
+  const accessToken = this.signToken(payload);
 
       console.log('🔐 Email Login - Success for user:', user.email);
 
@@ -577,10 +589,7 @@ export class AuthService {
         isEmailVerified: user.isEmailVerified,
       };
 
-      const accessToken = this.jwtService.sign(payload, {
-        secret: this.configService.get<string>('JWT_SECRET'),
-        expiresIn: this.configService.get<string>('JWT_EXPIRES_IN', '7d'),
-      });
+  const accessToken = this.signToken(payload);
 
       console.log('🔐 NextAuth Google - Success for user:', user.email);
 
