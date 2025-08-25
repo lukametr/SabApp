@@ -4,6 +4,14 @@ import { Controller, Get } from '@nestjs/common';
 export class HealthController {
   @Get()
   check() {
-    return { status: 'ok' };
+    console.log('🏥 Health check endpoint called');
+    const response = { 
+      status: 'ok', 
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      environment: process.env.NODE_ENV || 'development'
+    };
+    console.log('🏥 Health check response:', response);
+    return response;
   }
 }

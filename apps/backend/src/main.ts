@@ -11,6 +11,7 @@ import { UserRole } from './users/schemas/user.schema';
 
 async function createDefaultAdmin(app: any) {
   try {
+    console.log('👤 Creating default admin user...');
     const usersService = app.get(UsersService);
     
     // Check if admin already exists
@@ -41,14 +42,24 @@ async function createDefaultAdmin(app: any) {
     
   } catch (error) {
     console.error('❌ Error creating default admin user:', error.message);
+    // Don't fail startup if admin creation fails
   }
 }
 
 async function bootstrap() {
+  console.log('🚀 Bootstrap starting...');
+  console.log('🔧 Environment variables:', {
+    NODE_ENV: process.env.NODE_ENV,
+    PORT: process.env.PORT,
+    MONGODB_URI: process.env.MONGODB_URI ? 'SET' : 'MISSING'
+  });
+  
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: ['error', 'warn', 'log', 'debug', 'verbose'],
     abortOnError: false,
   });
+
+  console.log('✅ NestJS application created successfully');
 
   // Increase request body size limits to support base64 images
   app.use(json({ limit: '50mb' }));
@@ -227,8 +238,18 @@ async function bootstrap() {
     });
 
     // Start the application
+    console.log(`🚀 Starting application on port ${port}...`);
     await app.listen(port, '0.0.0.0');
     console.log(`✅ Application is running on: http://0.0.0.0:${port}`);
+    
+    // Test health endpoint immediately
+    console.log(`🏥 Testing health endpoint immediately...`);
+    try {
+      const healthResponse = await fetch(`http://localhost:${port}/health`);
+      console.log(`🏥 Health endpoint test: ${healthResponse.status} - ${await healthResponse.text()}`);
+    } catch (healthError) {
+      console.error(`🏥 Health endpoint test failed:`, healthError.message);
+    }
     
     // Create default admin user after app starts
     await createDefaultAdmin(app);
