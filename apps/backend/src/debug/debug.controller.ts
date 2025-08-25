@@ -216,9 +216,24 @@ export class DebugController {
   @Get('check-admin')
   async checkAdmin() {
     try {
+      const states: Record<number, string> = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting' };
+      const readyState = (this.connection as any).readyState as number;
+      const stateText = states[readyState] || String(readyState);
+
+      if (readyState !== 1) {
+        return {
+          status: 'error',
+          code: 'DB_NOT_CONNECTED',
+          readyState,
+          stateText,
+          timestamp: new Date().toISOString(),
+        };
+      }
+
       const adminUser = await this.usersService.findByEmail('admin@saba.com');
       return {
         status: 'success',
+        db: { readyState, stateText },
         exists: !!adminUser,
         id: adminUser?._id,
         email: adminUser?.email,

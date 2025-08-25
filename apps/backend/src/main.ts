@@ -7,6 +7,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import compression from 'compression';
 import { UsersService } from './users/users.service';
+import { getConnectionToken } from '@nestjs/mongoose';
 import { UserRole } from './users/schemas/user.schema';
 
 async function createDefaultAdmin(app: any) {
@@ -283,8 +284,24 @@ async function bootstrap() {
       console.error(`🏥 Health endpoint test failed:`, healthError.message);
     }
     
-    // Create default admin user after app starts
-    await createDefaultAdmin(app);
+    // Wait for Mongo connection before attempting default admin creation
+    try {
+      const conn: any = app.get(getConnectionToken());
+      const states: Record<number, string> = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting' };
+      const waitStart = Date.now();
+      while (conn.readyState !== 1 && Date.now() - waitStart < 10000) {
+        console.log('⏳ Waiting for Mongo connection...', states[conn.readyState] || conn.readyState);
+        await new Promise(r => setTimeout(r, 500));
+      }
+      console.log('🧭 Mongo readyState:', states[conn.readyState] || conn.readyState);
+      if (conn.readyState === 1) {
+        await createDefaultAdmin(app);
+      } else {
+        console.warn('⚠️ Skipping default admin creation: DB not connected');
+      }
+    } catch (e: any) {
+      console.warn('⚠️ Could not verify Mongo connection before admin creation:', e?.message);
+    }
     console.log(`📚 API Documentation available at: http://0.0.0.0:${port}/docs`);
     console.log(`🏥 Health check available at: http://0.0.0.0:${port}/health`);
     console.log(`🌐 CORS Origin: ${corsOrigin}`);
