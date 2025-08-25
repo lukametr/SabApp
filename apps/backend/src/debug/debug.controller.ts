@@ -215,17 +215,29 @@ export class DebugController {
 
   @Get('check-admin')
   async checkAdmin() {
-    const adminUser = await this.usersService.findByEmail('admin@saba.com');
-    return {
-      exists: !!adminUser,
-      id: adminUser?._id,
-      email: adminUser?.email,
-      hasPassword: !!adminUser?.password,
-      passwordLength: adminUser?.password?.length || 0,
-      authProvider: adminUser?.authProvider,
-      role: adminUser?.role,
-      isEmailVerified: adminUser?.isEmailVerified,
-    };
+    try {
+      const adminUser = await this.usersService.findByEmail('admin@saba.com');
+      return {
+        status: 'success',
+        exists: !!adminUser,
+        id: adminUser?._id,
+        email: adminUser?.email,
+        hasPassword: !!adminUser?.password,
+        passwordLength: adminUser?.password?.length || 0,
+        authProvider: adminUser?.authProvider,
+        role: adminUser?.role,
+        isEmailVerified: adminUser?.isEmailVerified,
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error: any) {
+      return {
+        status: 'error',
+        message: error?.message,
+        name: error?.name,
+        code: error?.code,
+        timestamp: new Date().toISOString(),
+      };
+    }
   }
 
   @Post('oauth-token-exchange-test')

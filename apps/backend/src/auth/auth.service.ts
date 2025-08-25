@@ -554,9 +554,11 @@ export class AuthService {
       // Database connectivity issues
       if (
         error?.name === 'MongoNetworkError' ||
+        error?.name === 'MongooseServerSelectionError' ||
         msg.includes('ECONNREFUSED') ||
         msg.includes('getaddrinfo') ||
-        msg.includes('ENOTFOUND')
+        msg.includes('ENOTFOUND') ||
+        msg.includes('Server selection timed out')
       ) {
         throw new BadRequestException({
           message: 'Authentication temporarily unavailable',
