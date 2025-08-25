@@ -537,9 +537,38 @@ export class AuthService {
           // Removed personalNumber and phoneNumber
         },
       };
-    } catch (error) {
-      console.error('🔐 Email Login - Error:', error);
-      throw error;
+    } catch (error: any) {
+      console.error('🔐 Email Login - Error:', {
+        message: error?.message,
+        name: error?.name,
+        code: error?.code,
+      });
+      const msg = String(error?.message || '');
+      // JWT secret misconfig handled here as well (belt and suspenders)
+      if (msg.includes('secretOrPrivateKey') || msg.includes('secret or private key')) {
+        throw new BadRequestException({
+          message: 'Authentication unavailable: JWT secret not configured',
+          code: 'JWT_SECRET_MISSING',
+        });
+      }
+      // Database connectivity issues
+      if (
+        error?.name === 'MongoNetworkError' ||
+        msg.includes('ECONNREFUSED') ||
+        msg.includes('getaddrinfo') ||
+        msg.includes('ENOTFOUND')
+      ) {
+        throw new BadRequestException({
+          message: 'Authentication temporarily unavailable',
+          code: 'DB_UNAVAILABLE',
+        });
+      }
+      // Pass through known HTTP exceptions (BadRequest/Unauthorized)
+      if (error?.status && error?.response) {
+        throw error;
+      }
+      // Fallback generic error
+      throw new BadRequestException({ message: 'Login failed', code: 'LOGIN_FAILED' });
     }
   }
 
