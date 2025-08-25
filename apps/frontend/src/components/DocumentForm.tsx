@@ -8,6 +8,7 @@ import { DatePicker, TimePicker, LocalizationProvider } from '@mui/x-date-picker
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { ka } from 'date-fns/locale';
 import { CreateDocumentDto } from '../types/document';
+import { useAuthStore } from '../store/authStore';
 import { Delete, Add } from '@mui/icons-material';
 
 const PERSONS = [
@@ -56,6 +57,7 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hazardIdRef = useRef<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const idInputRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
 
   console.log('🔄 [HazardSection] Current hazards state:', {
     count: hazards.length,
@@ -79,12 +81,20 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
       residualRisk: { probability: 0, severity: 0, total: 0 },
       requiredMeasures: '',
       responsiblePerson: '',
-      reviewDate: null, // Start with null for DatePicker
+      reviewDate: null, // Filled from shared review date in parent
       photos: []
     };
     console.log('✅ Added new hazard:', newHazard.id);
     onHazardsChange([...hazards, newHazard]);
     setExpandedHazard(newHazard.id);
+    // Focus the identification field and scroll into view after render
+    setTimeout(() => {
+      const input = idInputRefs.current[newHazard.id];
+      if (input) {
+        input.focus();
+        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 0);
   };
 
   const removeHazard = (id: string) => {
@@ -316,6 +326,7 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
                     console.log('[HazardSection] hazardIdentification change', { id: hazard.id, value: e.target.value });
                     updateHazard(hazard.id, { hazardIdentification: e.target.value });
                   }}
+                  inputRef={(el: HTMLTextAreaElement) => { idInputRefs.current[hazard.id] = el; }}
                 />
               </Grid>
 
@@ -557,21 +568,7 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
                 />
               </Grid>
 
-              <Grid item xs={12}>
-                <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ka}>
-                  <DatePicker
-                    label="გადახედვის სავარაუდო დრო"
-                    value={hazard.reviewDate}
-                    onChange={(date) => updateHazard(hazard.id, { reviewDate: date })}
-                    slotProps={{
-                      textField: {
-                        fullWidth: true,
-                        required: false // Allow empty initially
-                      }
-                    }}
-                  />
-                </LocalizationProvider>
-              </Grid>
+              {/* Review date moved to a single shared picker in parent */}
 
               <Grid item xs={12}>
                 <TextField
@@ -674,6 +671,8 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
   const [hazards, setHazards] = useState<HazardData[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [sharedReviewDate, setSharedReviewDate] = useState<Date | null>(null);
+  const { user } = useAuthStore();
 
   const { control, handleSubmit: submitForm, formState: { errors }, reset, getValues } = useForm<CreateDocumentDto>({
     defaultValues: {
@@ -726,11 +725,14 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
               : { probability: 0, severity: 0, total: 0 },
             requiredMeasures: hazard.requiredMeasures || '',
             responsiblePerson: hazard.responsiblePerson || '',
-            reviewDate: hazard.reviewDate ? new Date(hazard.reviewDate) : null, // Keep null if no date
+            reviewDate: hazard.reviewDate ? new Date(hazard.reviewDate) : null, // will be normalized to shared below
             photos: hazard.photos || []
           };
         });
         setHazards(formattedHazards);
+        // Derive shared review date from first hazard (if present)
+        const derivedReview = formattedHazards[0]?.reviewDate || null;
+        setSharedReviewDate(derivedReview);
         // Reset form with new values, but do NOT set hazards in reset (let state manage it)
         reset({
           evaluatorName: defaultValues.evaluatorName || '',
@@ -750,15 +752,20 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
         // Reset to empty form for new document
         console.log('🆕 Creating new document - resetting form');
         setHazards([]);
+        // Autofill evaluator name/surname from logged-in user
+        const fullName = user?.name || '';
+        const [firstName, ...rest] = fullName.split(' ').filter(Boolean);
+        const lastName = rest.join(' ');
         reset({
-          evaluatorName: '',
-          evaluatorLastName: '',
+          evaluatorName: firstName || '',
+          evaluatorLastName: lastName || '',
           objectName: '',
           workDescription: '',
           date: new Date(),
           time: new Date(),
           photos: []
         });
+        setSharedReviewDate(null);
       }
     }
     
@@ -786,9 +793,15 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
     setIsSubmitting(true);
 
     // საფრთხის გარეშეც შეიძლება დოკუმენტის შექმნა
+    // Apply shared review date to all hazards before submit
+    const hazardsWithSharedReview = hazards.map(h => ({
+      ...h,
+      reviewDate: sharedReviewDate || h.reviewDate || null,
+    }));
+
     const formattedData: CreateDocumentDto = {
       ...data,
-      hazards: hazards, // ცარიელიც შეიძლება იყოს
+      hazards: hazardsWithSharedReview, // ცარიელიც შეიძლება იყოს
     };
 
     console.log('📊 [DETAILED] Form submission data:', {
@@ -913,7 +926,7 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
         </Box>
       </DialogTitle>
       <DialogContent>
-        <Box 
+  <Box 
           component="form" 
           onSubmit={submitForm(handleFormSubmitInternal)}
           noValidate 
@@ -941,6 +954,25 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
               <Controller name="workDescription" control={control} rules={{ required: true }} render={({ field }: { field: ControllerRenderProps<CreateDocumentDto, 'workDescription'> }) => (
                 <TextField {...field} label="სამუშაოს მოკლე აღწერა" fullWidth required multiline rows={2} error={!!errors.workDescription} />
               )} />
+            </Grid>
+            <Grid item xs={12}>
+              <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ka}>
+                <DatePicker
+                  label="გადახედვის სავარაუდო დრო (ყველა საფრთხისთვის)"
+                  value={sharedReviewDate}
+                  onChange={(date) => {
+                    setSharedReviewDate(date);
+                    // propagate to hazards state immediately
+                    setHazards(prev => prev.map(h => ({ ...h, reviewDate: date })));
+                  }}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      required: false
+                    }
+                  }}
+                />
+              </LocalizationProvider>
             </Grid>
             <Grid item xs={6}>
               <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ka}>

@@ -43,10 +43,7 @@ export class ReportService {
         processedDocument.evaluator || processedDocument.inspector || 
         processedDocument.createdBy || '';
     
-    // მომხმარებლის ინფორმაცია - ორგანიზაცია და პოზიცია
-    const userOrganization = processedDocument.userInfo?.organization || '';
-    const userPosition = processedDocument.userInfo?.position || '';
-    const userContact = processedDocument.userInfo?.phoneNumber || processedDocument.userInfo?.email || '';
+  // მომხმარებლის დამატებითი ინფორმაცია ამოღებულია Excel-დან მოთხოვნის მიხედვით
     
     const objectName = processedDocument.objectName || 
       processedDocument.project || 
@@ -63,17 +60,13 @@ export class ReportService {
       ? new Date(processedDocument.date || processedDocument.assessmentDate || processedDocument.createdAt || processedDocument.dateCreated).toLocaleDateString('ka-GE') 
       : new Date().toLocaleDateString('ka-GE'); // fallback to today
     
-    const time = processedDocument.time || processedDocument.timeCreated || processedDocument.timestamp
-      ? new Date(processedDocument.time || processedDocument.timeCreated || processedDocument.timestamp).toLocaleTimeString('ka-GE', { hour: '2-digit', minute: '2-digit' })
-      : new Date().toLocaleTimeString('ka-GE', { hour: '2-digit', minute: '2-digit' }); // fallback to now
+  // დრო აღარ ჩანს header-ში
 
     const headerData = [
       ['რისკის შეფასების ფორმა №1', '', '', '', '', '', '', '', '', '', '', '', '', '', ''], // A1:O1 (15 სვეტი)
       ['შეფასებლის სახელი და გვარი:', evaluatorName, '', '', '', '', '', '', '', 'თარიღი:', date, '', '', '', ''], // A2:I2 და J2:O2
-      ['ორგანიზაცია:', userOrganization, '', '', '', '', '', '', '', 'დრო:', time, '', '', '', ''], // A3:I3 და J3:O3
-      ['პოზიცია:', userPosition, '', '', '', '', '', '', '', 'კონტაქტი:', userContact, '', '', '', ''], // A4:I4 და J4:O4
-      ['სამუშაო ობიექტის დასახელება:', objectName, '', '', '', '', '', '', '', '', '', '', '', '', ''], // A5:O5
-      ['სამუშაოს აღწერა:', workDescription, '', '', '', '', '', '', '', '', '', '', '', '', ''] // A6:O6
+      ['სამუშაო ობიექტის დასახელება:', objectName, '', '', '', '', '', '', '', '', '', '', '', '', ''], // A3:O3 (shifted up)
+      ['სამუშაოს აღწერა:', workDescription, '', '', '', '', '', '', '', '', '', '', '', '', ''] // A4:O4 (shifted up)
     ];
 
     // 2. ცხრილის სათაურები - 15 სვეტი (თავიდან ამოღებულია "საწყისი რისკი" და "ნარჩენი რისკი" სვეტები)
@@ -92,7 +85,7 @@ export class ReportService {
         'სიმძიმე (ნარჩენი)',                // K
         'ნამრავლი (ნარჩენი)',               // L
         'საჭირო ღონისძიებები',              // M
-        'შესრულებაზე პასუხისმგებელი პირი',  // N
+  'შესრულებაზე პასუხისმგებელი პირი/ვადა',  // N
         'გადახედვის სავარაუდო თარიღი',      // O
       ]
     ];
@@ -237,12 +230,8 @@ export class ReportService {
   worksheet.mergeCells('A1:O1'); // სათაური spans all 15 columns
     worksheet.mergeCells('A2:I2'); // შეფასებლის სახელი და გვარი
   worksheet.mergeCells('J2:O2'); // თარიღი
-    worksheet.mergeCells('A3:I3'); // ორგანიზაცია
-  worksheet.mergeCells('J3:O3'); // დრო
-    worksheet.mergeCells('A4:I4'); // პოზიცია
-  worksheet.mergeCells('J4:O4'); // კონტაქტი
-  worksheet.mergeCells('A5:O5'); // სამუშაო ობიექტი spans all columns
-  worksheet.mergeCells('A6:O6'); // სამუშაოს აღწერა spans all columns 
+  worksheet.mergeCells('A3:O3'); // სამუშაო ობიექტი spans all columns
+  worksheet.mergeCells('A4:O4'); // სამუშაოს აღწერა spans all columns 
     
     // 9. სვეტების სიგანის მორგება - 17 სვეტი
     worksheet.columns = [
@@ -305,7 +294,7 @@ export class ReportService {
     }
 
     // Table Header სტილი - გაუმჯობესებული ღია ნაცრისფერი ფონით
-    const headerRowIdx = headerData.length + 2;
+  const headerRowIdx = headerData.length + 2;
     const headerRow = worksheet.getRow(headerRowIdx);
     headerRow.eachCell(cell => {
       cell.font = { bold: true, size: 10, name: 'Arial' };
