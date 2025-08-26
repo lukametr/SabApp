@@ -59,6 +59,18 @@ class HazardDto {
   @IsObject()
   @ValidateNested()
   @Type(() => RiskDto)
+  @Transform(({ value }) => {
+    if (value === null || value === undefined || value === '') return undefined;
+    if (typeof value === 'string') {
+      try {
+        const parsed = JSON.parse(value);
+        return typeof parsed === 'object' && parsed !== null ? parsed : undefined;
+      } catch {
+        return undefined;
+      }
+    }
+    return value;
+  })
   initialRisk?: RiskDto;
 
   @IsOptional()
@@ -69,6 +81,18 @@ class HazardDto {
   @IsObject()
   @ValidateNested()
   @Type(() => RiskDto)
+  @Transform(({ value }) => {
+    if (value === null || value === undefined || value === '') return undefined;
+    if (typeof value === 'string') {
+      try {
+        const parsed = JSON.parse(value);
+        return typeof parsed === 'object' && parsed !== null ? parsed : undefined;
+      } catch {
+        return undefined;
+      }
+    }
+    return value;
+  })
   residualRisk?: RiskDto;
 
   @IsOptional()
