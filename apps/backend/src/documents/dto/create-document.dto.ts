@@ -109,9 +109,10 @@ export class CreateDocumentDto {
   workDescription: string;
 
   @Transform(({ value }) => {
-    if (!value && value !== 0) return undefined;
-    const d = new Date(value);
-    return isNaN(d.getTime()) ? undefined : d;
+    // Default to current date when missing/invalid to avoid validation failure
+    if (value === null || value === undefined || value === '') return new Date();
+    const parsed = new Date(value);
+    return isNaN(parsed.getTime()) ? new Date() : parsed;
   })
   @IsDate()
   @Type(() => Date)
