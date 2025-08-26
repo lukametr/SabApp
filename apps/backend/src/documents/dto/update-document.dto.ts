@@ -107,6 +107,17 @@ export class UpdateDocumentDto {
   time?: Date;
 
   @IsOptional()
+  @Transform(({ value }) => {
+    if (value === null) return null; // allow explicitly clearing
+    if (!value || value === '') return undefined;
+    const d = new Date(value);
+    return isNaN(d.getTime()) ? undefined : d;
+  })
+  @IsDate()
+  @Type(() => Date)
+  reviewDate?: Date | null;
+
+  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => HazardDto)
