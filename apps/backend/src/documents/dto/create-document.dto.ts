@@ -160,5 +160,19 @@ export class CreateDocumentDto {
   @IsArray()
   @IsString({ each: true })
   @IsOptional()
+  @Transform(({ value }) => {
+    if (value === null || value === undefined || value === '') return [];
+    if (Array.isArray(value)) return value.filter((v) => typeof v === 'string');
+    if (typeof value === 'string') {
+      try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed.filter((v) => typeof v === 'string') : [];
+      } catch {
+        // If it's a single base64 string, accept it as a one-element array
+        return value.startsWith('data:image/') ? [value] : [];
+      }
+    }
+    return [];
+  })
   photos?: string[];
 } 
