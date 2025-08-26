@@ -40,7 +40,11 @@ export class DocumentsService {
         isFavorite: false,
         assessmentA: 0,
         assessmentSh: 0,
-        assessmentR: 0,
+  assessmentR: 0,
+  // ჩამოტვირთვების მრიცხველები ყოველთვის იწყება ნულიდან
+  downloadZipCount: 0,
+  downloadExcelCount: 0,
+  downloadPdfCount: 0,
       });
       
       console.log('💾 Saving document to database...');

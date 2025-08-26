@@ -99,6 +99,7 @@ const DocumentList: React.FC<DocumentListProps> = React.memo(({
             <TableCell>თარიღი</TableCell>
             <TableCell>საფრთხეების რაოდენობა</TableCell>
             <TableCell>მაქსიმალური რისკი</TableCell>
+            <TableCell>გად.მაქს.ვადა</TableCell>
             <TableCell>მოქმედებები</TableCell>
           </TableRow>
         </TableHead>
@@ -153,6 +154,15 @@ const DocumentList: React.FC<DocumentListProps> = React.memo(({
                   color={getRiskColor(getMaxRisk(doc.hazards)) as 'success' | 'warning' | 'error'}
                   size="small"
                 />
+              </TableCell>
+              <TableCell>
+                {(() => {
+                  // Prefer document-level reviewDate, fallback to earliest hazard review date
+                  const rDate = (doc as any).reviewDate
+                    ? new Date((doc as any).reviewDate as any)
+                    : getEarliestReviewDate(doc);
+                  return rDate ? formatDate(rDate) : 'არ არის მითითებული';
+                })()}
               </TableCell>
               <TableCell>
                 <Box display="flex" gap={1}>
