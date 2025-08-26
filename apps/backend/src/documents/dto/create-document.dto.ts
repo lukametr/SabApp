@@ -1,18 +1,38 @@
 import { IsString, IsOptional, IsDate, IsArray, IsNumber, ValidateNested, IsObject } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 
+// Transform helpers
+const transformToStringArray = ({ value }: { value: any }) => {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.filter((v) => typeof v === 'string');
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed.filter((v) => typeof v === 'string') : [value];
+    } catch {
+      return value.startsWith('data:image/') ? [value] : [value];
+    }
+  }
+  return [];
+};
+
+const transformToNumber = ({ value }: { value: any }) => {
+  if (value === '' || value == null) return undefined;
+  return Number(value);
+};
+
 class RiskDto {
-  @Transform(({ value }) => (value === '' || value === null || value === undefined ? undefined : Number(value)))
+  @Transform(transformToNumber)
   @IsOptional()
   @IsNumber()
   probability?: number;
 
-  @Transform(({ value }) => (value === '' || value === null || value === undefined ? undefined : Number(value)))
+  @Transform(transformToNumber)
   @IsOptional()
   @IsNumber()
   severity?: number;
 
-  @Transform(({ value }) => (value === '' || value === null || value === undefined ? undefined : Number(value)))
+  @Transform(transformToNumber)
   @IsOptional()
   @IsNumber()
   total?: number;
@@ -30,21 +50,7 @@ class HazardDto {
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  @Transform(({ value }) => {
-    // Normalize to string[]
-    if (value === null || value === undefined || value === '') return [];
-    if (Array.isArray(value)) return value.filter((v) => typeof v === 'string');
-    if (typeof value === 'string') {
-      try {
-        const parsed = JSON.parse(value);
-        return Array.isArray(parsed) ? parsed.filter((v) => typeof v === 'string') : [];
-      } catch {
-        // If single string provided, wrap into array
-        return [value];
-      }
-    }
-    return [];
-  })
+  @Transform(transformToStringArray)
   affectedPersons?: string[];
 
   @IsOptional()
@@ -117,41 +123,28 @@ class HazardDto {
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  @Transform(({ value }) => {
-    if (value === null || value === undefined || value === '') return [];
-    if (Array.isArray(value)) return value.filter((v) => typeof v === 'string');
-    if (typeof value === 'string') {
-      try {
-        const parsed = JSON.parse(value);
-        return Array.isArray(parsed) ? parsed.filter((v) => typeof v === 'string') : [];
-      } catch {
-        // If it's a single base64 string, accept it as a one-element array
-        return value.startsWith('data:image/') ? [value] : [];
-      }
-    }
-    return [];
-  })
+  @Transform(transformToStringArray)
   photos?: string[];
 }
 
 export class CreateDocumentDto {
   @Transform(({ value }) => {
-    if (typeof value === 'string') return value;
-    return String(value || '');
+  if (typeof value === 'string') return value;
+  return String(value || '');
   })
   @IsString()
   evaluatorName: string;
 
   @Transform(({ value }) => {
-    if (typeof value === 'string') return value;
-    return String(value || '');
+  if (typeof value === 'string') return value;
+  return String(value || '');
   })
   @IsString()
   evaluatorLastName: string;
 
   @Transform(({ value }) => {
-    if (typeof value === 'string') return value;
-    return String(value || '');
+  if (typeof value === 'string') return value;
+  return String(value || '');
   })
   @IsString()
   objectName: string;
@@ -164,15 +157,7 @@ export class CreateDocumentDto {
   workDescription: string;
 
   @Transform(({ value }) => {
-    console.log('📅 DATE TRANSFORM:', { value, type: typeof value });
-    // Default to current date when missing/invalid to avoid validation failure
-    if (value === null || value === undefined || value === '') return new Date();
-    if (typeof value === 'string') {
-      const parsed = new Date(value);
-      console.log('📅 Parsed date from string:', parsed);
-      return isNaN(parsed.getTime()) ? new Date() : parsed;
-    }
-    if (value instanceof Date) return value;
+    if (!value) return new Date();
     const parsed = new Date(value);
     return isNaN(parsed.getTime()) ? new Date() : parsed;
   })
@@ -181,46 +166,19 @@ export class CreateDocumentDto {
   date: Date;
 
   @Transform(({ value, obj }) => {
-    console.log('⏰ TIME TRANSFORM:', { value, type: typeof value, obj_date: obj?.date });
-    
-    // თუ არის "HH:mm" ფორმატის სტრინგი
-    if (typeof value === 'string' && value.includes(':')) {
+    if (!value) return new Date();
+
+    // Handle "HH:mm" format
+    if (typeof value === 'string' && /^\d{1,2}:\d{2}$/.test(value)) {
       const [hours, minutes] = value.split(':').map(Number);
-      if (!isNaN(hours) && !isNaN(minutes)) {
-        const baseDate = obj?.date ? new Date(obj.date) : new Date();
-        baseDate.setHours(hours, minutes, 0, 0);
-        console.log('⏰ Created time from HH:mm format:', baseDate);
-        return baseDate;
-      }
+      const baseDate = obj?.date ? new Date(obj.date) : new Date();
+      baseDate.setHours(hours, minutes, 0, 0);
+      return baseDate;
     }
-    
-    // თუ არის რიცხვი (timestamp)
-    if (typeof value === 'number') {
-      const date = new Date(value);
-      if (!isNaN(date.getTime())) {
-        console.log('⏰ Created time from timestamp:', date);
-        return date;
-      }
-    }
-    
-    // თუ არის სტრინგი, სცადე Date პარსინგი
-    if (typeof value === 'string') {
-      const date = new Date(value);
-      if (!isNaN(date.getTime())) {
-        console.log('⏰ Parsed time as Date string:', date);
-        return date;
-      }
-    }
-    
-    // თუ უკვე არის Date ობიექტი
-    if (value instanceof Date && !isNaN(value.getTime())) {
-      console.log('⏰ Already a valid Date:', value);
-      return value;
-    }
-    
-    // Default: მიმდინარე დრო
-    console.log('⏰ Using current time as default');
-    return new Date();
+
+    // Try to parse as date
+    const parsed = new Date(value);
+    return isNaN(parsed.getTime()) ? new Date() : parsed;
   })
   @IsDate()
   @Type(() => Date)
@@ -247,19 +205,6 @@ export class CreateDocumentDto {
   @IsArray()
   @IsString({ each: true })
   @IsOptional()
-  @Transform(({ value }) => {
-    if (value === null || value === undefined || value === '') return [];
-    if (Array.isArray(value)) return value.filter((v) => typeof v === 'string');
-    if (typeof value === 'string') {
-      try {
-        const parsed = JSON.parse(value);
-        return Array.isArray(parsed) ? parsed.filter((v) => typeof v === 'string') : [];
-      } catch {
-        // If it's a single base64 string, accept it as a one-element array
-        return value.startsWith('data:image/') ? [value] : [];
-      }
-    }
-    return [];
-  })
+  @Transform(transformToStringArray)
   photos?: string[];
 } 

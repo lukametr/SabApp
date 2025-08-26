@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Box, Button, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, Alert, Stack, Chip } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
 import DocumentList from '../../components/DocumentList';
 import DocumentForm from '../../components/DocumentForm';
@@ -100,6 +100,69 @@ export default function DocumentsClient() {
 
   return (
     <Box p={3}>
+      {/* Review date alerts: overdue (red) and due soon (yellow) */}
+      {(() => {
+        const msPerDay = 24 * 60 * 60 * 1000;
+        const now = new Date();
+
+        // Helper: get earliest valid review date in a document (across hazards)
+        const getEarliestReviewDate = (doc: Document): Date | null => {
+          const dates = (doc.hazards || [])
+            .map(h => (h?.reviewDate ? new Date(h.reviewDate as any) : null))
+            .filter((d): d is Date => !!d && !isNaN(d.getTime()));
+          if (!dates.length) return null;
+          return new Date(Math.min(...dates.map(d => d.getTime())));
+        };
+
+        const classified = documents.map(doc => {
+          const earliest = getEarliestReviewDate(doc);
+          if (!earliest) return { doc, status: null as 'overdue' | 'dueSoon' | null };
+          const diffMs = earliest.getTime() - now.getTime();
+          const diffDays = Math.floor(diffMs / msPerDay);
+          if (diffDays < 0) return { doc, status: 'overdue' as const };
+          if (diffDays <= 2) return { doc, status: 'dueSoon' as const };
+          return { doc, status: null as const };
+        });
+
+        const overdueDocs = classified.filter(c => c.status === 'overdue').map(c => c.doc);
+        const dueSoonDocs = classified.filter(c => c.status === 'dueSoon').map(c => c.doc);
+
+        return (
+          <Stack spacing={2} mb={2}>
+            {overdueDocs.length > 0 && (
+              <Alert severity="error">
+                <Box display="flex" flexDirection="column" gap={1}>
+                  <strong>ვადაგასული გადახედვის თარიღი</strong>
+                  <Box display="flex" flexWrap="wrap" gap={1}>
+                    {overdueDocs.slice(0, 6).map(d => (
+                      <Chip key={d.id} label={d.objectName} color="error" size="small" />
+                    ))}
+                    {overdueDocs.length > 6 && (
+                      <Chip label={`და კიდევ ${overdueDocs.length - 6}`} color="error" size="small" variant="outlined" />
+                    )}
+                  </Box>
+                </Box>
+              </Alert>
+            )}
+            {dueSoonDocs.length > 0 && (
+              <Alert severity="warning">
+                <Box display="flex" flexDirection="column" gap={1}>
+                  <strong>გაფრთხილება: 2 დღეში ან ნაკლებში გადახედვის ვადა</strong>
+                  <Box display="flex" flexWrap="wrap" gap={1}>
+                    {dueSoonDocs.slice(0, 6).map(d => (
+                      <Chip key={d.id} label={d.objectName} color="warning" size="small" />
+                    ))}
+                    {dueSoonDocs.length > 6 && (
+                      <Chip label={`და კიდევ ${dueSoonDocs.length - 6}`} color="warning" size="small" variant="outlined" />
+                    )}
+                  </Box>
+                </Box>
+              </Alert>
+            )}
+          </Stack>
+        );
+      })()}
+
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <h1>დოკუმენტები</h1>
         <Button
