@@ -118,22 +118,32 @@ export class CreateDocumentDto {
   date: Date;
 
   @Transform(({ value, obj }) => {
-    if (!value && value !== 0) return undefined;
-    // Accept ISO datetime, timestamp, or HH:mm strings
+    console.log('⏰ TIME TRANSFORM:', { value, type: typeof value, obj_date: obj?.date });
+    
+    // თუ არ არის მნიშვნელობა, გამოიყენე მიმდინარე დრო
+    if (!value && value !== 0 && value !== '0') {
+      console.log('⏰ No time value, using current time');
+      return new Date();
+    }
+    
+    // თუ არის "HH:mm" ფორმატი
     if (typeof value === 'string') {
-      const timeMatch = value.match(/^\s*(\d{1,2}):(\d{2})\s*$/);
+      const timeMatch = value.match(/^(\d{1,2}):(\d{2})$/);
       if (timeMatch) {
         const hours = parseInt(timeMatch[1], 10);
         const minutes = parseInt(timeMatch[2], 10);
         const baseDate = obj?.date ? new Date(obj.date) : new Date();
-        if (!isNaN(baseDate.getTime())) {
-          baseDate.setHours(hours, minutes, 0, 0);
-          return baseDate;
-        }
+        baseDate.setHours(hours, minutes, 0, 0);
+        console.log('⏰ Parsed time string:', baseDate);
+        return baseDate;
       }
     }
-    const d = new Date(value);
-    return isNaN(d.getTime()) ? undefined : d;
+    
+    // სცადე Date პარსინგი
+    const parsed = new Date(value);
+    const result = isNaN(parsed.getTime()) ? new Date() : parsed;
+    console.log('⏰ Parsed as Date:', result);
+    return result;
   })
   @IsDate()
   @Type(() => Date)

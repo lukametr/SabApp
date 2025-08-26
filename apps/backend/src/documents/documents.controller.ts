@@ -25,6 +25,20 @@ export class DocumentsController {
   async create(@Body() createDocumentDto: CreateDocumentDto, @Request() req: any) {
     try {
       const userId = req.user?.id || req.user?.sub; // Get user ID from JWT token
+      
+      console.log('📥 RECEIVED PAYLOAD:', JSON.stringify(createDocumentDto, null, 2));
+      console.log('📥 PAYLOAD TYPES:', {
+        date: typeof createDocumentDto.date,
+        time: typeof createDocumentDto.time,
+        photos: Array.isArray(createDocumentDto.photos),
+        hazards: Array.isArray(createDocumentDto.hazards)
+      });
+      
+      // თუ hazards არსებობს
+      if (createDocumentDto.hazards && createDocumentDto.hazards.length > 0) {
+        console.log('📥 FIRST HAZARD:', JSON.stringify(createDocumentDto.hazards[0], null, 2));
+      }
+      
       console.log('📋 Creating document for user:', userId || 'anonymous');
   console.log('📋 Received document data:', createDocumentDto);
   // Files interceptor removed; photos expected as base64 strings in DTO

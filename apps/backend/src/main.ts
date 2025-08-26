@@ -172,19 +172,22 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({
     transform: true,
     whitelist: true,
-    forbidNonWhitelisted: false, // Allow non-whitelisted properties for FormData
-    skipMissingProperties: false, // Don't skip validation for missing properties
-    validationError: { target: false, value: false },
+    forbidNonWhitelisted: false,
+    transformOptions: {
+      enableImplicitConversion: true,
+    },
     exceptionFactory: (errors) => {
-      const simplified = errors.map(error => ({
-        property: error.property,
-        value: error.value,
-        constraints: error.constraints
+      const detailedErrors = errors.map(e => ({
+        property: e.property,
+        value: e.value,
+        constraints: e.constraints,
+        children: e.children
       }));
-      console.error('📋 Validation errors:', simplified);
+      console.error('❌ VALIDATION FAILED:', JSON.stringify(detailedErrors, null, 2));
       return new BadRequestException({
+        statusCode: 400,
         message: 'Validation failed',
-        errors: simplified,
+        errors: detailedErrors
       });
     }
   }));

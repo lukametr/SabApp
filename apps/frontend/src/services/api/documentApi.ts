@@ -19,12 +19,31 @@ export const documentApi = {
   },
 
   create: async (data: CreateDocumentDto): Promise<Document> => {
+    console.log('📤 SENDING TO BACKEND:', JSON.stringify(data, null, 2));
+    console.log('📤 DATA TYPES:', {
+      date: data.date,
+      dateType: typeof data.date,
+      time: data.time,
+      timeType: typeof data.time,
+      photos: data.photos,
+      hazards: data.hazards?.length || 0
+    });
+    
+    // თუ time არის string ფორმატში "HH:mm", გარდაქმენი Date-ად
+    let timeValue = data.time;
+    if (typeof data.time === 'string' && /^\d{1,2}:\d{2}$/.test(data.time)) {
+      const [hours, minutes] = (data.time as string).split(':').map(Number);
+      const timeDate = new Date(data.date);
+      timeDate.setHours(hours, minutes, 0, 0);
+      timeValue = timeDate;
+    }
+
     // Process hazards - photos are already base64 encoded in photos array
     const processedHazards = data.hazards.map(hazard => {
       const processedHazard = {
         ...hazard,
-        reviewDate: hazard.reviewDate ? hazard.reviewDate.toISOString() : null, // Convert Date to ISO string or null
-        photos: hazard.photos || [] as string[] // Keep base64 photos as they are
+        reviewDate: hazard.reviewDate ? hazard.reviewDate.toISOString() : undefined,
+        photos: hazard.photos || []
       };
       
       console.log('🔄 [API] Processing hazard for create:', {
@@ -36,22 +55,19 @@ export const documentApi = {
       return processedHazard;
     });
 
-    // Build JSON payload directly like update does
+    // გარდაქმენი date და time ISO string-ებად
     const createPayload = {
       evaluatorName: data.evaluatorName,
       evaluatorLastName: data.evaluatorLastName,
       objectName: data.objectName,
       workDescription: data.workDescription,
-      date: data.date.toISOString(),
-      time: data.time.toISOString(),
+      date: data.date instanceof Date ? data.date.toISOString() : data.date,
+      time: timeValue instanceof Date ? timeValue.toISOString() : timeValue,
       hazards: processedHazards,
       photos: data.photos || []
     };
-
-    console.log('📋 Creating document with payload:', {
-      hazardsCount: processedHazards.length,
-      photosCount: createPayload.photos.length
-    });
+    
+    console.log('📤 FINAL PAYLOAD:', JSON.stringify(createPayload, null, 2));
 
     const response = await api.post('/documents', createPayload, {
       headers: {
