@@ -160,30 +160,44 @@ export class CreateDocumentDto {
   @Transform(({ value, obj }) => {
     console.log('⏰ TIME TRANSFORM:', { value, type: typeof value, obj_date: obj?.date });
     
-    // თუ არ არის მნიშვნელობა, გამოიყენე მიმდინარე დრო
-    if (!value && value !== 0 && value !== '0') {
-      console.log('⏰ No time value, using current time');
-      return new Date();
-    }
-    
-    // თუ არის "HH:mm" ფორმატი
-    if (typeof value === 'string') {
-      const timeMatch = value.match(/^(\d{1,2}):(\d{2})$/);
-      if (timeMatch) {
-        const hours = parseInt(timeMatch[1], 10);
-        const minutes = parseInt(timeMatch[2], 10);
+    // თუ არის "HH:mm" ფორმატის სტრინგი
+    if (typeof value === 'string' && value.includes(':')) {
+      const [hours, minutes] = value.split(':').map(Number);
+      if (!isNaN(hours) && !isNaN(minutes)) {
         const baseDate = obj?.date ? new Date(obj.date) : new Date();
         baseDate.setHours(hours, minutes, 0, 0);
-        console.log('⏰ Parsed time string:', baseDate);
+        console.log('⏰ Created time from HH:mm format:', baseDate);
         return baseDate;
       }
     }
     
-    // სცადე Date პარსინგი
-    const parsed = new Date(value);
-    const result = isNaN(parsed.getTime()) ? new Date() : parsed;
-    console.log('⏰ Parsed as Date:', result);
-    return result;
+    // თუ არის რიცხვი (timestamp)
+    if (typeof value === 'number') {
+      const date = new Date(value);
+      if (!isNaN(date.getTime())) {
+        console.log('⏰ Created time from timestamp:', date);
+        return date;
+      }
+    }
+    
+    // თუ არის სტრინგი, სცადე Date პარსინგი
+    if (typeof value === 'string') {
+      const date = new Date(value);
+      if (!isNaN(date.getTime())) {
+        console.log('⏰ Parsed time as Date string:', date);
+        return date;
+      }
+    }
+    
+    // თუ უკვე არის Date ობიექტი
+    if (value instanceof Date && !isNaN(value.getTime())) {
+      console.log('⏰ Already a valid Date:', value);
+      return value;
+    }
+    
+    // Default: მიმდინარე დრო
+    console.log('⏰ Using current time as default');
+    return new Date();
   })
   @IsDate()
   @Type(() => Date)

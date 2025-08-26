@@ -22,6 +22,11 @@ export class DocumentsService {
         hazardsCount: Array.isArray(createDocumentDto.hazards) ? createDocumentDto.hazards.length : 0,
         photosCount: createDocumentDto.photos?.length || 0,
         userId: userId || 'anonymous',
+        time: createDocumentDto.time,
+        timeType: typeof createDocumentDto.time,
+        timeValid: createDocumentDto.time instanceof Date,
+        date: createDocumentDto.date,
+        dateType: typeof createDocumentDto.date,
         hazardPhotos: Array.isArray(createDocumentDto.hazards) ? createDocumentDto.hazards.map((h: any) => ({
           id: h.id,
           photosCount: h.photos?.length || 0
@@ -48,7 +53,11 @@ export class DocumentsService {
       
       return savedDocument.toJSON() as Document;
     } catch (error) {
-      console.error('❌ Error creating document:', error);
+      console.error('❌ Error creating document:', {
+        message: error.message,
+        stack: error.stack,
+        validation: error.errors
+      });
       throw error;
     }
   }
