@@ -30,6 +30,21 @@ class HazardDto {
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
+  @Transform(({ value }) => {
+    // Normalize to string[]
+    if (value === null || value === undefined || value === '') return [];
+    if (Array.isArray(value)) return value.filter((v) => typeof v === 'string');
+    if (typeof value === 'string') {
+      try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed.filter((v) => typeof v === 'string') : [];
+      } catch {
+        // If single string provided, wrap into array
+        return [value];
+      }
+    }
+    return [];
+  })
   affectedPersons?: string[];
 
   @IsOptional()
