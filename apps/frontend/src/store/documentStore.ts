@@ -30,7 +30,14 @@ export const useDocumentStore = create<DocumentStore>((set) => ({
     set({ isLoading: true, error: null });
     try {
       const documents = await documentApi.getAll();
-      set({ documents, isLoading: false });
+      // ნორმალიზება: ჩამოტვირთვების მრიცხველები ყოველთვის იყოს რიცხვი (ნაგულისხმევი 0)
+      const normalized = documents.map((d: any) => ({
+        ...d,
+        downloadZipCount: Number(d?.downloadZipCount ?? 0) || 0,
+        downloadExcelCount: Number(d?.downloadExcelCount ?? 0) || 0,
+        downloadPdfCount: Number(d?.downloadPdfCount ?? 0) || 0,
+      }));
+      set({ documents: normalized as any, isLoading: false });
     } catch (error) {
       set({ error: 'დოკუმენტების ჩატვირთვა ვერ მოხერხდა', isLoading: false });
     }
@@ -50,7 +57,13 @@ export const useDocumentStore = create<DocumentStore>((set) => ({
     set({ isLoading: true, error: null });
     try {
       const document = await documentApi.getById(id);
-      set({ selectedDocument: document, isLoading: false });
+      const normalized = {
+        ...document,
+        downloadZipCount: Number((document as any)?.downloadZipCount ?? 0) || 0,
+        downloadExcelCount: Number((document as any)?.downloadExcelCount ?? 0) || 0,
+        downloadPdfCount: Number((document as any)?.downloadPdfCount ?? 0) || 0,
+      } as any;
+      set({ selectedDocument: normalized, isLoading: false });
     } catch (error) {
       set({ error: 'დოკუმენტის ჩატვირთვა ვერ მოხერხდა', isLoading: false });
     }
@@ -62,8 +75,15 @@ export const useDocumentStore = create<DocumentStore>((set) => ({
       console.log('დოკუმენტის შექმნა:', data, file);
       const response = await documentApi.create(data);
       console.log('პასუხი:', response);
+      // ნორმალიზება ახალ დოკუმენტზე
+      const normalized = {
+        ...response,
+        downloadZipCount: Number((response as any)?.downloadZipCount ?? 0) || 0,
+        downloadExcelCount: Number((response as any)?.downloadExcelCount ?? 0) || 0,
+        downloadPdfCount: Number((response as any)?.downloadPdfCount ?? 0) || 0,
+      } as any;
       set((state) => ({
-        documents: [...state.documents, response],
+        documents: [...state.documents, normalized],
         isLoading: false
       }));
     } catch (error) {
@@ -77,6 +97,12 @@ export const useDocumentStore = create<DocumentStore>((set) => ({
     try {
       console.log('📋 Store updating document:', data.id);
       const updatedDocument = await documentApi.update(data);
+      const normalized = {
+        ...updatedDocument,
+        downloadZipCount: Number((updatedDocument as any)?.downloadZipCount ?? 0) || 0,
+        downloadExcelCount: Number((updatedDocument as any)?.downloadExcelCount ?? 0) || 0,
+        downloadPdfCount: Number((updatedDocument as any)?.downloadPdfCount ?? 0) || 0,
+      } as any;
       console.log('✅ Store received updated document:', {
         id: updatedDocument.id,
         objectName: updatedDocument.objectName,
@@ -85,9 +111,9 @@ export const useDocumentStore = create<DocumentStore>((set) => ({
       
       set(state => ({
         documents: state.documents.map(doc =>
-          doc.id === data.id ? updatedDocument : doc
+          doc.id === data.id ? normalized : doc
         ),
-        selectedDocument: state.selectedDocument?.id === data.id ? updatedDocument : state.selectedDocument,
+        selectedDocument: state.selectedDocument?.id === data.id ? normalized : state.selectedDocument,
         isLoading: false
       }));
     } catch (error) {

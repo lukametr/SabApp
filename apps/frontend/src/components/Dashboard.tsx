@@ -201,6 +201,12 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
   // Stats calculation
   const totalDocuments = documents.length;
   const totalHazards = documents.reduce((sum, doc) => sum + (doc.hazards?.length || 0), 0);
+  const totalDownloads = documents.reduce((sum, doc) => {
+  const zip = Number((doc as any).downloadZipCount ?? 0) || 0;
+  const excel = Number((doc as any).downloadExcelCount ?? 0) || 0;
+  const pdf = Number((doc as any).downloadPdfCount ?? 0) || 0;
+    return sum + zip + excel + pdf;
+  }, 0);
   const recentDocuments = documents.filter(doc => {
     const dateValue = doc.createdAt || doc.date;
     if (!dateValue) return false;
@@ -330,7 +336,7 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
               <CardContent sx={{ textAlign: 'center' }}>
                 <GetApp sx={{ fontSize: 40, color: 'success.main', mb: 1 }} />
                 <Typography variant="h4" color="success.main">
-                  {totalDocuments * 3}
+                  {totalDownloads}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   ჩამოტვირთვა
