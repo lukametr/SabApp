@@ -108,6 +108,10 @@ export class Document extends MongoDocument {
   @Prop({ required: true })
   time: Date;
 
+  // Document-level review date (earliest expected review time)
+  @Prop({ required: false, default: null })
+  reviewDate: Date | null;
+
   // Ensure hazards always exists; default empty array prevents validator errors on legacy docs
   @Prop({ type: [Hazard], required: true, default: [] })
   hazards: Hazard[];

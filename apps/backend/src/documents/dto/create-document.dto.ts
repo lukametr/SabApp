@@ -184,6 +184,15 @@ export class CreateDocumentDto {
   @Type(() => Date)
   time: Date;
 
+  @Transform(({ value }) => {
+    if (!value) return undefined;
+    const parsed = new Date(value);
+    return isNaN(parsed.getTime()) ? undefined : parsed;
+  })
+  @IsDate()
+  @Type(() => Date)
+  reviewDate: Date;
+
   @IsOptional()
   @Transform(({ value }) => {
     if (value === null || value === undefined || value === '') return [];

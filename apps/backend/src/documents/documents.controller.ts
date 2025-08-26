@@ -71,7 +71,7 @@ export class DocumentsController {
       }
     
     // Create document directly; interceptor has already processed photos/hazards
-    const documentWithPhotos = {
+  const documentWithPhotos = {
       ...createDocumentDto,
       photos: createDocumentDto.photos || []
     };

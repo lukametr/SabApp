@@ -68,6 +68,7 @@ export default function DocumentsClient() {
       workDescription: doc.workDescription,
       date: doc.date,
       time: doc.time,
+  ...(doc.reviewDate ? { reviewDate: doc.reviewDate } : {}),
       hazards: doc.hazards || [],
       // რედაქტირებისას არ ვაწვდით photos-ს CreateDocumentDto-ში რადგან ისინი string[] არიან, არა File[]
       // photos ცალკე იმუშავებენ UpdateDocumentDto-ში
@@ -89,6 +90,7 @@ export default function DocumentsClient() {
         date: data.date,
         time: data.time,
         hazards: hazardsToSend,
+        reviewDate: data.reviewDate,
         photos: selectedDocument.photos || [] // Keep existing photos from selected document (string[])
       };
       await handleUpdate(updateData);
@@ -106,7 +108,11 @@ export default function DocumentsClient() {
         const now = new Date();
 
         // Helper: get earliest valid review date in a document (across hazards)
-        const getEarliestReviewDate = (doc: Document): Date | null => {
+        const getDocumentReviewDate = (doc: Document): Date | null => {
+          if (doc.reviewDate) {
+            const d = new Date(doc.reviewDate as any);
+            if (!isNaN(d.getTime())) return d;
+          }
           const dates = (doc.hazards || [])
             .map(h => (h?.reviewDate ? new Date(h.reviewDate as any) : null))
             .filter((d): d is Date => !!d && !isNaN(d.getTime()));
@@ -115,13 +121,13 @@ export default function DocumentsClient() {
         };
 
         const classified = documents.map(doc => {
-          const earliest = getEarliestReviewDate(doc);
+          const earliest = getDocumentReviewDate(doc);
           if (!earliest) return { doc, status: null as 'overdue' | 'dueSoon' | null };
           const diffMs = earliest.getTime() - now.getTime();
           const diffDays = Math.floor(diffMs / msPerDay);
-          if (diffDays < 0) return { doc, status: 'overdue' as const };
-          if (diffDays <= 2) return { doc, status: 'dueSoon' as const };
-          return { doc, status: null as const };
+          if (diffDays < 0) return { doc, status: 'overdue' as 'overdue' };
+          if (diffDays <= 2) return { doc, status: 'dueSoon' as 'dueSoon' };
+          return { doc, status: null as null };
         });
 
         const overdueDocs = classified.filter(c => c.status === 'overdue').map(c => c.doc);
@@ -130,9 +136,9 @@ export default function DocumentsClient() {
         return (
           <Stack spacing={2} mb={2}>
             {overdueDocs.length > 0 && (
-              <Alert severity="error">
+        <Alert severity="error">
                 <Box display="flex" flexDirection="column" gap={1}>
-                  <strong>ვადაგასული გადახედვის თარიღი</strong>
+          <strong>თქვენს ობიექტზე სავარაუდო გადახედვის დრო ვადაგასულია</strong>
                   <Box display="flex" flexWrap="wrap" gap={1}>
                     {overdueDocs.slice(0, 6).map(d => (
                       <Chip key={d.id} label={d.objectName} color="error" size="small" />
@@ -145,9 +151,9 @@ export default function DocumentsClient() {
               </Alert>
             )}
             {dueSoonDocs.length > 0 && (
-              <Alert severity="warning">
+        <Alert severity="warning">
                 <Box display="flex" flexDirection="column" gap={1}>
-                  <strong>გაფრთხილება: 2 დღეში ან ნაკლებში გადახედვის ვადა</strong>
+          <strong>გაფრთხილება: თქვენს ობიექტზე სავარაუდო გადახედვის დრო 2 დღეზე ნაკლებია</strong>
                   <Box display="flex" flexWrap="wrap" gap={1}>
                     {dueSoonDocs.slice(0, 6).map(d => (
                       <Chip key={d.id} label={d.objectName} color="warning" size="small" />

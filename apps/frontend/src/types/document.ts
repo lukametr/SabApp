@@ -40,6 +40,7 @@ export interface Document {
   workDescription: string;
   date: Date;
   time: Date;
+  reviewDate: Date | null;
   hazards: Hazard[];
   filePath?: string;
   isFavorite: boolean;
@@ -58,6 +59,7 @@ export interface CreateDocumentDto {
   workDescription: string;
   date: Date;
   time: Date;
+  reviewDate: Date; // required at create time
   hazards: Hazard[];
   photos?: File[];
 }
@@ -70,6 +72,7 @@ export interface UpdateDocumentDto {
   workDescription?: string;
   date?: Date;
   time?: Date;
+  reviewDate?: Date | null;
   hazards?: Hazard[];
   photos?: string[]; // Base64 data URLs
   // Preserve metadata during updates

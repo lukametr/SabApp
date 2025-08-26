@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   Table,
   TableBody,
@@ -64,6 +64,31 @@ const DocumentList: React.FC<DocumentListProps> = React.memo(({
     return Math.max(...hazards.map(h => h.residualRisk?.total || 0));
   }, []);
 
+  const getEarliestReviewDate = useCallback((doc: Document): Date | null => {
+    if ((doc as any).reviewDate) {
+      const d = new Date((doc as any).reviewDate as any);
+      if (!isNaN(d.getTime())) return d;
+    }
+    const hazards = doc.hazards || [];
+    if (!hazards || hazards.length === 0) return null;
+    const dates = hazards
+      .map(h => (h?.reviewDate ? new Date(h.reviewDate as any) : null))
+      .filter((d): d is Date => !!d && !isNaN(d.getTime()));
+    if (dates.length === 0) return null;
+    return new Date(Math.min(...dates.map(d => d.getTime())));
+  }, []);
+
+  const getReviewStatus = useCallback((doc: Document): 'overdue' | 'dueSoon' | null => {
+    const earliest = getEarliestReviewDate(doc);
+    if (!earliest) return null;
+    const now = new Date();
+    const msPerDay = 24 * 60 * 60 * 1000;
+    const diffDays = Math.floor((earliest.getTime() - now.getTime()) / msPerDay);
+    if (diffDays < 0) return 'overdue';
+    if (diffDays <= 2) return 'dueSoon';
+    return null;
+  }, [getEarliestReviewDate]);
+
   return (
     <TableContainer component={Paper}>
       <Table>
@@ -90,9 +115,21 @@ const DocumentList: React.FC<DocumentListProps> = React.memo(({
               <TableCell>
                 <Box>
                   <Typography variant="body1">{doc.objectName}</Typography>
-                  <Typography variant="caption" color="textSecondary">
-                    {doc.workDescription}
-                  </Typography>
+                  <Box display="flex" alignItems="center" gap={1} flexWrap="wrap">
+                    <Typography variant="caption" color="textSecondary">
+                      {doc.workDescription}
+                    </Typography>
+                    {(() => {
+                      const status = getReviewStatus(doc);
+                      if (status === 'overdue') {
+                        return <Chip label="ვადაგასული" color="error" size="small" />;
+                      }
+                      if (status === 'dueSoon') {
+                        return <Chip label="მიახლოებული ვადა" color="warning" size="small" />;
+                      }
+                      return null;
+                    })()}
+                  </Box>
                 </Box>
               </TableCell>
               <TableCell>

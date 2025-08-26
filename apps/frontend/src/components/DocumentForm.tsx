@@ -42,6 +42,7 @@ interface HazardData {
   requiredMeasures: string;
   responsiblePerson: string;
   reviewDate: Date | null; // Allow null for DatePicker compatibility
+  reviewDate: Date | null; // Allow null for DatePicker compatibility
   photos: string[]; // Base64 data URLs
 }
 
@@ -741,6 +742,7 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
           workDescription: defaultValues.workDescription || '',
           date: defaultValues.date ? new Date(defaultValues.date) : new Date(),
           time: defaultValues.time ? new Date(defaultValues.time) : new Date(),
+          reviewDate: defaultValues.reviewDate ? new Date(defaultValues.reviewDate) : null,
           photos: defaultValues.photos || []
         });
         console.log('✅ Form reset with values:', {
@@ -763,6 +765,7 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
           workDescription: '',
           date: new Date(),
           time: new Date(),
+          reviewDate: null,
           photos: []
         });
         setSharedReviewDate(null);
@@ -957,21 +960,25 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
             </Grid>
             <Grid item xs={12}>
               <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ka}>
-                <DatePicker
-                  label="გადახედვის სავარაუდო დრო (ყველა საფრთხისთვის)"
-                  value={sharedReviewDate}
-                  onChange={(date) => {
-                    setSharedReviewDate(date);
-                    // propagate to hazards state immediately
-                    setHazards(prev => prev.map(h => ({ ...h, reviewDate: date })));
-                  }}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      required: false
-                    }
-                  }}
-                />
+                <Controller name="reviewDate" control={control} rules={{ required: true }} render={({ field }: { field: ControllerRenderProps<CreateDocumentDto, 'reviewDate'> }) => (
+                  <DatePicker
+                    label="გადახედვის სავარაუდო დრო (აუცილებელი)"
+                    {...field}
+                    value={field.value || null}
+                    onChange={(date) => {
+                      field.onChange(date);
+                      setSharedReviewDate(date);
+                      setHazards(prev => prev.map(h => ({ ...h, reviewDate: date })));
+                    }}
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        required: true,
+                        error: !!errors.reviewDate
+                      }
+                    }}
+                  />
+                )} />
               </LocalizationProvider>
             </Grid>
             <Grid item xs={6}>

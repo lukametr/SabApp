@@ -63,6 +63,7 @@ export const documentApi = {
       workDescription: data.workDescription,
       date: data.date instanceof Date ? data.date.toISOString() : data.date,
       time: timeValue instanceof Date ? timeValue.toISOString() : timeValue,
+      reviewDate: data.reviewDate instanceof Date ? data.reviewDate.toISOString() : data.reviewDate,
       hazards: processedHazards,
       photos: data.photos || []
     };
@@ -93,6 +94,9 @@ export const documentApi = {
     if (data.workDescription) updatePayload.workDescription = data.workDescription;
     if (data.date) updatePayload.date = data.date.toISOString();
     if (data.time) updatePayload.time = data.time.toISOString();
+    if (data.reviewDate !== undefined) {
+      updatePayload.reviewDate = data.reviewDate instanceof Date ? data.reviewDate.toISOString() : data.reviewDate;
+    }
 
     if (Array.isArray(data.hazards)) {
       updatePayload.hazards = data.hazards.map(hazard => ({
