@@ -135,21 +135,44 @@ class HazardDto {
 }
 
 export class CreateDocumentDto {
+  @Transform(({ value }) => {
+    if (typeof value === 'string') return value;
+    return String(value || '');
+  })
   @IsString()
   evaluatorName: string;
 
+  @Transform(({ value }) => {
+    if (typeof value === 'string') return value;
+    return String(value || '');
+  })
   @IsString()
   evaluatorLastName: string;
 
+  @Transform(({ value }) => {
+    if (typeof value === 'string') return value;
+    return String(value || '');
+  })
   @IsString()
   objectName: string;
 
+  @Transform(({ value }) => {
+    if (typeof value === 'string') return value;
+    return String(value || '');
+  })
   @IsString()
   workDescription: string;
 
   @Transform(({ value }) => {
+    console.log('📅 DATE TRANSFORM:', { value, type: typeof value });
     // Default to current date when missing/invalid to avoid validation failure
     if (value === null || value === undefined || value === '') return new Date();
+    if (typeof value === 'string') {
+      const parsed = new Date(value);
+      console.log('📅 Parsed date from string:', parsed);
+      return isNaN(parsed.getTime()) ? new Date() : parsed;
+    }
+    if (value instanceof Date) return value;
     const parsed = new Date(value);
     return isNaN(parsed.getTime()) ? new Date() : parsed;
   })

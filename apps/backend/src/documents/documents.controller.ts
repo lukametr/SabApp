@@ -1,4 +1,5 @@
 import { Controller, Get, Post, Body, Param, Delete, UseInterceptors, Patch, Res, UseGuards, Request, BadRequestException } from '@nestjs/common';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 import { DocumentsService } from './documents.service';
 import { ReportService } from './report.service';
@@ -21,7 +22,13 @@ export class DocumentsController {
 
   @Post()
   @UseGuards(JwtAuthGuard, SubscriptionGuard)
-  @UseInterceptors(PhotoUploadInterceptor)
+  @UseInterceptors(
+    PhotoUploadInterceptor,
+    FileFieldsInterceptor([
+      { name: 'photos', maxCount: 10 },
+      { name: 'hazardPhotos', maxCount: 50 }
+    ])
+  )
   async create(@Body() createDocumentDto: CreateDocumentDto, @Request() req: any) {
     try {
       const userId = req.user?.id || req.user?.sub; // Get user ID from JWT token
