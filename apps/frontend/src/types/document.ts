@@ -48,6 +48,10 @@ export interface Document {
   assessmentSh: number;
   assessmentR: number;
   photos: string[]; // Base64 data URLs
+  // Download counters (from backend)
+  downloadZipCount?: number;
+  downloadExcelCount?: number;
+  downloadPdfCount?: number;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -284,6 +284,93 @@ export class ReportService {
       }
     };
 
+    // დანართები Excel-ში - მეორე Sheet
+    try {
+      const attachmentSheet = workbook.addWorksheet('დანართები');
+      // სათაური
+      attachmentSheet.getCell('A1').value = 'ფოტო დანართები';
+      attachmentSheet.getCell('A1').font = { size: 16, bold: true, name: 'Arial' } as any;
+      attachmentSheet.mergeCells('A1:D1');
+
+      let currentRow = 3;
+
+      // დოკუმენტის ფოტოები
+      if (processedDocument.photos && Array.isArray(processedDocument.photos) && processedDocument.photos.length > 0) {
+        attachmentSheet.getCell(`A${currentRow}`).value = 'დოკუმენტის ფოტოები:';
+        attachmentSheet.getCell(`A${currentRow}`).font = { bold: true, name: 'Arial' } as any;
+        currentRow += 1;
+
+        processedDocument.photos.forEach((photo: string, index: number) => {
+          if (typeof photo === 'string' && photo.startsWith('data:image/')) {
+            try {
+              const base64Data = photo.split(',')[1];
+              // ExcelJS supports only 'png' and 'jpeg' extensions
+              const lower = photo.toLowerCase();
+              const extension = lower.includes('png') ? 'png' : 'jpeg';
+              const imageId = workbook.addImage({ base64: base64Data, extension } as any);
+
+              // სურათის ჩასმა
+              attachmentSheet.addImage(imageId, { tl: { col: 1, row: currentRow - 1 }, ext: { width: 300, height: 200 } } as any);
+              attachmentSheet.getCell(`A${currentRow}`).value = `დოკუმენტის ფოტო ${index + 1}`;
+              // რიგის სიმაღლე (დაახლ. 15 პოინტი = 20px)
+              for (let r = 0; r < 14; r++) {
+                const row = attachmentSheet.getRow(currentRow + r);
+                if (!row.height || row.height < 18) row.height = 18;
+              }
+              currentRow += 14; // ადგილი შემდეგისთვის
+            } catch (err) {
+              // ignore single photo failure
+            }
+          }
+        });
+      }
+
+      // საფრთხეების ფოტოები
+      const hazardsForAttachments = Array.isArray(processedDocument.hazards) ? processedDocument.hazards : [];
+      hazardsForAttachments.forEach((hazard: any, hazardIndex: number) => {
+        if (hazard && Array.isArray(hazard.photos) && hazard.photos.length > 0) {
+          attachmentSheet.getCell(`A${currentRow}`).value = `დანართი №${hazardIndex + 1} - ${hazard.hazardIdentification || 'საფრთხე'}`;
+          attachmentSheet.getCell(`A${currentRow}`).font = { bold: true, name: 'Arial' } as any;
+          currentRow += 1;
+
+          hazard.photos.forEach((photo: string, photoIndex: number) => {
+            if (typeof photo === 'string' && photo.startsWith('data:image/')) {
+              try {
+                const base64Data = photo.split(',')[1];
+                // ExcelJS supports only 'png' and 'jpeg' extensions
+                const lower = photo.toLowerCase();
+                const extension = lower.includes('png') ? 'png' : 'jpeg';
+                const imageId = workbook.addImage({ base64: base64Data, extension } as any);
+
+                attachmentSheet.addImage(imageId, { tl: { col: 1, row: currentRow - 1 }, ext: { width: 300, height: 200 } } as any);
+                attachmentSheet.getCell(`A${currentRow}`).value = `ფოტო ${photoIndex + 1}`;
+                for (let r = 0; r < 14; r++) {
+                  const row = attachmentSheet.getRow(currentRow + r);
+                  if (!row.height || row.height < 18) row.height = 18;
+                }
+                currentRow += 14;
+              } catch (err) {
+                // ignore single photo failure
+              }
+            }
+          });
+
+          currentRow += 2; // spacer შემდეგი საფრთხისთვის
+        }
+      });
+
+      // სვეტების სიგანე
+      attachmentSheet.columns = [
+        { width: 15 },
+        { width: 40 },
+        { width: 40 },
+        { width: 40 }
+      ] as any;
+    } catch (e) {
+      // არა-კრიტიკული; დანართების ფურცელი ვერ გენერირდა
+      console.warn('⚠️ Excel attachment sheet generation failed:', e?.message);
+    }
+
     // 11. ფაილის გენერაცია
     const buffer = await workbook.xlsx.writeBuffer();
     return Buffer.from(buffer);
@@ -450,17 +537,9 @@ export class ReportService {
             format: 'A4',
             landscape: false,
             printBackground: true,
-            width: '297mm',
-            height: '210mm',
-            margin: {
-              top: '5mm',
-              right: '5mm', 
-              bottom: '5mm',
-              left: '5mm'
-            },
+            margin: { top: '20mm', right: '20mm', bottom: '20mm', left: '20mm' },
             displayHeaderFooter: false,
-            timeout: 60000,
-            scale: 0.8
+            timeout: 60000
           });
         } catch (pdfError) {
           console.log('⚠️ First PDF attempt failed, trying fallback options...');
@@ -554,6 +633,59 @@ export class ReportService {
         `;
         }).join('')
       : '<tr><td colspan="18">საფრთხეები არ იქნა იდენტიფიცირებული</td></tr>';
+
+    // დანართების HTML სექცია (ბოლო გვერდები)
+    let attachmentsHTML = `
+      <div style="page-break-before: always;"></div>
+      <div style="padding: 20px;">
+        <h2 style="text-align: center; color: #333;">ფოტო დანართები</h2>
+    `;
+
+    const docPhotos = Array.isArray(document.photos) ? document.photos : [];
+    if (docPhotos.length > 0) {
+      attachmentsHTML += `<h3>დოკუმენტის ფოტოები:</h3>`;
+      attachmentsHTML += `<div style="display: flex; flex-wrap: wrap; gap: 20px;">`;
+      docPhotos.forEach((photo: string, index: number) => {
+        if (typeof photo === 'string' && photo.startsWith('data:image/')) {
+          attachmentsHTML += `
+            <div style="margin-bottom: 20px; page-break-inside: avoid;">
+              <p style="font-weight: bold;">დოკუმენტის ფოტო ${index + 1}</p>
+              <img src="${photo}" style="max-width: 300px; max-height: 400px; border: 1px solid #ddd; padding: 5px;" />
+            </div>
+          `;
+        }
+      });
+      attachmentsHTML += `</div>`;
+    }
+
+    let hasHazardPhotos = false;
+    hazards.forEach((hazard: any, hazardIndex: number) => {
+      if (hazard.photos && Array.isArray(hazard.photos) && hazard.photos.length > 0) {
+        hasHazardPhotos = true;
+        attachmentsHTML += `
+          <div style="page-break-inside: avoid; margin-top: 30px;">
+            <h3>დანართი №${hazardIndex + 1} - ${hazard.hazardIdentification || 'საფრთხე'}</h3>
+            <div style="display: flex; flex-wrap: wrap; gap: 20px;">
+        `;
+        hazard.photos.forEach((photo: string, photoIndex: number) => {
+          if (typeof photo === 'string' && photo.startsWith('data:image/')) {
+            attachmentsHTML += `
+              <div style="margin-bottom: 20px; page-break-inside: avoid;">
+                <p style="font-weight: bold;">ფოტო ${photoIndex + 1}</p>
+                <img src="${photo}" style="max-width: 300px; max-height: 400px; border: 1px solid #ddd; padding: 5px;" />
+              </div>
+            `;
+          }
+        });
+        attachmentsHTML += `</div></div>`;
+      }
+    });
+
+    if (docPhotos.length === 0 && !hasHazardPhotos) {
+      attachmentsHTML += `<p style="text-align: center; color: #666; margin-top: 50px;">ფოტო დანართები არ არის</p>`;
+    }
+
+    attachmentsHTML += `</div>`;
 
     return `
       <!DOCTYPE html>
@@ -739,6 +871,7 @@ export class ReportService {
           <div style="margin-top: 30px; text-align: center; font-size: 8px; color: #666;">
             გენერირებულია: ${new Date().toLocaleDateString('ka-GE')} ${new Date().toLocaleTimeString('ka-GE')}
           </div>
+          ${attachmentsHTML}
         </body>
       </html>
     `;

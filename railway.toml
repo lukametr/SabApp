@@ -28,3 +28,8 @@ CORS_ORIGIN = "https://sabapp.com"
 PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = "true"
 PUPPETEER_EXECUTABLE_PATH = "/usr/bin/google-chrome-stable"
 CHROME_BIN = "/usr/bin/google-chrome-stable"
+BACKEND_URL = "https://sabapp.com"
+NEXT_PUBLIC_BACKEND_URL = "https://sabapp.com"
+NEXTAUTH_URL = "https://sabapp.com"
+# Set this in Railway UI for security; placeholder here
+NEXTAUTH_SECRET = "change-me-in-railway"

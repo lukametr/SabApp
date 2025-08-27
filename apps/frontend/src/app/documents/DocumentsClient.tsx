@@ -209,7 +209,13 @@ export default function DocumentsClient() {
       >
         <DialogTitle>დოკუმენტის წაშლა</DialogTitle>
         <DialogContent>
-          <p>დარწმუნებული ხართ, რომ გსურთ ამ დოკუმენტის წაშლა?</p>
+          <p style={{ marginBottom: 8 }}>
+            {documentToDelete?.objectName ? (
+              <>დოკუმენტი: <strong>{documentToDelete.objectName}</strong></>
+            ) : null}
+          </p>
+          <p style={{ marginBottom: 8 }}>ამ მოქმედებით დოკუმენტი და მასთან დაკავშირებული მონაცემები სამუდამოდ წაიშლება.</p>
+          <p>დარწმუნებული ხართ, რომ გსურთ წაშლა?</p>
         </DialogContent>
         <DialogActions>
           <Button

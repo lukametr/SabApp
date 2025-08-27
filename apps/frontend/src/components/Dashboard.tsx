@@ -51,6 +51,8 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
   const [viewDoc, setViewDoc] = useState<Document | null>(null);
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
   const [openForm, setOpenForm] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [documentToDelete, setDocumentToDelete] = useState<Document | null>(null);
 
   // Idle timeout - 24 hours
   useIdleTimeout({
@@ -93,11 +95,25 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
     setOpen(true);
   }, []);
 
-  const handleDelete = useCallback(async (doc: Document) => {
-    console.log('🗑️ Dashboard delete called for:', { id: doc.id, objectName: doc.objectName });
-    await deleteDocument(doc.id);
+  const handleDeleteClick = useCallback((doc: Document) => {
+    console.log('🗑️ Dashboard delete clicked for:', { id: doc.id, objectName: doc.objectName });
+    setDocumentToDelete(doc);
+    setIsDeleteDialogOpen(true);
+  }, []);
+
+  const handleDeleteConfirm = useCallback(async () => {
+    if (!documentToDelete) return;
+    console.log('🗑️ Dashboard delete confirmed for:', { id: documentToDelete.id, objectName: documentToDelete.objectName });
+    await deleteDocument(documentToDelete.id);
+    setIsDeleteDialogOpen(false);
+    setDocumentToDelete(null);
     fetchDocuments();
-  }, [deleteDocument, fetchDocuments]);
+  }, [deleteDocument, fetchDocuments, documentToDelete]);
+
+  const handleDeleteCancel = useCallback(() => {
+    setIsDeleteDialogOpen(false);
+    setDocumentToDelete(null);
+  }, []);
 
   const handleSelect = useCallback((doc: Document) => {
     setSelectedDocument(doc);
@@ -402,7 +418,7 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
             <DocumentList
               documents={documents}
               onEdit={handleEdit}
-              onDelete={handleDelete}
+              onDelete={handleDeleteClick}
               onSelect={handleSelect}
             />
           )}
@@ -431,12 +447,39 @@ export default function Dashboard({ user: propUser }: DashboardProps) {
                 setOpen(true);
               }}
               onDelete={() => {
-                handleDelete(selectedDocument);
+                if (selectedDocument) {
+                  handleDeleteClick(selectedDocument);
+                }
                 setOpenForm(false);
               }}
             />
           )}
         </DialogContent>
+      </Dialog>
+
+      {/* Delete confirmation dialog */}
+      <Dialog
+        open={isDeleteDialogOpen}
+        onClose={handleDeleteCancel}
+      >
+        <DialogTitle>დოკუმენტის წაშლა</DialogTitle>
+        <DialogContent>
+          <Typography sx={{ mb: 1 }}>
+            {documentToDelete?.objectName ? (
+              <>დოკუმენტი: <strong>{documentToDelete.objectName}</strong></>
+            ) : null}
+          </Typography>
+          <Typography sx={{ mb: 1 }}>
+            ამ მოქმედებით დოკუმენტი და მასთან დაკავშირებული მონაცემები სამუდამოდ წაიშლება.
+          </Typography>
+          <Typography>დარწმუნებული ხართ, რომ გსურთ წაშლა?</Typography>
+        </DialogContent>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, p: 2 }}>
+          <Button onClick={handleDeleteCancel}>გაუქმება</Button>
+          <Button onClick={handleDeleteConfirm} color="error" variant="contained">
+            დოკუმენტის წაშლა
+          </Button>
+        </Box>
       </Dialog>
     </Box>
   );
