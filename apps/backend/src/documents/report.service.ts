@@ -92,22 +92,19 @@ export class ReportService {
     ];
 
   // 3. ცხრილის მონაცემები (hazards) - 15 სვეტი
-    const hazards = Array.isArray(processedDocument.hazards) ? processedDocument.hazards : [];
-    // მრავალ ფოტოზე: თითო საფრთხეზე შეიძლება დაგვჭირდეს დამატებითი ცარიელი რიგები, რომ ფოტოები მოთავსდეს მხოლოდ B სვეტში
-    const rowsPerImage = 5;           // ვერტიკალური ინტერვალი თითო ფოტოზე (რიგები)
-    const imageHeightRows = 4;        // რამდენ რიგს ფარავს თითო ფოტო B სვეტში
+  const hazards = Array.isArray(processedDocument.hazards) ? processedDocument.hazards : [];
   const tableRows: any[] = [];
 
     if (hazards.length > 0) {
       for (const [index, hazard] of hazards.entries()) {
         const photosCount = Array.isArray(hazard.photos) ? hazard.photos.length : 0;
-        const rowsNeeded = photosCount > 0 ? (imageHeightRows + (photosCount - 1) * rowsPerImage) : 1;
+        const photoText = photosCount > 0 ? `იხილეთ დანართი №${index + 1}` : '';
 
-        // პირველი row — რეალური მონაცემები
+        // ერთი row — რეალური მონაცემები (ფოტოს ველში ტექსტი)
         tableRows.push([
           (index + 1),
           hazard.hazardIdentification || '',
-          '', // ფოტო სვეტი ცარიელი (ფოტოები ჩავარდება render-ისას)
+          photoText, // ფოტო სვეტი — ტექსტი დანართზე
           hazard.affectedPersons?.join(', ') || '',
           hazard.injuryDescription || '',
           hazard.existingControlMeasures || '',
@@ -122,11 +119,6 @@ export class ReportService {
           hazard.responsiblePerson || '',
           hazard.reviewDate ? new Date(hazard.reviewDate).toLocaleDateString('ka-GE') : ''
         ]);
-
-        // დამატებითი spacer რიგები — მხოლოდ ცარიელი ველები, რომ ფოტოებმა დაიკავონ B სვეტი ქვემოთაც
-        for (let r = 1; r < rowsNeeded; r++) {
-          tableRows.push(new Array(tableHeaders[0].length).fill(''));
-        }
       }
     } else {
       for (let i = 0; i < 5; i++) tableRows.push(new Array(tableHeaders[0].length).fill(''));
@@ -143,90 +135,7 @@ export class ReportService {
     // 5. Worksheet-ში ჩასმა
     worksheet.addRows(fullSheetData);
 
-  // 6. ფოტოების ჩასმის ფუნქცია - ჩარჩოში ჩატევა (B სვეტი) და არ გასცდეს საზღვრებს
-  const addImageToWorksheet = async (base64Data: string, position: { row: number, photoIndex: number }) => {
-      try {
-        // base64 სტრინგიდან ბაფერის შექმნა
-        const matches = base64Data.match(/^data:([^;]+);base64,(.+)$/);
-        if (matches) {
-          const mimeType = matches[1];
-          const base64Content = matches[2];
-          // Create proper Node.js Buffer directly from base64 string
-          const imageBuffer = Buffer.from(base64Content, 'base64');
-
-          // Extension ტიპის განსაზღვრა
-          let extension: 'png' | 'jpeg' | 'gif' = 'png';
-          if (mimeType.includes('jpeg') || mimeType.includes('jpg')) {
-            extension = 'jpeg';
-          } else if (mimeType.includes('png')) {
-            extension = 'png';
-          } else if (mimeType.includes('gif')) {
-            extension = 'gif';
-          }
-
-          // ფოტოს ჩამატება workbook-ში - Node.js Buffer ტიპისთვის
-          const imageId = workbook.addImage({
-            buffer: imageBuffer as any,
-            extension: extension,
-          } as any);
-
-          // სვეტი C-ის სიგანის პიქსელებში მისაღები შეფასება (~7px ერთეულზე)
-          const colC = worksheet.getColumn(3); // C
-          const colWidth = (colC.width || 20) * 7; // approx pixels
-          const pxMargin = 6; // მცირე შიდა მარჯანი
-          const targetWidth = Math.max(40, Math.floor(colWidth - pxMargin));
-
-          // ვთვლით იმ რიგის საწყისს (1-based to 0-based)
-          const photoRowStart = position.row + position.photoIndex * rowsPerImage; // 1-based
-
-          // დავადუზოთ ზონა C{start}:C{start+imageHeightRows-1} — ორი-უჯრედიანი ანქორი, რომ არ გასცდეს C სვეტს
-          const startCell = `C${photoRowStart}`;
-          const endCell = `C${photoRowStart + (imageHeightRows - 1)}`;
-          worksheet.addImage(imageId, {
-            tl: { col: 2, row: photoRowStart - 1 },
-            ext: { width: targetWidth, height: 200 }, // ფიქსირებული მაღალი, რომ ფოტოები ჩაეტიოს
-            editAs: 'oneCell'
-          } as any);
-
-          // პარალელურად, მინიმალური row height იმ დიაპაზონზე
-          for (let i = 0; i < imageHeightRows; i++) {
-            const r = worksheet.getRow(photoRowStart + i);
-            const pxToPoints = (px: number) => px * 0.75; // 96dpi → points
-            r.height = Math.max(r.height || 0, pxToPoints(60));
-          }
-
-          console.log(`✅ Added image in C column at ${startCell}:${endCell}`);
-        } else {
-          console.error('❌ Invalid base64 image format');
-        }
-      } catch (error) {
-        console.error('❌ Error adding image to Excel:', error);
-      }
-    };
-
-  // 7. ფოტოების ჩასმა hazards-ისთვის - ფიქსირებული C სვეტში, spacer რიგებით
-    if (hazards.length > 0) {
-      const headerRowsCount = headerData.length + 1; // header rows + empty row
-      const tableHeaderRow = headerRowsCount + 1; // table header row
-      const dataStartRow = tableHeaderRow + 1; // მონაცემების დაწყების სტრიქონი (სწორი)
-
-      // ავაგოთ თითო საფრთხის საწყისი რიგის ინდექსი (worksheet-ში), tableRows-ის სიგრძე ვიცით
-      let cursor = dataStartRow;
-      for (let i = 0; i < hazards.length; i++) {
-        const hazard = hazards[i];
-        const photosCount = Array.isArray(hazard.photos) ? hazard.photos.length : 0;
-        const rowsNeeded = photosCount > 0 ? (imageHeightRows + (photosCount - 1) * rowsPerImage) : 1;
-
-        // შევინახოთ საწყისი row — არაა საჭირო ცალკე მასივი, პირდაპირ cursor-ით ვიმუშავებთ
-        if (photosCount > 0) {
-          console.log(`📸 Adding ${photosCount} photos for hazard ${i + 1} in C column (rowsNeeded=${rowsNeeded})`);
-          for (let p = 0; p < photosCount; p++) {
-            await addImageToWorksheet(hazard.photos[p], { row: cursor, photoIndex: p });
-          }
-        }
-        cursor += rowsNeeded; // შემდეგი საფრთხე იწყება ამდენი რიგის შემდეგ
-      }
-    }
+  // 6. ფოტოების ემბედი ამოღებულია — სვეტში ჩაჯდება ტექსტი დანართზე მითითებით
 
     // 8. Merge-ები - სწორი ფორმატირებისთვის (16 სვეტი)
     worksheet.mergeCells('A1:P1'); // სათაური spans all 16 columns
@@ -600,7 +509,7 @@ export class ReportService {
       ? hazards.map((hazard: any, index: number) => {
           // ფოტოების რაოდენობის ჩვენება binary მონაცემების ნაცვლად
           const photosCount = hazard.photos && Array.isArray(hazard.photos) ? hazard.photos.length : 0;
-          const photosText = photosCount > 0 ? `${photosCount} ფოტო` : 'ფოტო არ არის';
+            const photosText = photosCount > 0 ? `${photosCount} ფოტო` : 'ფოტო არ არის';
           
           return `
           <tr>
