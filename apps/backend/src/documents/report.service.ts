@@ -64,9 +64,9 @@ export class ReportService {
 
     const headerData = [
       ['რისკის შეფასების ფორმა №1', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''], // A1:P1 (16 სვეტი)
-      ['შეფასებლის სახელი და გვარი:', evaluatorName, '', '', '', '', '', '', '', '', 'თარიღი:', date, '', '', '', ''], // A2:J2 და K2:P2
-      ['სამუშაო ობიექტის დასახელება:', objectName, '', '', '', '', '', '', '', '', '', '', '', '', '', ''], // A3:P3
-      ['სამუშაოს აღწერა:', workDescription, '', '', '', '', '', '', '', '', '', '', '', '', '', ''] // A4:P4
+  ['შემფასებლის სახელი და გვარი:', '', evaluatorName, '', '', '', '', '', 'თარიღი:', '', date, '', '', '', '', ''], // A2: label/value და თარიღი ცალკე ველებად
+      ['სამუშაო ობიექტის დასახელება:', '', objectName, '', '', '', '', '', '', '', '', '', '', '', '', ''], // A3: label/value
+      ['სამუშაოს აღწერა:', '', workDescription, '', '', '', '', '', '', '', '', '', '', '', '', ''] // A4: label/value
     ];
 
     // 2. ცხრილის სათაურები - 15 სვეტი (თავიდან ამოღებულია "საწყისი რისკი" და "ნარჩენი რისკი" სვეტები)
@@ -137,12 +137,19 @@ export class ReportService {
 
   // 6. ფოტოების ემბედი ამოღებულია — სვეტში ჩაჯდება ტექსტი დანართზე მითითებით
 
-    // 8. Merge-ები - სწორი ფორმატირებისთვის (16 სვეტი)
-    worksheet.mergeCells('A1:P1'); // სათაური spans all 16 columns
-    worksheet.mergeCells('A2:J2'); // შეფასებლის სახელი და გვარი
-    worksheet.mergeCells('K2:P2'); // თარიღი
-    worksheet.mergeCells('A3:P3'); // სამუშაო ობიექტი spans all columns
-    worksheet.mergeCells('A4:P4'); // სამუშაოს აღწერა spans all columns 
+  // 8. Merge-ები - სწორი ფორმატირებისთვის (16 სვეტი)
+  worksheet.mergeCells('A1:P1'); // სათაური spans all 16 columns
+  // A2:B2 label, C2:H2 value, I2:J2 label (თარიღი), K2:P2 value (თარიღი)
+  worksheet.mergeCells('A2:B2');
+  worksheet.mergeCells('C2:H2');
+  worksheet.mergeCells('I2:J2');
+  worksheet.mergeCells('K2:P2');
+  // A3:B3 label, C3:P3 value
+  worksheet.mergeCells('A3:B3');
+  worksheet.mergeCells('C3:P3');
+  // A4:B4 label, C4:P4 value
+  worksheet.mergeCells('A4:B4');
+  worksheet.mergeCells('C4:P4'); 
     
     // 9. სვეტების სიგანის მორგება - 16 სვეტი
     worksheet.columns = [
@@ -184,7 +191,21 @@ export class ReportService {
   for (let i = 2; i <= headerData.length + 1; i++) {
       const row = worksheet.getRow(i);
       row.eachCell((cell, colNumber) => {
-    if (colNumber === 1 || colNumber === 11) { // Label columns (A and K)
+        if (i === 2 && (colNumber === 1 || colNumber === 9)) { // Row 2 labels at A and I
+          cell.font = { bold: true, size: 10, name: 'Arial' };
+          cell.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'F2F2F2' }
+          };
+        } else if (i === 3 && colNumber === 1) { // Row 3 label at A
+          cell.font = { bold: true, size: 10, name: 'Arial' };
+          cell.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'F2F2F2' }
+          };
+        } else if (i === 4 && colNumber === 1) { // Row 4 label at A
           cell.font = { bold: true, size: 10, name: 'Arial' };
           cell.fill = {
             type: 'pattern',
@@ -509,7 +530,7 @@ export class ReportService {
       ? hazards.map((hazard: any, index: number) => {
           // ფოტოების რაოდენობის ჩვენება binary მონაცემების ნაცვლად
           const photosCount = hazard.photos && Array.isArray(hazard.photos) ? hazard.photos.length : 0;
-            const photosText = photosCount > 0 ? `${photosCount} ფოტო` : 'ფოტო არ არის';
+            const photosText = photosCount > 0 ? `იხილეთ დანართი №${index + 1}` : '';
           
           return `
           <tr>
@@ -669,7 +690,7 @@ export class ReportService {
           <div class="info-section">
             <table class="info-table">
               <tr>
-                <td>შეფასებლის სახელი და გვარი:</td>
+                <td>შემფასებლის სახელი და გვარი:</td>
                 <td>${evaluatorName}</td>
                 <td>თარიღი:</td>
                 <td>${date}</td>

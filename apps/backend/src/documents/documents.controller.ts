@@ -221,6 +221,40 @@ export class DocumentsController {
     res.send(buffer);
   }
 
+  // ფოტოების ცალკე ZIP დანართის ჩამოტვირთვა
+  @Get(':id/download/photos')
+  async downloadPhotos(@Param('id') id: string, @Res() res: Response): Promise<void> {
+    try {
+      const document = await this.documentsService.findOne(id);
+      if (!document) {
+        res.status(404).json({ message: 'Document not found' });
+        return;
+      }
+
+      const buffer = await this.documentsService.getDocumentFile(id);
+      try {
+        await this.documentsService.incrementDownloadCounter(id, 'zip');
+      } catch (e) {
+        console.warn('⚠️ Failed to increment ZIP download counter (photos):', e?.message);
+      }
+
+      const sanitizedName = document.objectName 
+        ? document.objectName.replace(/[^a-zA-Z0-9\u10A0-\u10FF\s-]/g, '')
+        : 'document';
+      const filename = `ფოტოები-${sanitizedName}-${new Date().toISOString().split('T')[0]}.zip`;
+
+      res.set({
+        'Content-Type': 'application/zip',
+        'Content-Disposition': `attachment; filename="${encodeURIComponent(filename)}"`,
+        'Content-Length': buffer.length.toString(),
+      });
+      res.send(buffer);
+    } catch (error) {
+      console.error('❌ Photos download error:', error);
+      res.status(500).json({ message: 'Photos download failed', error: error.message });
+    }
+  }
+
   // Excel რეპორტის ჩამოტვირთვა
   @Get(':id/download/excel')
   async downloadExcelReport(@Param('id') id: string, @Res() res: Response, @Request() req: any) {
