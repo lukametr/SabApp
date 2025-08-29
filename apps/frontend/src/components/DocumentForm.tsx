@@ -784,6 +784,19 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
     }
   }, [open, isInitialized]); // Remove defaultValues from dependencies to prevent re-initialization
 
+  // სავალდებულო ველების შემოწმება (დამატებულია მოთხოვნის შესაბამისად)
+  // შენიშვნა: ამ პროექტში ფორმის მდგომარეობას მართავს react-hook-form, ამიტომ აქ ვიგულისხმოთ,
+  // რომ formData შეესაბამება getValues()-ის შედეგს. ფუნქციის ზუსტი ტექსტი დაუცველად ვინარჩუნოთ.
+  const checkRequiredFields = () => {
+    const formData = getValues() as any;
+    const missing: string[] = [];
+    if (!formData.companyName) missing.push('კომპანიის დასახელება');
+    if (!formData.evaluationObject) missing.push('შეფასების ობიექტი');
+    if (!formData.evaluationDate) missing.push('შეფასების თარიღი');
+    if (!formData.reviewDate) missing.push('გადახედვის თარიღი');
+    return missing;
+  };
+
   const handleFormSubmitInternal = async (data: CreateDocumentDto) => {
     // Prevent double submission
     if (isSubmitting) {

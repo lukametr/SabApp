@@ -4,17 +4,11 @@ import React from 'react';
 import { Box, Container, Paper, Typography } from '@mui/material';
 
 export default function AboutPage() {
-  return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: '#f5f5f5', py: 4 }}>
-      <Container maxWidth="md">
-        <Paper elevation={3} sx={{ p: 4 }}>
-          <Typography variant="h3" component="h1" gutterBottom align="center">
-            ჩვენი მიზანი
-          </Typography>
-          <Typography component="div" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.8 }}>
-{`sabapp-ის მთავარი მიზანია შრომის უსაფრთხოების სპეციალისტებისთვის რისკების შეფასების დოკუმენტაციის წარმოებისა და მართვის პროცესი გავხადოთ მარტივი, ციფრული და სტანდარტებთან შესაბამისი.
+  const content = `ჩვენი მიზანი
 
-ჩვენი მისიაა:
+პლატფორმის მთავარი მიზანია შრომის უსაფრთხოების სპეციალისტებისთვის რისკების შეფასებისდოკუმენტაციის წარმოებისა და მართვის პროცესი გავხადოთ მარტივი, ციფრული და სტანდარტებთან შესაბამისი.
+
+ჩვენი მისია:
 
 ბიუროკრატიის შემცირება — ქაღალდზე დამოკიდებულების შემცირება და ყველა საჭირო დოკუმენტის ერთიან ციფრულ სივრცეში თავმოყრა.
 
@@ -24,7 +18,16 @@ export default function AboutPage() {
 
 ინოვაცია და მდგრადობა — შრომის უსაფრთხოების სფეროში ინოვაციური ციფრული გადაწყვეტების დანერგვა, რაც ხელს უწყობს როგორც კომპანიების განვითარებას, ასევე ეკოლოგიურად პასუხისმგებელ სამუშაო გარემოს.
 
-sabapp მიზნად ისახავს საქართველოში და საერთაშორისო დონეზე გახდეს შრომის უსაფრთხოების ციფრული ტრანსფორმაციის სანდო პარტნიორი.`}
+პლატფორმა მიზნად ისახავს საქართველოში და საერთაშორისო დონეზე გახდეს შრომის უსაფრთხოების ციფრული ტრანსფორმაციის სანდო პარტნიორი.`;
+  return (
+    <Box sx={{ minHeight: '100vh', backgroundColor: '#f5f5f5', py: 4 }}>
+      <Container maxWidth="md">
+        <Paper elevation={3} sx={{ p: 4 }}>
+          <Typography variant="h3" component="h1" gutterBottom align="center">
+            ჩვენი მიზანი
+          </Typography>
+          <Typography component="div" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.8 }}>
+            {content}
           </Typography>
         </Paper>
       </Container>
