@@ -3,7 +3,7 @@ import axios, { AxiosResponse, AxiosError } from 'axios';
 // Use relative URL when served from backend, external URL for development
 const getApiUrl = () => {
   // Always use env variable or fallback, regardless of environment
-  return process.env.NEXT_PUBLIC_API_URL || 'https://sabapp.com/api';
+  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
 };
 
 const API_URL = getApiUrl();

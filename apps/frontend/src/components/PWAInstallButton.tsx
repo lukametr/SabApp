@@ -133,7 +133,7 @@ const PWAInstallButton: React.FC = () => {
           </Typography>
           
           <Typography variant="body2" sx={{ mb: 2, opacity: 0.9 }}>
-            დააყენეთ SabApp თქვენს {isMobile ? 'მოწყობილობაზე' : 'მოწყობილობაზე'} სწრაფი წვდომისთვის
+            დააყენეთ აპლიკაცია თქვენს {isMobile ? 'მოწყობილობაზე' : 'მოწყობილობაზე'} სწრაფი წვდომისთვის
           </Typography>
           
           <Button
@@ -180,7 +180,7 @@ const PWAInstallButton: React.FC = () => {
               </Box>
               
               <Typography variant="body1" sx={{ mb: 1 }}>
-                SabApp-ის მთავარ ეკრანზე დასამატებლად:
+                აპლიკაციის მთავარ ეკრანზე დასამატებლად:
               </Typography>
               
               <Stack spacing={1.5}>
@@ -257,7 +257,7 @@ const PWAInstallButton: React.FC = () => {
               </Box>
               
               <Typography variant="body1" sx={{ mb: 1 }}>
-                SabApp-ის მთავარ ეკრანზე დასამატებლად:
+                აპლიკაციის მთავარ ეკრანზე დასამატებლად:
               </Typography>
               
               <Stack spacing={1.5}>
@@ -334,7 +334,7 @@ const PWAInstallButton: React.FC = () => {
               </Box>
               
               <Typography variant="body1" sx={{ mb: 1 }}>
-                კომპიუტერზე SabApp-ის დასაყენებლად:
+                კომპიუტერზე აპლიკაციის დასაყენებლად:
               </Typography>
               
               <Stack spacing={1.5}>
@@ -397,7 +397,7 @@ const PWAInstallButton: React.FC = () => {
                     3
                   </Box>
                   <Typography>
-                    დაადასტურეთ დაყენება და SabApp გამოჩნდება როგორც ჩვეულებრივი პროგრამა
+                    დაადასტურეთ დაყენება და აპლიკაცია გამოჩნდება როგორც ჩვეულებრივი პროგრამა
                   </Typography>
                 </Box>
               </Stack>
@@ -406,7 +406,7 @@ const PWAInstallButton: React.FC = () => {
           
           <Box sx={{ mt: 3, p: 2, backgroundColor: 'grey.50', borderRadius: 1 }}>
             <Typography variant="body2" color="text.secondary">
-              💡 დაყენების შემდეგ SabApp გამოჩნდება თქვენს მთავარ ეკრანზე და იმუშავებს ჩვეულებრივი აპლიკაციის მსგავსად!
+              💡 დაყენების შემდეგ აპლიკაცია გამოჩნდება თქვენს მთავარ ეკრანზე და იმუშავებს ჩვეულებრივი აპლიკაციის მსგავსად!
             </Typography>
           </Box>
         </DialogContent>

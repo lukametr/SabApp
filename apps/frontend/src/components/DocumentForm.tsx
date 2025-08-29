@@ -42,7 +42,6 @@ interface HazardData {
   requiredMeasures: string;
   responsiblePerson: string;
   reviewDate: Date | null; // Allow null for DatePicker compatibility
-  reviewDate: Date | null; // Allow null for DatePicker compatibility
   photos: string[]; // Base64 data URLs
 }
 
@@ -503,6 +502,13 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
                     console.log('[HazardSection] additionalControlMeasures change', { id: hazard.id, value: e.target.value });
                     updateHazard(hazard.id, { additionalControlMeasures: e.target.value });
                   }}
+                  placeholder={
+                    'საფრთხის აღმოფხვრა-\n' +
+                    'საფრთხის ჩანაცვლება-\n' +
+                    'საფრთხის იზოლირება-\n' +
+                    'უსაფრთხოების პროცედურები-\n' +
+                    'ინდივიდუალური დაცვის საშუალებები-'
+                  }
                 />
               </Grid>
 
@@ -742,7 +748,7 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
           workDescription: defaultValues.workDescription || '',
           date: defaultValues.date ? new Date(defaultValues.date) : new Date(),
           time: defaultValues.time ? new Date(defaultValues.time) : new Date(),
-          reviewDate: defaultValues.reviewDate ? new Date(defaultValues.reviewDate) : null,
+          reviewDate: defaultValues.reviewDate ? new Date(defaultValues.reviewDate) : (derivedReview || undefined),
           photos: defaultValues.photos || []
         });
         console.log('✅ Form reset with values:', {
@@ -765,7 +771,7 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
           workDescription: '',
           date: new Date(),
           time: new Date(),
-          reviewDate: null,
+          reviewDate: undefined,
           photos: []
         });
         setSharedReviewDate(null);
@@ -960,9 +966,9 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
             </Grid>
             <Grid item xs={12}>
               <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ka}>
-                <Controller name="reviewDate" control={control} rules={{ required: true }} render={({ field }: { field: ControllerRenderProps<CreateDocumentDto, 'reviewDate'> }) => (
+        <Controller name="reviewDate" control={control} rules={{ required: true }} render={({ field }: { field: ControllerRenderProps<CreateDocumentDto, 'reviewDate'> }) => (
                   <DatePicker
-                    label="გადახედვის სავარაუდო დრო (აუცილებელი)"
+          label="გადახედვის სავარაუდო დრო (აუცილებელია)"
                     {...field}
                     value={field.value || null}
                     onChange={(date) => {
@@ -1019,7 +1025,13 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
               <HazardSection hazards={hazards} onHazardsChange={setHazards} />
             </Grid>
             <Grid item xs={12}>
-              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2 }}>
+              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2, alignItems: 'center' }}>
+                {/** Inline validation hint near the submit button when required fields are missing */}
+                {(!!errors.evaluatorName || !!errors.evaluatorLastName || !!errors.objectName || !!errors.workDescription || !!errors.date || !!errors.time || !!errors.reviewDate) && (
+                  <Typography variant="body2" color="error" sx={{ mr: 'auto' }}>
+                    გთხოვთ შეავსოთ ყველა სავალდებულო ველი
+                  </Typography>
+                )}
                 <Button variant="outlined" onClick={handleCancel}>
                   გაუქმება
                 </Button>

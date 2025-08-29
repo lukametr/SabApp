@@ -20,7 +20,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:3000'),
-  title: 'SabApp - უსაფრთხოების შეფასების აპლიკაცია',
+  title: 'უსაფრთხოების შეფასების აპლიკაცია',
   description: 'უსაფრთხოების შეფასების ფორმების შევსება და მართვა',
   manifest: '/manifest.json',
   icons: {
@@ -33,15 +33,15 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'SabApp',
+  title: 'უსაფრთხოების შეფასების აპლიკაცია',
   },
   formatDetection: {
     telephone: false,
   },
   openGraph: {
     type: 'website',
-    siteName: 'SabApp',
-    title: 'SabApp - უსაფრთხოების შეფასების აპლიკაცია',
+  siteName: 'უსაფრთხოების შეფასების აპლიკაცია',
+  title: 'უსაფრთხოების შეფასების აპლიკაცია',
     description: 'უსაფრთხოების შეფასების ფორმების შევსება და მართვა',
   },
 };
@@ -58,7 +58,7 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="SabApp" />
+  <meta name="apple-mobile-web-app-title" content="უსაფრთხოების შეფასება" />
         <meta name="theme-color" content="#1976d2" />
         
         {/* Font preconnect for better performance */}

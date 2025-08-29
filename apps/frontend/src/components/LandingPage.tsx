@@ -235,7 +235,7 @@ export default function LandingPage() {
               <Card elevation={3}>
                 <CardContent sx={{ p: 4 }}>
                   <Typography variant="h6" gutterBottom>
-                    ფორმის ავსების მაგალითი
+                    ფორმის შევსების მაგალითი - თ.
                   </Typography>
                   <Box sx={{ 
                     backgroundColor: '#f5f5f5', 
@@ -327,8 +327,7 @@ export default function LandingPage() {
           <Grid container spacing={4}>
             <Grid item xs={12} md={4}>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <Shield sx={{ mr: 1 }} />
-                <Typography variant="h6">SabApp</Typography>
+                <img src="/logo-3.jpg" alt="App logo" style={{ height: 28 }} />
               </Box>
               <Typography variant="body2" color="grey.400">
                 უსაფრთხოების შეფასების ციფრული პლატფორმა

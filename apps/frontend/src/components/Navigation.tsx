@@ -290,8 +290,15 @@ export default function Navigation() {
           <div className="flex justify-between h-16">
             <div className="flex">
               <div className="flex-shrink-0 flex items-center">
-                <Link href="/" className="text-xl font-bold text-primary-600">
-                  SabApp
+                <Link href="/" className="inline-flex items-center" aria-label="Home">
+                  <Image 
+                    src="/logo-3.jpg" 
+                    alt="App logo" 
+                    width={120} 
+                    height={36} 
+                    priority
+                    style={{ height: 36, width: 'auto' }}
+                  />
                 </Link>
               </div>
               {/* Desktop Menu */}

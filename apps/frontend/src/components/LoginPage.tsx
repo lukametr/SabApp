@@ -98,7 +98,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
       console.log('🔧 Google Login - Starting redirect flow...');
       
       // Use same redirect flow as RegisterPage
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://sabapp.com/api';
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
       const googleOAuthUrl = `${baseUrl}/auth/google`;
       
       console.log('🔧 Google Login - Redirecting to:', googleOAuthUrl);
@@ -120,10 +120,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
       <Container maxWidth="sm">
         <Paper elevation={3} sx={{ p: 4 }}>
           <Box sx={{ textAlign: 'center', mb: 4 }}>
-            <Shield sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
-            <Typography variant="h4" gutterBottom>
-              SabApp
-            </Typography>
+            <img src="/logo-3.jpg" alt="App logo" style={{ height: 40, marginBottom: 8 }} />
             <Typography variant="h6" color="text.secondary">
               შესვლა სისტემაში
             </Typography>

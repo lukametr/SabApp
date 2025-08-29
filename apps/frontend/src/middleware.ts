@@ -11,7 +11,7 @@ export function middleware(request: NextRequest) {
     base-uri 'self';
     form-action 'self';
     frame-ancestors 'none';
-    connect-src 'self' https://*.googleapis.com *.google.com https://*.gstatic.com data: blob: https://sabapp.com;
+  connect-src 'self' https://*.googleapis.com *.google.com https://*.gstatic.com data: blob: http://localhost:3000;
     frame-src *.google.com;
     worker-src blob:;
   `

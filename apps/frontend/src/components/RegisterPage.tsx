@@ -139,10 +139,7 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
       <Container maxWidth="sm">
         <Paper elevation={3} sx={{ p: 4 }}>
           <Box sx={{ textAlign: 'center', mb: 4 }}>
-            <Shield sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
-            <Typography variant="h4" gutterBottom>
-              SabApp
-            </Typography>
+            <img src="/logo-3.jpg" alt="App logo" style={{ height: 40, marginBottom: 8 }} />
             <Typography variant="h6" color="text.secondary">
               რეგისტრაცია
             </Typography>

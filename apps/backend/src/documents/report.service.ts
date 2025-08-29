@@ -56,28 +56,34 @@ export class ReportService {
       processedDocument.description || 
       processedDocument.summary || '';
     
-    const date = processedDocument.date || processedDocument.assessmentDate || processedDocument.createdAt || processedDocument.dateCreated
-      ? new Date(processedDocument.date || processedDocument.assessmentDate || processedDocument.createdAt || processedDocument.dateCreated).toLocaleDateString('ka-GE') 
+    const dateSource = processedDocument.date || processedDocument.assessmentDate || processedDocument.createdAt || processedDocument.dateCreated;
+    const date = dateSource
+      ? new Date(dateSource).toLocaleDateString('ka-GE')
       : new Date().toLocaleDateString('ka-GE'); // fallback to today
+    // 24-hour time (HH:mm). Prefer explicit time field if available, otherwise use the date's time.
+    const time = (processedDocument.time
+      ? new Date(processedDocument.time)
+      : (dateSource ? new Date(dateSource) : new Date())
+    ).toLocaleTimeString('ka-GE', { hour12: false, hour: '2-digit', minute: '2-digit' });
     
-  // დრო აღარ ჩანს header-ში
+  // დრო გამოდის თარიღის ქვეშ (იმავე უჯრაში ახალ ხაზზე)
 
     const headerData = [
       ['რისკის შეფასების ფორმა №1', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''], // A1:P1 (16 სვეტი)
-  ['შემფასებლის სახელი და გვარი:', '', evaluatorName, '', '', '', '', '', 'თარიღი:', '', date, '', '', '', '', ''], // A2: label/value და თარიღი ცალკე ველებად
+  ['შემფასებლის სახელი და გვარი:', '', evaluatorName, '', '', '', '', '', 'თარიღი:', '', `${date}\n${time}`, '', '', '', '', ''], // A2: label/value და თარიღი+დრო (ახალ ხაზზე)
       ['სამუშაო ობიექტის დასახელება:', '', objectName, '', '', '', '', '', '', '', '', '', '', '', '', ''], // A3: label/value
       ['სამუშაოს აღწერა:', '', workDescription, '', '', '', '', '', '', '', '', '', '', '', '', ''] // A4: label/value
     ];
 
     // 2. ცხრილის სათაურები - 15 სვეტი (თავიდან ამოღებულია "საწყისი რისკი" და "ნარჩენი რისკი" სვეტები)
-    const tableHeaders = [
+  const tableHeaders = [
       [
         '№',                               // A - ნომერი
-        'საფრთხე და იდენტიფიკაცია',        // B
-        'ფოტო/ვიდეო მასალა',               // C
+    'საფრთხის იდენტიფიკაცია',        // B (aligned with frontend form)
+    'ამსახველი ფოტო/ვიდეო მასალა',               // C (requested wording)
         'პოტენციურად დაზარალებული პირები', // D
         'ტრავმის ხასიათი',                 // E
-        'მიმდინარე კონტროლის ღონისძიებები', // F
+    'არსებული კონტროლის ღონისძიებები', // F (requested wording)
         'ალბათობა (საწყისი)',               // G
         'სიმძიმე (საწყისი)',                // H
         'ნამრავლი (საწყისი)',               // I
@@ -154,11 +160,11 @@ export class ReportService {
     // 9. სვეტების სიგანის მორგება - 16 სვეტი
     worksheet.columns = [
       { width: 5 },  // A - №
-      { width: 25 }, // B - საფრთხე და იდენტიფიკაცია
+  { width: 25 }, // B - საფრთხის იდენტიფიკაცია
       { width: 20 }, // C - ფოტო
       { width: 25 }, // D - პოტენციურად დაზარალებული პირები
       { width: 20 }, // E - ტრავმის ხასიათი
-      { width: 25 }, // F - მიმდინარე კონტროლის ღონისძიებები
+  { width: 25 }, // F - არსებული კონტროლის ღონისძიებები
       { width: 12 }, // G - ალბათობა (საწყისი)
       { width: 12 }, // H - სიმძიმე (საწყისი)
       { width: 12 }, // I - ნამრავლი (საწყისი)
@@ -191,7 +197,7 @@ export class ReportService {
   for (let i = 2; i <= headerData.length + 1; i++) {
       const row = worksheet.getRow(i);
       row.eachCell((cell, colNumber) => {
-        if (i === 2 && (colNumber === 1 || colNumber === 9)) { // Row 2 labels at A and I
+  if (i === 2 && (colNumber === 1 || colNumber === 9)) { // Row 2 labels at A and I
           cell.font = { bold: true, size: 10, name: 'Arial' };
           cell.fill = {
             type: 'pattern',
@@ -221,9 +227,10 @@ export class ReportService {
           bottom: { style: 'thin' },
           right: { style: 'thin' }
         };
-        cell.alignment = { vertical: 'middle', wrapText: true };
+  cell.alignment = { vertical: 'middle', wrapText: true };
       });
-      row.height = 25;
+  // Increase row height for row 2 to fit date + time on two lines
+  row.height = i === 2 ? 35 : 25;
     }
 
     // Table Header სტილი - გაუმჯობესებული ღია ნაცრისფერი ფონით
@@ -535,7 +542,7 @@ export class ReportService {
         try {
           pdfBuffer = await page.pdf({
             format: 'A4',
-            landscape: false,
+            landscape: true,
             printBackground: true,
             margin: { top: '20mm', right: '20mm', bottom: '20mm', left: '20mm' },
             displayHeaderFooter: false,
@@ -547,6 +554,7 @@ export class ReportService {
           // Fallback with minimal options
           pdfBuffer = await page.pdf({
             format: 'A4',
+            landscape: true,
             printBackground: false,
             margin: {
               top: '10mm',
@@ -601,7 +609,9 @@ export class ReportService {
     const objectName = document.objectName || '';
     const workDescription = document.workDescription || '';
     const date = document.date ? new Date(document.date).toLocaleDateString('ka-GE') : '';
-    const time = document.time ? new Date(document.time).toLocaleTimeString('ka-GE') : '';
+    const time = document.time
+      ? new Date(document.time).toLocaleTimeString('ka-GE', { hour12: false, hour: '2-digit', minute: '2-digit' })
+      : '';
 
     // საფრთხეების ცხრილი - 17 სვეტი (Excel-ის მსგავსი)
     const hazards = Array.isArray(document.hazards) ? document.hazards : [];
@@ -792,7 +802,7 @@ export class ReportService {
             }
             
             @page {
-              size: A4 portrait;
+              size: A4 landscape;
               margin: 5mm;
             }
             
@@ -845,11 +855,11 @@ export class ReportService {
               <thead>
                 <tr>
                   <th>№</th>
-                  <th>საფრთხე და იდენტიფიკაცია</th>
-                  <th>არსებული ფოტო/ვიდეო მასალა</th>
+                  <th>საფრთხის იდენტიფიკაცია</th>
+                  <th>ამსახველი ფოტო/ვიდეო მასალა</th>
                   <th>პოტენციურად დაზარალებული პირები</th>
                   <th>ტრავმის ხასიათი</th>
-                  <th>მიმდინარე კონტროლის ღონისძიებები</th>
+                  <th>არსებული კონტროლის ღონისძიებები</th>
                   <th>ალბათობა (საწყისი)</th>
                   <th>სიმძიმე (საწყისი)</th>
                   <th>ნამრავლი (საწყისი)</th>
@@ -869,7 +879,7 @@ export class ReportService {
           </div>
           
           <div style="margin-top: 30px; text-align: center; font-size: 8px; color: #666;">
-            გენერირებულია: ${new Date().toLocaleDateString('ka-GE')} ${new Date().toLocaleTimeString('ka-GE')}
+            გენერირებულია: ${new Date().toLocaleDateString('ka-GE')} ${new Date().toLocaleTimeString('ka-GE', { hour12: false, hour: '2-digit', minute: '2-digit' })}
           </div>
           ${attachmentsHTML}
         </body>

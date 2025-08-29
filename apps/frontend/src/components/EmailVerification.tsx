@@ -60,9 +60,9 @@ export default function EmailVerification() {
       <Container maxWidth="sm">
         <Paper elevation={3} sx={{ p: 4, textAlign: 'center' }}>
           <Shield sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
-          <Typography variant="h4" gutterBottom>
-            SabApp
-          </Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+            <img src="/logo-3.jpg" alt="logo" style={{ height: 56, objectFit: 'contain' }} />
+          </Box>
           <Typography variant="h6" color="text.secondary" sx={{ mb: 4 }}>
             ელ. ფოსტის ვერიფიკაცია
           </Typography>

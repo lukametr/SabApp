@@ -59,9 +59,10 @@ const DocumentList: React.FC<DocumentListProps> = React.memo(({
     return dateObj.toLocaleDateString('ka-GE');
   }, []);
 
-  const getMaxRisk = useCallback((hazards: Hazard[]): number => {
+  // Show the sum of initial risks (საწყისი რისკის ჯამი)
+  const getInitialRiskSum = useCallback((hazards: Hazard[]): number => {
     if (!hazards || hazards.length === 0) return 0;
-    return Math.max(...hazards.map(h => h.residualRisk?.total || 0));
+    return hazards.reduce((sum, h) => sum + (h.initialRisk?.total || 0), 0);
   }, []);
 
   const getEarliestReviewDate = useCallback((doc: Document): Date | null => {
@@ -98,7 +99,7 @@ const DocumentList: React.FC<DocumentListProps> = React.memo(({
             <TableCell>შემფასებელი</TableCell>
             <TableCell>თარიღი</TableCell>
             <TableCell>საფრთხეების რაოდენობა</TableCell>
-            <TableCell>მაქსიმალური რისკი</TableCell>
+            <TableCell>საწყისი რისკის ჯამი</TableCell>
             <TableCell>გად.მაქს.ვადა</TableCell>
             <TableCell>მოქმედებები</TableCell>
           </TableRow>
@@ -150,8 +151,8 @@ const DocumentList: React.FC<DocumentListProps> = React.memo(({
               </TableCell>
               <TableCell>
                 <Chip 
-                  label={getMaxRisk(doc.hazards)}
-                  color={getRiskColor(getMaxRisk(doc.hazards)) as 'success' | 'warning' | 'error'}
+                  label={getInitialRiskSum(doc.hazards)}
+                  color={getRiskColor(getInitialRiskSum(doc.hazards)) as 'success' | 'warning' | 'error'}
                   size="small"
                 />
               </TableCell>
