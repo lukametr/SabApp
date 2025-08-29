@@ -21,7 +21,8 @@ export default function EmailVerification() {
   const [loading, setLoading] = useState(true);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
-  const token = searchParams.get('token');
+  // Guard against possible null from useSearchParams types
+  const token = searchParams?.get('token') || null;
 
   useEffect(() => {
     if (token) {

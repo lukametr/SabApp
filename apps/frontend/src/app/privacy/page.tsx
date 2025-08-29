@@ -1,0 +1,30 @@
+"use client";
+
+import React from 'react';
+import { Box, Container, Paper, Typography, Button } from '@mui/material';
+import { useRouter } from 'next/navigation';
+
+export default function PrivacyPage() {
+  const router = useRouter();
+  return (
+    <Box sx={{ minHeight: '100vh', backgroundColor: '#f5f5f5', py: 4 }}>
+      <Container maxWidth="md">
+        <Paper elevation={3} sx={{ p: 4 }}>
+          <Typography variant="h3" component="h1" gutterBottom align="center">
+            კონფიდენციალურობის პოლიტიკა
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', mb: 3 }}>
+            ბოლო განახლება: 2025 წლის 28 აგვისტო
+          </Typography>
+          <Typography component="div" sx={{ whiteSpace: 'pre-wrap' }}>
+            {/* The markdown/plaintext from privacy-policy.md could be rendered properly; keeping concise for now. */}
+            ჩვენი კონფიდენციალურობის პოლიტიკა განსაზღვრავს როგორ ვაგროვებთ, ვიყენებთ და ვაცდით მონაცემებს. დამატებითი ინფორმაცია იხილეთ პლატფორმაზე მითითებულ დოკუმენტში ან დაგვიკავშირდით privacy@sabapp.com მისამართზე.
+          </Typography>
+          <Box sx={{ textAlign: 'center', mt: 4 }}>
+            <Button variant="contained" onClick={() => router.back()}>უკან დაბრუნება</Button>
+          </Box>
+        </Paper>
+      </Container>
+    </Box>
+  );
+}

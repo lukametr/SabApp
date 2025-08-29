@@ -341,6 +341,8 @@ export default function LandingPage() {
                 <Typography variant="body2" color="grey.400">შეფასების ფორმები</Typography>
                 <Typography variant="body2" color="grey.400">PDF რეპორტები</Typography>
                 <Typography variant="body2" color="grey.400">Excel ექსპორტი</Typography>
+                <Typography variant="body2" color="grey.400" component="a" href="/terms" sx={{ cursor: 'pointer', display: 'inline-block' }}>წესები და პირობები</Typography>
+                <Typography variant="body2" color="grey.400" component="a" href="/privacy" sx={{ cursor: 'pointer', display: 'inline-block' }}>კონფიდენციალურობის პოლიტიკა</Typography>
               </Stack>
             </Grid>
             <Grid item xs={12} md={4}>
