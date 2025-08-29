@@ -351,11 +351,14 @@ export default function LandingPage() {
               </Typography>
               <Stack spacing={1} id="contact">
                 <Typography variant="body2" color="grey.400">მხარდაჭერა</Typography>
-                <Typography variant="body2" color="grey.400">წესები და პირობები</Typography>
-                <Typography variant="body2" color="grey.400">კონფიდენციალურობა</Typography>
+                <Typography variant="body2" color="grey.400" component="a" href="/privacy" sx={{ cursor: 'pointer', display: 'inline-block' }}>კონფიდენციალურობის პოლიტიკა</Typography>
+                <Typography variant="body2" color="grey.400" component="a" href="mailto:info.sabapp@gmail.com" sx={{ cursor: 'pointer', display: 'inline-block' }}>info.sabapp@gmail.com</Typography>
               </Stack>
             </Grid>
           </Grid>
+          <Box sx={{ mt: 3 }}>
+            <Typography variant="body2" color="grey.500" align="center">© sabapp — ყველა უფლება დაცულია</Typography>
+          </Box>
         </Container>
       </Box>
     </Box>
