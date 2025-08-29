@@ -100,7 +100,7 @@ const DocumentList: React.FC<DocumentListProps> = React.memo(({
             <TableCell>თარიღი</TableCell>
             <TableCell>საფრთხეების რაოდენობა</TableCell>
             <TableCell>საწყისი რისკის ჯამი</TableCell>
-            <TableCell>გად.მაქს.ვადა</TableCell>
+            <TableCell>გადახედვის ვადა</TableCell>
             <TableCell>მოქმედებები</TableCell>
           </TableRow>
         </TableHead>

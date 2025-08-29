@@ -366,6 +366,15 @@ export default function Navigation() {
                   >
                     რეგისტრაცია
                   </Link>
+                  <Link href="/about" className="px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-900">
+                    ჩვენი მიზანი
+                  </Link>
+                  <Link href="/terms" className="px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-900">
+                    წესები და პირობები
+                  </Link>
+                  <Link href="/privacy" className="px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-900">
+                    კონფიდენციალურობა
+                  </Link>
                 </>
               )}
               {user && (

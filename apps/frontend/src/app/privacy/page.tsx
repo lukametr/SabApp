@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 
 export default function PrivacyPage() {
   const router = useRouter();
+  const content = `კონფიდენციალურობის პოლიტიკა\n\nეს დოკუმენტი აღწერს როგორ ვაგროვებთ, ვიყენებთ და ვიცავთ თქვენს მონაცემებს sabapp პლატფორმაზე. დამატებითი კითხვების შემთხვევაში დაგვიკავშირდით privacy@sabapp.com მისამართზე.`;
   return (
     <Box sx={{ minHeight: '100vh', backgroundColor: '#f5f5f5', py: 4 }}>
       <Container maxWidth="md">
@@ -16,10 +17,7 @@ export default function PrivacyPage() {
           <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', mb: 3 }}>
             ბოლო განახლება: 2025 წლის 28 აგვისტო
           </Typography>
-          <Typography component="div" sx={{ whiteSpace: 'pre-wrap' }}>
-            {/* The markdown/plaintext from privacy-policy.md could be rendered properly; keeping concise for now. */}
-            ჩვენი კონფიდენციალურობის პოლიტიკა განსაზღვრავს როგორ ვაგროვებთ, ვიყენებთ და ვაცდით მონაცემებს. დამატებითი ინფორმაცია იხილეთ პლატფორმაზე მითითებულ დოკუმენტში ან დაგვიკავშირდით privacy@sabapp.com მისამართზე.
-          </Typography>
+          <Typography component="div" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.8 }}>{content}</Typography>
           <Box sx={{ textAlign: 'center', mt: 4 }}>
             <Button variant="contained" onClick={() => router.back()}>უკან დაბრუნება</Button>
           </Box>
