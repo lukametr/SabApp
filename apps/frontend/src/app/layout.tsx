@@ -24,11 +24,11 @@ export const metadata: Metadata = {
   description: 'უსაფრთხოების შეფასების ფორმების შევსება და მართვა',
   manifest: '/manifest.json',
   icons: {
-  icon: '/logo-3.jpg',
-    apple: [
-      { url: '/icon-192.svg', sizes: '192x192', type: 'image/svg+xml' },
-      { url: '/icon-512.svg', sizes: '512x512', type: 'image/svg+xml' },
+    icon: [
+      { url: '/logo-3.jpg', type: 'image/jpeg' }
     ],
+    apple: '/logo-3.jpg',
+    shortcut: '/logo-3.jpg'
   },
   appleWebApp: {
     capable: true,

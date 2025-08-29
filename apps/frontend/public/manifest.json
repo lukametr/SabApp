@@ -10,16 +10,14 @@
   "scope": "/",
   "icons": [
     {
-      "src": "/icon-192.svg",
-  "sizes": "any",
-      "type": "image/svg+xml",
-  "purpose": "any"
+      "src": "/logo-3.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
     },
     {
-      "src": "/icon-512.svg",
-  "sizes": "any",
-      "type": "image/svg+xml",
-  "purpose": "any"
+      "src": "/logo-3.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
     }
   ]
 }
