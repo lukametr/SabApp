@@ -353,31 +353,62 @@ export class UsersService {
   }
 
   async updateProfile(userId: string, data: UpdateProfileDto): Promise<UserDocument> {
-    // პირდაპირი განახლება findByIdAndUpdate-ით
-    const updateData: any = {};
-    
-    if (data.name !== undefined) updateData.name = data.name;
-    if (data.organization !== undefined) updateData.organization = data.organization;
-    if (data.position !== undefined) updateData.position = data.position;
-    if (data.phoneNumber !== undefined) updateData.phoneNumber = data.phoneNumber;
-    
-    const user = await this.userModel.findByIdAndUpdate(
-      userId,
-      updateData,
-      { new: true, runValidators: true }
-    ).exec();
-    
-    if (!user) {
-      throw new NotFoundException('User not found');
+    // Normalize inputs and avoid saving empty strings/nulls into unique/sparse indexed fields
+    const setData: Record<string, any> = {};
+    const unsetData: Record<string, ''> = {};
+
+    const handleField = (key: keyof UpdateProfileDto, value: any) => {
+      if (value === undefined) return; // not provided
+      if (value === null) {
+        unsetData[String(key)] = '';
+        return;
+      }
+      if (typeof value === 'string') {
+        const trimmed = value.trim();
+        if (trimmed === '') {
+          unsetData[String(key)] = '';
+        } else {
+          setData[String(key)] = trimmed;
+        }
+        return;
+      }
+      setData[String(key)] = value;
+    };
+
+    handleField('name', data.name);
+    handleField('organization', data.organization);
+    handleField('position', data.position);
+    handleField('phoneNumber', data.phoneNumber);
+    handleField('picture', data.picture as any);
+
+    const updateOps: any = {};
+    if (Object.keys(setData).length) updateOps.$set = setData;
+    if (Object.keys(unsetData).length) updateOps.$unset = unsetData;
+
+    try {
+      const user = await this.userModel
+        .findByIdAndUpdate(userId, updateOps, { new: true, runValidators: true })
+        .exec();
+
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      console.log('✅ Profile updated successfully:', {
+        userId: user._id,
+        phoneNumber: user.phoneNumber,
+        organization: user.organization,
+        position: user.position,
+      });
+
+      return user;
+    } catch (err: any) {
+      // Handle duplicate key errors gracefully (e.g., phoneNumber unique index)
+      if (err?.code === 11000) {
+        const field = Object.keys(err.keyPattern || {})[0] || 'field';
+        throw new ConflictException(`${field} already exists`);
+      }
+      throw err;
     }
-    
-    console.log('✅ Profile updated successfully:', {
-      userId: user._id,
-      phoneNumber: user.phoneNumber,
-      organization: user.organization,
-      position: user.position
-    });
-    
-    return user;
   }
 }
