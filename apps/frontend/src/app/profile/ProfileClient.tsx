@@ -72,9 +72,21 @@ export default function ProfileClient() {
       // რედაქტირების დახურვა
       setEditing(false);
       
-    } catch (err) {
+    } catch (err: any) {
       console.error('Save error:', err);
-      setError('შენახვა ვერ მოხერხდა');
+      const status = err?.response?.status;
+      const msg: string | undefined = err?.response?.data?.message;
+      if (status === 409) {
+        if (msg && typeof msg === 'string' && msg.toLowerCase().includes('phonenumber')) {
+          setError('ეს ტელეფონის ნომერი უკვე გამოიყენება სხვა ანგარიშზე.');
+        } else {
+          setError(msg || 'კონფლიქტი: ერთი ან რამდენიმე ველი უკვე გამოიყენება.');
+        }
+      } else if (status === 400) {
+        setError(msg || 'არასწორი მონაცემები. გთხოვთ გადაამოწმოთ ველები.');
+      } else {
+        setError('შენახვა ვერ მოხერხდა');
+      }
     } finally {
       setSaving(false);
     }
