@@ -389,12 +389,20 @@ export class AuthService {
       });
 
       console.log('≡ƒöº Email Registration - Success:', user.email);
-      // Send verification email
-      await sendVerificationEmail(user.email, emailVerificationToken);
+      // Send verification email (do not fail registration if email fails)
+      let emailSent = true;
+      try {
+        await sendVerificationEmail(user.email, emailVerificationToken);
+      } catch (e) {
+        emailSent = false;
+        console.error('📧 Email sending failed during registration (continuing):', (e as any)?.message || e);
+      }
 
       // Return success without JWT token - user must verify email first
       return {
-        message: 'Registration successful. Please check your email to verify your account.',
+        message: emailSent
+          ? 'Registration successful. Please check your email to verify your account.'
+          : 'Registration successful. Verification email could not be sent right now. Please try resending later or contact support.',
         user: {
           id: String(user._id),
           name: user.name,
@@ -403,6 +411,7 @@ export class AuthService {
           status: user.status,
         },
         requiresEmailVerification: true,
+        emailSent,
       } as any;
     } catch (error) {
       console.error('≡ƒöº Email Registration - Error:', error);
