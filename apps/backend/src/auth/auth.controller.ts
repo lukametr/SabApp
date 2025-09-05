@@ -10,6 +10,7 @@ import { Roles } from './decorators/roles.decorator';
 import { UserRole } from '../users/schemas/user.schema';
 import { Response } from 'express';
 import { UpdateProfileDto } from '../users/dto/update-profile.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -339,5 +340,23 @@ export class AuthController {
       createdAt: updatedUser.createdAt,
       updatedAt: updatedUser.updatedAt
     };
+  }
+
+  @Post('change-password')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Change user password' })
+  @ApiResponse({ status: 200, description: 'Password changed successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized or invalid current password' })
+  async changePassword(
+    @Request() req: any,
+    @Body() changePasswordDto: ChangePasswordDto
+  ) {
+    const userId = req.user.id || req.user.sub;
+    return this.authService.changePassword(
+      userId,
+      changePasswordDto.currentPassword,
+      changePasswordDto.newPassword
+    );
   }
 }

@@ -411,4 +411,21 @@ export class UsersService {
       throw err;
     }
   }
+
+  async updatePassword(userId: string, hashedPassword: string): Promise<void> {
+    try {
+      const user = await this.userModel
+        .findByIdAndUpdate(userId, { $set: { password: hashedPassword } }, { new: true })
+        .exec();
+
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      console.log('✅ Password updated successfully for user:', userId);
+    } catch (error) {
+      console.error('❌ Error updating password:', error);
+      throw error;
+    }
+  }
 }

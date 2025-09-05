@@ -123,7 +123,12 @@ export class ReportService {
           hazard.residualRisk?.total ?? '',
           hazard.requiredMeasures || '',
           hazard.responsiblePerson || '',
-          hazard.reviewDate ? new Date(hazard.reviewDate).toLocaleDateString('ka-GE') : ''
+          hazard.reviewDate ? (() => {
+            const reviewDate = new Date(hazard.reviewDate);
+            const dateStr = reviewDate.toLocaleDateString('ka-GE');
+            const timeStr = reviewDate.toLocaleTimeString('ka-GE', { hour12: false, hour: '2-digit', minute: '2-digit' });
+            return `${dateStr}\n${timeStr}`;
+          })() : ''
         ]);
       }
     } else {
@@ -638,7 +643,12 @@ export class ReportService {
             <td class="num-cell">${hazard.residualRisk?.total || ''}</td>
             <td>${hazard.requiredMeasures || ''}</td>
             <td>${hazard.responsiblePerson || ''}</td>
-            <td>${hazard.reviewDate ? new Date(hazard.reviewDate).toLocaleDateString('ka-GE') : ''}</td>
+            <td>${hazard.reviewDate ? (() => {
+              const reviewDate = new Date(hazard.reviewDate);
+              const dateStr = reviewDate.toLocaleDateString('ka-GE');
+              const timeStr = reviewDate.toLocaleTimeString('ka-GE', { hour12: false, hour: '2-digit', minute: '2-digit' });
+              return `${dateStr} ${timeStr}`;
+            })() : ''}</td>
           </tr>
         `;
         }).join('')

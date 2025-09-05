@@ -649,4 +649,33 @@ export class AuthService {
       throw error;
     }
   }
+
+  async changePassword(userId: string, currentPassword: string, newPassword: string) {
+    try {
+      const user = await this.usersService.findById(userId);
+      
+      if (!user) {
+        throw new UnauthorizedException('მომხმარებელი ვერ მოიძებნა');
+      }
+
+      // Check if user has a password (for Google OAuth users)
+      if (!user.password) {
+        throw new BadRequestException('ამ ანგარიშისთვის პაროლის შეცვლა შეუძლებელია');
+      }
+
+      const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+      
+      if (!isPasswordValid) {
+        throw new UnauthorizedException('მიმდინარე პაროლი არასწორია');
+      }
+
+      const hashedNewPassword = await bcrypt.hash(newPassword, 12);
+      await this.usersService.updatePassword(userId, hashedNewPassword);
+
+      return { message: 'პაროლი წარმატებით შეიცვალა' };
+    } catch (error) {
+      console.error('Password change error:', error);
+      throw error;
+    }
+  }
 }
