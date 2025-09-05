@@ -235,7 +235,7 @@ export default function LandingPage() {
               <Card elevation={3}>
                 <CardContent sx={{ p: 4 }}>
                   <Typography variant="h6" gutterBottom>
-                    ფორმის შევსების მაგალითი - თ.
+                    ფორმის შევსების მაგალითი
                   </Typography>
                   <Box sx={{ 
                     backgroundColor: '#f5f5f5', 

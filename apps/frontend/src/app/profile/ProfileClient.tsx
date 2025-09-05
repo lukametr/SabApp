@@ -18,6 +18,15 @@ export default function ProfileClient() {
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Password change states
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [passwordError, setPasswordError] = useState('');
 
   // No need to call loadFromStorage here - handled by AuthProvider
 
@@ -92,6 +101,45 @@ export default function ProfileClient() {
     }
   };
 
+  // Password change handler
+  const handlePasswordChange = async () => {
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordError('ახალი პაროლები არ ემთხვევა');
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      setPasswordError('პაროლი უნდა შეიცავდეს მინიმუმ 6 სიმბოლოს');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/change-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token || localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword
+        })
+      });
+
+      if (response.ok) {
+        setShowPasswordModal(false);
+        setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+        setPasswordError('');
+        alert('პაროლი წარმატებით შეიცვალა');
+      } else {
+        const error = await response.json();
+        setPasswordError(error.message || 'პაროლის შეცვლა ვერ მოხერხდა');
+      }
+    } catch (error) {
+      setPasswordError('სერვერთან კავშირის შეცდომა');
+    }
+  };
+
   return (
     <div className="max-w-xl mx-auto mt-10 p-6 bg-white rounded shadow">
       <h1 className="text-2xl font-bold mb-4">პროფილი</h1>
@@ -124,8 +172,9 @@ export default function ProfileClient() {
           <div className="mb-2">სტატუსი: <span className="font-mono">{user.status}</span></div>
           <div className="mb-2">როლი: <span className="font-mono">{user.role}</span></div>
           <div className="mb-2">ელფოსტის დადასტურება: <span className="font-mono">{user.isEmailVerified ? 'დადასტურებულია' : 'ვერ დადასტურდა'}</span></div>
-          <div className="mt-4">
+          <div className="mt-4 flex gap-2">
             <button onClick={startEdit} className="px-4 py-2 bg-blue-600 text-white rounded">რედაქტირება</button>
+            <button onClick={() => setShowPasswordModal(true)} className="px-4 py-2 bg-orange-600 text-white rounded">პაროლის შეცვლა</button>
           </div>
         </>
       ) : (
@@ -150,6 +199,53 @@ export default function ProfileClient() {
           <div className="flex gap-2 pt-2">
             <button disabled={saving} onClick={save} className="px-4 py-2 bg-green-600 text-white rounded disabled:opacity-50">შენახვა</button>
             <button disabled={saving} onClick={()=>setEditing(false)} className="px-4 py-2 bg-gray-200 rounded">გაუქმება</button>
+          </div>
+        </div>
+      )}
+      
+      {/* Password Change Modal */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg w-96">
+            <h2 className="text-xl font-bold mb-4">პაროლის შეცვლა</h2>
+            {passwordError && <div className="text-red-600 mb-3">{passwordError}</div>}
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm text-gray-700 mb-1">მიმდინარე პაროლი</label>
+                <input 
+                  type="password"
+                  value={passwordData.currentPassword} 
+                  onChange={e => setPasswordData({...passwordData, currentPassword: e.target.value})} 
+                  className="w-full border rounded px-3 py-2" 
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-700 mb-1">ახალი პაროლი</label>
+                <input 
+                  type="password"
+                  value={passwordData.newPassword} 
+                  onChange={e => setPasswordData({...passwordData, newPassword: e.target.value})} 
+                  className="w-full border rounded px-3 py-2" 
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-700 mb-1">ახალი პაროლის დადასტურება</label>
+                <input 
+                  type="password"
+                  value={passwordData.confirmPassword} 
+                  onChange={e => setPasswordData({...passwordData, confirmPassword: e.target.value})} 
+                  className="w-full border rounded px-3 py-2" 
+                />
+              </div>
+              <div className="flex gap-2 pt-2">
+                <button onClick={handlePasswordChange} className="px-4 py-2 bg-green-600 text-white rounded">შეცვლა</button>
+                <button onClick={() => {
+                  setShowPasswordModal(false);
+                  setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+                  setPasswordError('');
+                }} className="px-4 py-2 bg-gray-200 rounded">გაუქმება</button>
+              </div>
+            </div>
           </div>
         </div>
       )}
