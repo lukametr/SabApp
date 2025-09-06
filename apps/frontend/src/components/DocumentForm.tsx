@@ -592,6 +592,21 @@ o ინდივიდუალური დაცვის საშუალ�
                   }}
                 />
               </Grid>
+              
+              <Grid item xs={12}>
+                <TextField
+                  label="შესრულების ვადები"
+                  fullWidth
+                  multiline
+                  rows={2}
+                  value={hazard.requiredMeasures}
+                  onChange={(e) => {
+                    console.log('[HazardSection] requiredMeasures change', { id: hazard.id, value: e.target.value });
+                    updateHazard(hazard.id, { requiredMeasures: e.target.value });
+                  }}
+                  placeholder="მიუთითეთ შესრულების ვადები და დეტალები..."
+                />
+              </Grid>
             </Grid>
           </AccordionDetails>
         </Accordion>
