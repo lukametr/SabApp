@@ -1026,7 +1026,8 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
                 <Controller name="time" control={control} rules={{ required: true }} render={({ field }: { field: ControllerRenderProps<CreateDocumentDto, 'time'> }) => (
                   <TimePicker 
                     label="დრო" 
-                    {...field} 
+                    {...field}
+                    ampm={false}
                     slotProps={{
                       textField: {
                         fullWidth: true,
