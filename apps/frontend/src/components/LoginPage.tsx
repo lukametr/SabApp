@@ -33,6 +33,16 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isGoogleAccount, setIsGoogleAccount] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+
+  const handleRetry = () => {
+    setRetryCount(prev => prev + 1);
+    setError('');
+    // Retry the last action
+    if (email && password) {
+      handleEmailLogin({ preventDefault: () => {} } as React.FormEvent);
+    }
+  };
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,13 +90,16 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
         response: err.response 
       });
       
-      // Check if this is a Google-only account
-      if (err.response?.data?.code === 'GOOGLE_ACCOUNT_ONLY') {
+      // უფრო დეტალური error messages
+      if (err.message) {
+        setError(err.message);
+      } else if (err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else if (err.response?.data?.code === 'GOOGLE_ACCOUNT_ONLY') {
         setIsGoogleAccount(true);
         setError('ეს ანგარიში შექმნილია Google-ით. გთხოვთ, გამოიყენოთ "Google-ით შესვლა" ღილაკი.');
       } else {
-        setIsGoogleAccount(false);
-        setError(err.message || 'შესვლისას დაფიქსირდა შეცდომა');
+        setError('შესვლა ვერ მოხერხდა. სცადეთ მოგვიანებით.');
       }
     } finally {
       setLoading(false);
@@ -127,8 +140,21 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
           </Box>
 
           {error && (
-            <Alert severity="error" sx={{ mb: 3 }}>
+            <Alert 
+              severity="error" 
+              sx={{ mb: 3 }}
+              action={
+                <Button color="inherit" size="small" onClick={handleRetry}>
+                  თავიდან ცდა
+                </Button>
+              }
+            >
               {error}
+              {retryCount > 2 && (
+                <Typography variant="caption" display="block" mt={1}>
+                  თუ პრობლემა გრძელდება, დაუკავშირდით: info.sabapp@gmail.com
+                </Typography>
+              )}
               {isGoogleAccount && (
                 <Box sx={{ mt: 2 }}>
                   <Button

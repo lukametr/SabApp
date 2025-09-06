@@ -137,33 +137,22 @@ async function bootstrap() {
   app.use(compression());
 
   // CORS კონფიგურაცია
-  const corsOrigin = process.env.CORS_ORIGIN || '*';
-  const allowedOrigins = corsOrigin === '*' 
-    ? true 
-    : corsOrigin.split(',').concat([
-        'http://localhost:3000', 
-        'http://localhost:3001', 
-        'http://localhost:3002', 
-        'http://localhost:10000'
-      ]);
-  
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:3001', 
+    'https://sabapp.com',
+    'https://www.sabapp.com',
+    'https://saba-latest.vercel.app', // თუ Vercel-ზეა
+    process.env.FRONTEND_URL // environment variable-დან
+  ].filter(Boolean) as string[];
+
   app.enableCors({
     origin: allowedOrigins,
+    credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    credentials: false,
-    allowedHeaders: [
-      'Content-Type',
-      'Authorization',
-      'Accept',
-      'Origin',
-      'X-Requested-With',
-      'Access-Control-Allow-Origin',
-      'Access-Control-Allow-Headers',
-      'Access-Control-Allow-Methods',
-      'Access-Control-Allow-Credentials'
-    ],
-    exposedHeaders: ['R-Range', 'X-Content-Range'],
-    maxAge: 3600,
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    exposedHeaders: ['Content-Range', 'X-Content-Range'],
+    maxAge: 86400, // 24 საათი
     preflightContinue: false,
     optionsSuccessStatus: 204
   });
@@ -289,7 +278,7 @@ async function bootstrap() {
     }
     console.log(`📚 API Documentation available at: http://0.0.0.0:${port}/docs`);
     console.log(`🏥 Health check available at: http://0.0.0.0:${port}/health`);
-    console.log(`🌐 CORS Origin: ${corsOrigin}`);
+    console.log(`🌐 CORS enabled for multiple origins`);
     console.log(`🔧 API Routes available at: http://0.0.0.0:${port}/api`);
     
     // Keep the process alive - this is crucial for Render

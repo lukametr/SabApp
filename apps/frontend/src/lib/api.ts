@@ -92,10 +92,58 @@ api.interceptors.response.use(
 // Auth API functions
 export const authApi = {
   me: () => api.get('/auth/me'),
-  login: (credentials: { email: string; password: string }) => 
-    api.post('/auth/login', credentials),
-  register: (userData: any) => 
-    api.post('/auth/register', userData),
+  login: async (credentials: { email: string; password: string }) => {
+    try {
+      console.log('🔄 Attempting login to:', `${API_URL}/auth/login`);
+      
+      const response = await api.post('/auth/login', credentials);
+      console.log('✅ Login successful');
+      return response;
+    } catch (error: any) {
+      console.error('❌ Login error:', error);
+      
+      if (error.code === 'ECONNREFUSED' || error.message === 'Network Error') {
+        throw new Error('კავშირი სერვერთან ვერ დამყარდა. შეამოწმეთ ინტერნეტ კავშირი.');
+      } else if (error.response?.status === 0) {
+        throw new Error('კავშირი სერვერთან ვერ დამყარდა. გთხოვთ შეამოწმოთ ინტერნეტი.');
+      } else if (error.response?.status === 401) {
+        throw new Error('არასწორი ელ.ფოსტა ან პაროლი');
+      } else if (error.response?.status === 404) {
+        throw new Error('API მისამართი ვერ მოიძებნა. დაუკავშირდით ადმინისტრატორს.');
+      } else if (error.response?.status === 500) {
+        throw new Error('სერვერის შეცდომა. სცადეთ მოგვიანებით.');
+      } else if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      } else {
+        throw new Error(`შეცდომა: ${error.response?.status || error.message}`);
+      }
+    }
+  },
+  register: async (userData: any) => {
+    try {
+      console.log('🔄 Attempting registration to:', `${API_URL}/auth/register`);
+      
+      const response = await api.post('/auth/register', userData);
+      console.log('✅ Registration successful');
+      return response;
+    } catch (error: any) {
+      console.error('❌ Registration error:', error);
+      
+      if (error.code === 'ECONNREFUSED' || error.message === 'Network Error') {
+        throw new Error('სერვერთან კავშირი ვერ დამყარდა. შეამოწმეთ ინტერნეტ კავშირი.');
+      } else if (error.response?.status === 0) {
+        throw new Error('კავშირი სერვერთან ვერ დამყარდა. გთხოვთ შეამოწმოთ ინტერნეტი.');
+      } else if (error.response?.status === 404) {
+        throw new Error('API მისამართი ვერ მოიძებნა. დაუკავშირდით ადმინისტრატორს.');
+      } else if (error.response?.status === 500) {
+        throw new Error('სერვერის შეცდომა. სცადეთ მოგვიანებით.');
+      } else if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      } else {
+        throw new Error(`შეცდომა: ${error.response?.status || error.message}`);
+      }
+    }
+  },
   googleCallback: (data: { code: string; state?: string }) =>
     api.post('/auth/google/callback', data),
   updateProfile: (data: { name?: string; organization?: string | null; position?: string | null; phoneNumber?: string | null }) =>

@@ -61,6 +61,16 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+
+  const handleRetry = () => {
+    setRetryCount(prev => prev + 1);
+    setError('');
+    // Retry the last action
+    if (formData.email && formData.password && acceptTerms) {
+      handleEmailRegister({ preventDefault: () => {} } as React.FormEvent);
+    }
+  };
 
   // No Google registration completion logic needed with NextAuth
 
@@ -147,8 +157,21 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
 
 
           {error && (
-            <Alert severity="error" sx={{ mb: 3 }}>
+            <Alert 
+              severity="error" 
+              sx={{ mb: 3 }}
+              action={
+                <Button color="inherit" size="small" onClick={handleRetry}>
+                  თავიდან ცდა
+                </Button>
+              }
+            >
               {error}
+              {retryCount > 2 && (
+                <Typography variant="caption" display="block" mt={1}>
+                  თუ პრობლემა გრძელდება, დაუკავშირდით: info.sabapp@gmail.com
+                </Typography>
+              )}
             </Alert>
           )}
           {!clientId && (

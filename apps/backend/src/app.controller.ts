@@ -31,6 +31,8 @@ export class AppController {
     return {
       status: 'ok',
       timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development',
+      cors: 'enabled',
       uptime: process.uptime(),
       memory: process.memoryUsage(),
       version: process.env.npm_package_version || '1.0.0',

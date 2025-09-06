@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
 import Navigation from '../components/Navigation';
+import ConnectionStatus from '../components/ConnectionStatus';
 import Script from 'next/script';
 
 // Font optimization with proper configuration
@@ -91,6 +92,7 @@ export default function RootLayout({
         <Providers>
           <Navigation />
           {children}
+          <ConnectionStatus />
         </Providers>
       </body>
     </html>
