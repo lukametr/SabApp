@@ -42,6 +42,7 @@ interface HazardData {
   requiredMeasures: string;
   responsiblePerson: string;
   reviewDate: Date | null; // Allow null for DatePicker compatibility
+  implementationDeadlines: string; // New property for implementation deadlines
   photos: string[]; // Base64 data URLs
 }
 
@@ -88,6 +89,7 @@ o ინდივიდუალური დაცვის საშუალ�
       requiredMeasures: '',
       responsiblePerson: '',
       reviewDate: null, // Filled from shared review date in parent
+      implementationDeadlines: '', // New property for implementation deadlines
       photos: []
     };
     console.log('✅ Added new hazard:', newHazard.id);
@@ -122,6 +124,7 @@ o ინდივიდუალური დაცვის საშუალ�
         additionalControlMeasures: updatedHazard?.additionalControlMeasures,
         requiredMeasures: updatedHazard?.requiredMeasures,
         responsiblePerson: updatedHazard?.responsiblePerson,
+        implementationDeadlines: updatedHazard?.implementationDeadlines,
         initialRisk: updatedHazard?.initialRisk,
         residualRisk: updatedHazard?.residualRisk,
         reviewDate: updatedHazard?.reviewDate,
@@ -599,12 +602,18 @@ o ინდივიდუალური დაცვის საშუალ�
                   fullWidth
                   multiline
                   rows={2}
-                  value={hazard.requiredMeasures}
+                  value={hazard.implementationDeadlines}
                   onChange={(e) => {
-                    console.log('[HazardSection] requiredMeasures change', { id: hazard.id, value: e.target.value });
-                    updateHazard(hazard.id, { requiredMeasures: e.target.value });
+                    const value = e.target.value;
+                    // Basic validation: limit length and prevent only whitespace
+                    if (value.length <= 500) {
+                      console.log('[HazardSection] implementationDeadlines change', { id: hazard.id, value });
+                      updateHazard(hazard.id, { implementationDeadlines: value });
+                    }
                   }}
                   placeholder="მიუთითეთ შესრულების ვადები და დეტალები..."
+                  helperText={`${hazard.implementationDeadlines.length}/500 სიმბოლო`}
+                  error={hazard.implementationDeadlines.length > 500}
                 />
               </Grid>
             </Grid>
@@ -751,7 +760,12 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
               : { probability: 0, severity: 0, total: 0 },
             requiredMeasures: hazard.requiredMeasures || '',
             responsiblePerson: hazard.responsiblePerson || '',
-            reviewDate: hazard.reviewDate ? new Date(hazard.reviewDate) : null, // will be normalized to shared below
+            implementationDeadlines: hazard.implementationDeadlines || '',
+            reviewDate: hazard.reviewDate instanceof Date 
+              ? hazard.reviewDate 
+              : hazard.reviewDate 
+                ? new Date(hazard.reviewDate) 
+                : null, // will be normalized to shared below
             photos: hazard.photos || []
           };
         });
@@ -767,7 +781,11 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
           workDescription: defaultValues.workDescription || '',
           date: defaultValues.date ? new Date(defaultValues.date) : new Date(),
           time: defaultValues.time ? new Date(defaultValues.time) : new Date(),
-          reviewDate: defaultValues.reviewDate ? new Date(defaultValues.reviewDate) : (derivedReview || undefined),
+          reviewDate: defaultValues.reviewDate 
+            ? new Date(defaultValues.reviewDate) 
+            : derivedReview 
+              ? new Date(derivedReview) 
+              : new Date(),
           photos: defaultValues.photos || []
         });
         console.log('✅ Form reset with values:', {
@@ -790,7 +808,7 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
           workDescription: '',
           date: new Date(),
           time: new Date(),
-          reviewDate: undefined,
+          reviewDate: new Date(),
           photos: []
         });
         setSharedReviewDate(null);
@@ -802,19 +820,6 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
       setIsInitialized(false);
     }
   }, [open, isInitialized]); // Remove defaultValues from dependencies to prevent re-initialization
-
-  // სავალდებულო ველების შემოწმება (დამატებულია მოთხოვნის შესაბამისად)
-  // შენიშვნა: ამ პროექტში ფორმის მდგომარეობას მართავს react-hook-form, ამიტომ აქ ვიგულისხმოთ,
-  // რომ formData შეესაბამება getValues()-ის შედეგს. ფუნქციის ზუსტი ტექსტი დაუცველად ვინარჩუნოთ.
-  const checkRequiredFields = () => {
-    const formData = getValues() as any;
-    const missing: string[] = [];
-    if (!formData.companyName) missing.push('კომპანიის დასახელება');
-    if (!formData.evaluationObject) missing.push('შეფასების ობიექტი');
-    if (!formData.evaluationDate) missing.push('შეფასების თარიღი');
-    if (!formData.reviewDate) missing.push('გადახედვის თარიღი');
-    return missing;
-  };
 
   const handleFormSubmitInternal = async (data: CreateDocumentDto) => {
     // Prevent double submission
@@ -858,6 +863,7 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
         additionalControlMeasures: h.additionalControlMeasures || 'EMPTY',
         requiredMeasures: h.requiredMeasures || 'EMPTY',
         responsiblePerson: h.responsiblePerson || 'EMPTY',
+        implementationDeadlines: h.implementationDeadlines || 'EMPTY',
         initialRisk: h.initialRisk,
         residualRisk: h.residualRisk,
         reviewDate: h.reviewDate,

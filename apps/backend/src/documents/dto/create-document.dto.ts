@@ -110,6 +110,10 @@ class HazardDto {
   responsiblePerson?: string;
 
   @IsOptional()
+  @IsString()
+  implementationDeadlines?: string;
+
+  @IsOptional()
   @Transform(({ value }) => {
     // Treat null/empty as undefined so IsOptional skips validation
     if (value === null || value === '' || value === undefined) return undefined;

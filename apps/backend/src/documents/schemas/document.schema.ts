@@ -61,6 +61,9 @@ class Hazard {
   @Prop({ required: false, default: '' })
   responsiblePerson: string;
 
+  @Prop({ required: false, default: '' })
+  implementationDeadlines: string;
+
   @Prop({ required: false, default: null })
   reviewDate: Date;
 

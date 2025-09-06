@@ -18,6 +18,7 @@ export interface HazardLike {
   residualRisk?: Risk;
   requiredMeasures?: string;
   responsiblePerson?: string;
+  implementationDeadlines?: string;
   reviewDate?: Date | string;
   photos?: string[];
   [key: string]: any;
@@ -138,6 +139,7 @@ export const mergeHazardsAuthoritative = (current: HazardLike[] = [], incoming: 
         additionalControlMeasures: h.additionalControlMeasures ?? '',
         requiredMeasures: h.requiredMeasures ?? '',
         responsiblePerson: h.responsiblePerson ?? '',
+        implementationDeadlines: h.implementationDeadlines ?? '',
         affectedPersons: Array.isArray(h.affectedPersons) ? h.affectedPersons : [],
         initialRisk: ensureRisk(h.initialRisk),
         residualRisk: ensureRisk(h.residualRisk),

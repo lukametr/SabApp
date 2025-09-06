@@ -57,6 +57,10 @@ class HazardDto {
   responsiblePerson?: string;
 
   @IsOptional()
+  @IsString()
+  implementationDeadlines?: string;
+
+  @IsOptional()
   @Transform(({ value }) => {
     if (value === null || value === '' || value === undefined) return undefined;
     return new Date(value);

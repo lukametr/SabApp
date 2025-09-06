@@ -28,6 +28,7 @@ export interface Hazard {
   requiredMeasures: string;
   responsiblePerson: string;
   reviewDate: Date | null; // Allow null for DatePicker compatibility
+  implementationDeadlines: string; // New property for implementation deadlines
   photos: string[]; // Base64 data URLs
 }
 
