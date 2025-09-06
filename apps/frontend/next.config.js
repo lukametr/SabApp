@@ -50,6 +50,35 @@ const nextConfig = {
     apiUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:10000/api',
   },
 
+  // CSP Headers
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Content-Security-Policy',
+            value: `
+              default-src 'self';
+              script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.googleapis.com https://*.google.com;
+              style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+              font-src 'self' data: https://fonts.gstatic.com;
+              img-src 'self' data: blob: https:;
+              connect-src 'self' https://sabapp.com http://localhost:10000 https://*.googleapis.com *.google.com https://*.gstatic.com data: blob:;
+              media-src 'self' blob:;
+              object-src 'none';
+              frame-src 'self';
+              base-uri 'self';
+              form-action 'self';
+              frame-ancestors 'none';
+              upgrade-insecure-requests;
+            `.replace(/\s{2,}/g, ' ').trim()
+          }
+        ]
+      }
+    ]
+  },
+
   webpack: (config, { isServer }) => {
     config.resolve.fallback = {
       ...config.resolve.fallback,

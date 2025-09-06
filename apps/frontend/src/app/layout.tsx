@@ -54,6 +54,12 @@ export default function RootLayout({
   return (
     <html lang="ka" className={inter.variable}>
       <head>
+        {/* CSP Meta Tag */}
+        <meta 
+          httpEquiv="Content-Security-Policy" 
+          content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.googleapis.com https://*.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://sabapp.com http://localhost:10000 https://*.googleapis.com *.google.com https://*.gstatic.com data: blob:; media-src 'self' blob:; object-src 'none'; frame-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests;"
+        />
+        
         {/* PWA Meta Tags */}
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
