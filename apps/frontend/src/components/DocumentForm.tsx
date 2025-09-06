@@ -70,6 +70,12 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
   });
 
   const addHazard = () => {
+    const controlTemplate = `o საფრთხის აღმოფხვრა- 
+o საფრთხის ჩანაცვლება- 
+o საფრთხის იზოლირება- 
+o უსაფრთხოების პროცედურები- 
+o ინდივიდუალური დაცვის საშუალებები-`;
+
     const newHazard: HazardData = {
       id: `hazard_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       hazardIdentification: '',
@@ -77,7 +83,7 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
       injuryDescription: '',
       existingControlMeasures: '',
       initialRisk: { probability: 0, severity: 0, total: 0 },
-      additionalControlMeasures: '',
+      additionalControlMeasures: controlTemplate,
       residualRisk: { probability: 0, severity: 0, total: 0 },
       requiredMeasures: '',
       responsiblePerson: '',
@@ -452,7 +458,7 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
                 <Box display="flex" gap={2}>
                   <TextField
                     select
-          label="საწყისი რისკის ალბათობა"
+          label="ალბათობა"
                     SelectProps={{ native: true }}
                     sx={{ minWidth: 100 }}
                     value={hazard.initialRisk.probability}
@@ -468,7 +474,7 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
                   </TextField>
                   <TextField
                     select
-                    label="საწყისი რისკის შედეგი"
+                    label="შედეგი"
                     SelectProps={{ native: true }}
                     sx={{ minWidth: 100 }}
                     value={hazard.initialRisk.severity}
@@ -483,7 +489,7 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
                     {riskOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                   </TextField>
                   <TextField 
-                    label="საწყისი რისკი" 
+                    label="რისკი" 
                     value={hazard.initialRisk.total} 
                     InputProps={{ readOnly: true }} 
                     sx={{ minWidth: 100 }} 
@@ -493,22 +499,20 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
 
               <Grid item xs={12}>
                 <TextField
-                  label="გასატარებელი ზომები / რეაგირება"
+                  label="კონტროლის ზომები"
                   fullWidth
                   multiline
-                  rows={2}
+                  rows={5}
                   value={hazard.additionalControlMeasures}
                   onChange={(e) => {
                     console.log('[HazardSection] additionalControlMeasures change', { id: hazard.id, value: e.target.value });
                     updateHazard(hazard.id, { additionalControlMeasures: e.target.value });
                   }}
-                  placeholder={
-                    'საფრთხის აღმოფხვრა:\n' +
-                    'საფრთხის ჩანაცვლება:\n' +
-                    'საფრთხის იზოლირება:\n' +
-                    'უსაფრთხოების პროცედურები:\n' +
-                    'ინდივიდუალური დაცვის საშუალებები:'
-                  }
+                  placeholder={`o საფრთხის აღმოფხვრა- 
+o საფრთხის ჩანაცვლება- 
+o საფრთხის იზოლირება- 
+o უსაფრთხოების პროცედურები- 
+o ინდივიდუალური დაცვის საშუალებები-`}
                 />
               </Grid>
 
@@ -517,7 +521,7 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
                 <Box display="flex" gap={2}>
                   <TextField
                     select
-          label="ნარჩენი რისკის ალბათობა"
+          label="ალბათობა"
                     SelectProps={{ native: true }}
                     sx={{ minWidth: 100 }}
                     value={hazard.residualRisk.probability}
@@ -533,7 +537,7 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
                   </TextField>
                   <TextField
                     select
-                    label="ნარჩენი რისკის შედეგი"
+                    label="შედეგი"
                     SelectProps={{ native: true }}
                     sx={{ minWidth: 100 }}
                     value={hazard.residualRisk.severity}
@@ -548,7 +552,7 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
                     {riskOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                   </TextField>
                   <TextField 
-                    label="ნარჩენი რისკი" 
+                    label="რისკი" 
                     value={hazard.residualRisk.total} 
                     InputProps={{ readOnly: true }} 
                     sx={{ minWidth: 100 }} 
