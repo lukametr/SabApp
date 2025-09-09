@@ -54,15 +54,12 @@ ARG GOOGLE_CLIENT_ID=675742559993-5quocp5mgvmog0fd2g8ue03vpleb23t5.apps.googleus
 ARG GOOGLE_CLIENT_SECRET
 ARG NEXTAUTH_SECRET
 ARG NEXTAUTH_URL=https://sabapp.com
-ARG PORT=3001
-
 ENV NEXT_PUBLIC_GOOGLE_CLIENT_ID=${NEXT_PUBLIC_GOOGLE_CLIENT_ID}
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 ENV GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
 ENV GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
 ENV NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
 ENV NEXTAUTH_URL=${NEXTAUTH_URL}
-ENV PORT=${PORT}
 
 # Build frontend and backend
 ENV SKIP_ENV_VALIDATION=true
@@ -82,8 +79,13 @@ RUN ls -la ../frontend/out/ || echo "Frontend out directory not found"
 RUN cp -r ../frontend/out/* public/ || echo "Failed to copy frontend files"
 RUN ls -la public/ || echo "Public directory is empty"
 
-# Expose port
-EXPOSE 3001
+# Expose default port (Railway will override with $PORT)
+EXPOSE 3000
+
+# Add healthcheck script
+COPY healthcheck.js ./
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+  CMD node healthcheck.js
 
 # Start the backend application with detailed logging and fallback
 CMD ["sh", "-c", "echo 'Starting application...' && ls -la dist/ && node --version && npm --version && echo 'Environment:' && env | grep -E '(PORT|NODE_ENV|MONGODB_URI)' && echo 'Starting node process...' && timeout 30 node dist/main.js || (echo 'Main app failed, starting emergency health server...' && node health-server.js)"]

@@ -9,14 +9,14 @@ NEXT_PUBLIC_API_URL = "https://sabapp.com/api"
 [deploy]
 startCommand = "node dist/main.js"
 healthcheckPath = "/health"
-healthcheckTimeout = 100
+healthcheckTimeout = 60
 restartPolicyType = "always"
 restartPolicyMaxRetries = 10
 
 [environments.production]
 [environments.production.variables]
 NODE_ENV = "production"
-PORT = "3001"
+# PORT = Railway auto-assigns this
 MONGODB_URI = "${{ MONGODB_URI }}" # Set in Railway UI
 JWT_SECRET = "${{ JWT_SECRET }}"   # Set in Railway UI
 JWT_EXPIRES_IN = "7d"

@@ -218,13 +218,13 @@ async function bootstrap() {
 
   try {
     const portEnv = process.env.PORT;
-    if (!portEnv) {
-      console.warn('⚠️  PORT env var missing, defaulting to 3001');
-    }
-    const port = parseInt(portEnv || '3001', 10);
-    if (isNaN(port)) {
-      console.warn('⚠️  Invalid PORT value, defaulting to 3001:', portEnv);
-    }
+    const port = parseInt(portEnv || '3000', 10);
+    
+    console.log('🔧 Port configuration:', {
+      PORT_ENV: portEnv,
+      FINAL_PORT: port,
+      NODE_ENV: process.env.NODE_ENV
+    });
 
   // NOTE: Avoid manual mongoose connect/disconnect here to not interfere with Nest's managed connection
 
@@ -287,7 +287,7 @@ async function bootstrap() {
       const conn: any = app.get(getConnectionToken());
       const states: Record<number, string> = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting' };
       const waitStart = Date.now();
-      while (conn.readyState !== 1 && Date.now() - waitStart < 10000) {
+      while (conn.readyState !== 1 && Date.now() - waitStart < 30000) {
         console.log('⏳ Waiting for Mongo connection...', states[conn.readyState] || conn.readyState);
         await new Promise(r => setTimeout(r, 500));
       }

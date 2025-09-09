@@ -7,13 +7,21 @@ export class HealthController {
   @Get()
   @ApiOperation({ summary: 'Health check endpoint' })
   checkHealth() {
-    return {
-      status: 'healthy',
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      memory: process.memoryUsage(),
-      environment: process.env.NODE_ENV || 'development',
-    };
+    try {
+      return {
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        uptime: Math.floor(process.uptime()),
+        environment: process.env.NODE_ENV || 'development',
+      };
+    } catch (error) {
+      console.error('Health check error:', error);
+      return {
+        status: 'error',
+        timestamp: new Date().toISOString(),
+        error: error.message
+      };
+    }
   }
 
   @Get('debug')
