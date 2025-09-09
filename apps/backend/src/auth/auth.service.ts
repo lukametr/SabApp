@@ -1,12 +1,20 @@
 import { randomBytes } from 'crypto';
 import { sendVerificationEmail } from '../utils/email';
-import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  BadRequestException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { OAuth2Client } from 'google-auth-library';
 import * as bcrypt from 'bcryptjs';
 import { UsersService } from '../users/users.service';
-import { GoogleAuthDto, GoogleUserInfo, AuthResponseDto } from '../users/dto/google-auth.dto';
+import {
+  GoogleAuthDto,
+  GoogleUserInfo,
+  AuthResponseDto,
+} from '../users/dto/google-auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -19,7 +27,10 @@ export class AuthService {
     } catch (err: any) {
       const msg = err?.message || String(err);
       console.error('❌ JWT signing failed:', msg);
-      if (msg.includes('secretOrPrivateKey') || msg.includes('secret or private key')) {
+      if (
+        msg.includes('secretOrPrivateKey') ||
+        msg.includes('secret or private key')
+      ) {
         throw new BadRequestException({
           message: 'Authentication unavailable: JWT secret not configured',
           code: 'JWT_SECRET_MISSING',
@@ -35,10 +46,19 @@ export class AuthService {
     private configService: ConfigService,
   ) {
     const googleClientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
-    console.log('≡ƒöº Auth Service - Google Client ID configured:', !!googleClientId);
-    console.log('≡ƒöº Auth Service - Google Client ID length:', googleClientId?.length || 0);
-  console.log('🔐 Auth Service - JWT secret configured:', !!this.configService.get<string>('JWT_SECRET'));
-    
+    console.log(
+      '≡ƒöº Auth Service - Google Client ID configured:',
+      !!googleClientId,
+    );
+    console.log(
+      '≡ƒöº Auth Service - Google Client ID length:',
+      googleClientId?.length || 0,
+    );
+    console.log(
+      '🔐 Auth Service - JWT secret configured:',
+      !!this.configService.get<string>('JWT_SECRET'),
+    );
+
     this.googleClient = new OAuth2Client(googleClientId);
   }
 
@@ -47,7 +67,7 @@ export class AuthService {
       console.log('≡ƒöº Validating Google token...');
       const audience = this.configService.get<string>('GOOGLE_CLIENT_ID');
       console.log('≡ƒöº Google Client ID for verification:', !!audience);
-      
+
       const ticket = await this.googleClient.verifyIdToken({
         idToken,
         audience: audience,
@@ -60,15 +80,21 @@ export class AuthService {
       }
 
       if (!payload.sub || !payload.email || !payload.name) {
-        console.error('≡ƒöº Google token validation failed: Missing required fields', {
-          hasSub: !!payload.sub,
-          hasEmail: !!payload.email,
-          hasName: !!payload.name
-        });
+        console.error(
+          '≡ƒöº Google token validation failed: Missing required fields',
+          {
+            hasSub: !!payload.sub,
+            hasEmail: !!payload.email,
+            hasName: !!payload.name,
+          },
+        );
         throw new UnauthorizedException('Invalid Google token payload');
       }
 
-      console.log('≡ƒöº Google token validated successfully for user:', payload.email);
+      console.log(
+        '≡ƒöº Google token validated successfully for user:',
+        payload.email,
+      );
       console.log('≡ƒöº Google user sub (ID):', payload.sub);
 
       return {
@@ -85,44 +111,61 @@ export class AuthService {
   }
 
   async googleAuth(authDto: GoogleAuthDto): Promise<AuthResponseDto> {
-    console.log('≡ƒöº Google Auth - Starting authentication process (code or access_token)');
+    console.log(
+      '≡ƒöº Google Auth - Starting authentication process (code or access_token)',
+    );
     try {
       let googleUserInfo: GoogleUserInfo | null = null;
       if (authDto.code) {
         // Exchange code for tokens
-        const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
+        const tokenResponse = await fetch(
+          'https://oauth2.googleapis.com/token',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+              code: authDto.code,
+              client_id:
+                this.configService.get<string>('GOOGLE_CLIENT_ID') || '',
+              client_secret:
+                this.configService.get<string>('GOOGLE_CLIENT_SECRET') || '',
+              redirect_uri: `${this.configService.get<string>('NEXT_PUBLIC_API_URL') || 'https://sabapp.com/api'}/auth/google/callback`,
+              grant_type: 'authorization_code',
+            } as Record<string, string>),
           },
-          body: new URLSearchParams({
-            code: authDto.code,
-            client_id: this.configService.get<string>('GOOGLE_CLIENT_ID') || '',
-            client_secret: this.configService.get<string>('GOOGLE_CLIENT_SECRET') || '',
-            redirect_uri: `${this.configService.get<string>('NEXT_PUBLIC_API_URL') || 'https://sabapp.com/api'}/auth/google/callback`,
-            grant_type: 'authorization_code',
-          } as Record<string, string>),
-        });
+        );
         if (!tokenResponse.ok) {
-          throw new UnauthorizedException('Failed to exchange authorization code');
+          throw new UnauthorizedException(
+            'Failed to exchange authorization code',
+          );
         }
-        const tokens = await tokenResponse.json() as { id_token: string; access_token: string; };
+        const tokens = (await tokenResponse.json()) as {
+          id_token: string;
+          access_token: string;
+        };
         googleUserInfo = await this.validateGoogleToken(tokens.id_token);
       } else if ((authDto as any).idToken) {
         // Support direct Google ID token (One Tap / Credentials API)
-        googleUserInfo = await this.validateGoogleToken((authDto as any).idToken);
+        googleUserInfo = await this.validateGoogleToken(
+          (authDto as any).idToken,
+        );
       } else if (authDto.accessToken) {
         // Fallback: use access_token to get userinfo
-        const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-          headers: {
-            Authorization: `Bearer ${authDto.accessToken}`,
-            Accept: 'application/json',
+        const userInfoResponse = await fetch(
+          'https://www.googleapis.com/oauth2/v2/userinfo',
+          {
+            headers: {
+              Authorization: `Bearer ${authDto.accessToken}`,
+              Accept: 'application/json',
+            },
           },
-        });
+        );
         if (!userInfoResponse.ok) {
           throw new UnauthorizedException('Failed to fetch Google user info');
         }
-        const userInfo = await userInfoResponse.json() as {
+        const userInfo = (await userInfoResponse.json()) as {
           id: string;
           email: string;
           name?: string;
@@ -155,17 +198,23 @@ export class AuthService {
         console.log('🔍 User not found by Google ID, checking by email...');
         // Try by email
         user = await this.usersService.findByEmail(googleUserInfo.email);
-        
+
         if (user && !user.googleId) {
           // Link Google ID to existing email user
           console.log('🔗 Linking Google account to existing user');
-          await this.usersService.linkGoogleId(String(user._id), googleUserInfo.sub);
+          await this.usersService.linkGoogleId(
+            String(user._id),
+            googleUserInfo.sub,
+          );
           user = await this.usersService.findById(String(user._id));
         }
       }
 
       if (!user) {
-        console.log('👤 Creating new user from Google OAuth:', googleUserInfo.email);
+        console.log(
+          '👤 Creating new user from Google OAuth:',
+          googleUserInfo.email,
+        );
         // Create new user
         user = await this.usersService.createUser({
           ...googleUserInfo,
@@ -173,7 +222,10 @@ export class AuthService {
           organization,
           position,
         });
-        console.log('✅ New Google user created successfully:', googleUserInfo.email);
+        console.log(
+          '✅ New Google user created successfully:',
+          googleUserInfo.email,
+        );
       } else {
         console.log('✅ Existing user login:', user.email);
         // Existing user login - update last login
@@ -193,14 +245,16 @@ export class AuthService {
         isEmailVerified: user.isEmailVerified || true,
       };
 
-  const accessToken = this.signToken(payload);
+      const accessToken = this.signToken(payload);
 
-      console.log('≡ƒöº Google OAuth callback - JWT token generated successfully');
+      console.log(
+        '≡ƒöº Google OAuth callback - JWT token generated successfully',
+      );
       console.log('≡ƒöº JWT payload:', {
         sub: payload.sub,
         email: payload.email,
         role: payload.role,
-        status: payload.status
+        status: payload.status,
       });
 
       return {
@@ -223,24 +277,30 @@ export class AuthService {
     }
   }
 
-  async handleGoogleCallback(code: string, _state: string): Promise<AuthResponseDto> {
+  async handleGoogleCallback(
+    code: string,
+    _state: string,
+  ): Promise<AuthResponseDto> {
     try {
       console.log('≡ƒöº Handling Google OAuth callback with code:', !!code);
-      
+
       const clientId = this.configService.get<string>('GOOGLE_CLIENT_ID') || '';
-      const clientSecret = this.configService.get<string>('GOOGLE_CLIENT_SECRET') || '';
-      const backendUrl = this.configService.get<string>('NEXT_PUBLIC_API_URL') || 'https://sabapp.com/api';
+      const clientSecret =
+        this.configService.get<string>('GOOGLE_CLIENT_SECRET') || '';
+      const backendUrl =
+        this.configService.get<string>('NEXT_PUBLIC_API_URL') ||
+        'https://sabapp.com/api';
       const redirectUri = `${backendUrl}/auth/google/callback`;
-      
+
       console.log('🔧 OAuth Config Debug:', {
         hasClientId: !!clientId,
         clientIdLength: clientId.length,
         hasClientSecret: !!clientSecret,
         clientSecretLength: clientSecret.length,
         redirectUri,
-        backendUrl
+        backendUrl,
       });
-      
+
       // Exchange authorization code for tokens
       const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
@@ -257,24 +317,29 @@ export class AuthService {
       });
 
       console.log('≡ƒöº Token response status:', tokenResponse.status);
-      
+
       if (!tokenResponse.ok) {
         const errorText = await tokenResponse.text();
         console.log('≡ƒöº Token exchange error:', errorText);
-        throw new UnauthorizedException('Failed to exchange authorization code');
+        throw new UnauthorizedException(
+          'Failed to exchange authorization code',
+        );
       }
 
-      const tokens = await tokenResponse.json() as { id_token: string; access_token: string; };
-      
+      const tokens = (await tokenResponse.json()) as {
+        id_token: string;
+        access_token: string;
+      };
+
       // Validate the ID token
       const googleUserInfo = await this.validateGoogleToken(tokens.id_token);
-      
+
       console.log('🔍 Google user info:', {
         sub: googleUserInfo.sub,
         email: googleUserInfo.email,
-        name: googleUserInfo.name
+        name: googleUserInfo.name,
       });
-      
+
       // Check if user exists
       let user = await this.usersService.findByGoogleId(googleUserInfo.sub);
 
@@ -282,23 +347,32 @@ export class AuthService {
         console.log('🔍 User not found by Google ID, checking by email...');
         // Check if user exists by email (maybe registered with email/password)
         user = await this.usersService.findByEmail(googleUserInfo.email);
-        
+
         if (user) {
           // Link existing user with Google account
-          console.log('🔗 Linking existing user with Google account:', googleUserInfo.email);
-          await this.usersService.linkGoogleId(String(user._id), googleUserInfo.sub);
+          console.log(
+            '🔗 Linking existing user with Google account:',
+            googleUserInfo.email,
+          );
+          await this.usersService.linkGoogleId(
+            String(user._id),
+            googleUserInfo.sub,
+          );
           // Refresh user data
           user = await this.usersService.findById(String(user._id));
         } else {
           // Create new user with Google data
-          console.log('👤 Creating new user from Google OAuth:', googleUserInfo.email);
+          console.log(
+            '👤 Creating new user from Google OAuth:',
+            googleUserInfo.email,
+          );
           user = await this.usersService.createUser(googleUserInfo);
-          
+
           if (!user) {
             console.error('❌ CRITICAL: createUser returned null/undefined!');
             throw new Error('Failed to create user');
           }
-          
+
           console.log('✅ New Google user created successfully:', user.email);
         }
       } else {
@@ -306,7 +380,9 @@ export class AuthService {
       }
 
       if (!user) {
-        console.error('❌ CRITICAL: No user object available for JWT generation!');
+        console.error(
+          '❌ CRITICAL: No user object available for JWT generation!',
+        );
         throw new Error('User not found or created');
       }
 
@@ -326,9 +402,11 @@ export class AuthService {
         isEmailVerified: user.isEmailVerified,
       };
 
-  const access_token = this.signToken(payload);
+      const access_token = this.signToken(payload);
 
-      console.log('≡ƒöº Google OAuth callback - JWT token generated successfully');
+      console.log(
+        '≡ƒöº Google OAuth callback - JWT token generated successfully',
+      );
       console.log('≡ƒöº JWT payload:', payload);
 
       return {
@@ -360,7 +438,7 @@ export class AuthService {
   async registerWithEmail(registerDto: any): Promise<AuthResponseDto> {
     try {
       console.log('≡ƒöº Email Registration - Starting:', registerDto.email);
-      
+
       // Validate required fields
       if (!registerDto.email || !registerDto.password) {
         throw new BadRequestException('Email and password are required');
@@ -374,11 +452,16 @@ export class AuthService {
 
       // Hash password
       const saltRounds = 10;
-      const hashedPassword = await bcrypt.hash(registerDto.password, saltRounds);
+      const hashedPassword = await bcrypt.hash(
+        registerDto.password,
+        saltRounds,
+      );
 
       // Generate email verification token before user creation
       const emailVerificationToken = randomBytes(32).toString('hex');
-      const emailVerificationTokenExpires = new Date(Date.now() + 1000 * 60 * 60 * 24); // 24h
+      const emailVerificationTokenExpires = new Date(
+        Date.now() + 1000 * 60 * 60 * 24,
+      ); // 24h
 
       // Create user with email/password and verification token
       const user = await this.usersService.createEmailUser({
@@ -398,7 +481,10 @@ export class AuthService {
         await sendVerificationEmail(user.email, emailVerificationToken);
       } catch (e) {
         emailSent = false;
-        console.error('📧 Email sending failed during registration (continuing):', (e as any)?.message || e);
+        console.error(
+          '📧 Email sending failed during registration (continuing):',
+          e?.message || e,
+        );
       }
 
       // Return success without JWT token - user must verify email first
@@ -439,29 +525,33 @@ export class AuthService {
         throw new UnauthorizedException('Invalid email or password');
       }
 
-      console.log('🔐 Email Login - User found:', { 
-        id: user._id, 
-        email: user.email, 
+      console.log('🔐 Email Login - User found:', {
+        id: user._id,
+        email: user.email,
         hasPassword: !!user.password,
         authProvider: user.authProvider,
         googleId: !!user.googleId,
         status: user.status,
-        lastLoginAt: user.lastLoginAt
+        lastLoginAt: user.lastLoginAt,
       });
 
       // Check if user has Google ID (Google account)
       if (user.googleId) {
-        console.error('🔐 Email Login - Google account attempted email login:', {
-          email: user.email,
-          googleId: !!user.googleId,
-          hasPassword: !!user.password,
-          authProvider: user.authProvider
-        });
+        console.error(
+          '🔐 Email Login - Google account attempted email login:',
+          {
+            email: user.email,
+            googleId: !!user.googleId,
+            hasPassword: !!user.password,
+            authProvider: user.authProvider,
+          },
+        );
         throw new BadRequestException({
-          message: 'This account was created with Google. Please use "Sign in with Google" button instead.',
+          message:
+            'This account was created with Google. Please use "Sign in with Google" button instead.',
           code: 'GOOGLE_ACCOUNT_ONLY',
           email: user.email,
-          authProvider: user.authProvider || 'google'
+          authProvider: user.authProvider || 'google',
         });
       }
 
@@ -476,41 +566,56 @@ export class AuthService {
         inputPasswordLength: loginDto.password.length,
         storedHashLength: user.password.length,
         hashPrefix: user.password.substring(0, 7), // Should show $2a$ or $2b$
-        bcryptVersion: require('bcryptjs').version || 'unknown'
+        bcryptVersion: require('bcryptjs').version || 'unknown',
       });
-      
+
       let isPasswordValid = false;
-      
+
       try {
-        isPasswordValid = await bcrypt.compare(loginDto.password, user.password);
+        isPasswordValid = await bcrypt.compare(
+          loginDto.password,
+          user.password,
+        );
         console.log('🔐 Email Login - bcrypt.compare result:', isPasswordValid);
-        
+
         // If bcrypt fails and hash is $2a$ format, try creating new hash
         if (!isPasswordValid && user.password.startsWith('$2a$')) {
-          console.log('🔐 Email Login - Detected $2a$ hash, attempting compatibility fix...');
-          
+          console.log(
+            '🔐 Email Login - Detected $2a$ hash, attempting compatibility fix...',
+          );
+
           // Create a new $2b$ hash and update the user's password
           const newHash = await bcrypt.hash(loginDto.password, 10);
           console.log('🔐 Email Login - Created new $2b$ hash');
-          
+
           // Update user's password hash in database
           await this.usersService.updateUserPassword(String(user._id), newHash);
-          console.log('🔐 Email Login - Updated user password hash to $2b$ format');
-          
+          console.log(
+            '🔐 Email Login - Updated user password hash to $2b$ format',
+          );
+
           // Verify the new hash works
           isPasswordValid = await bcrypt.compare(loginDto.password, newHash);
-          console.log('🔐 Email Login - New hash verification result:', isPasswordValid);
+          console.log(
+            '🔐 Email Login - New hash verification result:',
+            isPasswordValid,
+          );
         }
-        
       } catch (bcryptError) {
         console.error('🔐 Email Login - bcrypt error:', bcryptError);
         throw new UnauthorizedException('Password verification failed');
       }
-      
-      console.log('🔐 Email Login - Final password validation result:', isPasswordValid);
-      
+
+      console.log(
+        '🔐 Email Login - Final password validation result:',
+        isPasswordValid,
+      );
+
       if (!isPasswordValid) {
-        console.error('🔐 Email Login - Password mismatch for user:', user.email);
+        console.error(
+          '🔐 Email Login - Password mismatch for user:',
+          user.email,
+        );
         throw new UnauthorizedException('Invalid email or password');
       }
 
@@ -533,7 +638,7 @@ export class AuthService {
       };
 
       console.log('🔐 Email Login - Generating JWT token...');
-  const accessToken = this.signToken(payload);
+      const accessToken = this.signToken(payload);
 
       console.log('🔐 Email Login - Success for user:', user.email);
 
@@ -557,7 +662,10 @@ export class AuthService {
       });
       const msg = String(error?.message || '');
       // JWT secret misconfig handled here as well (belt and suspenders)
-      if (msg.includes('secretOrPrivateKey') || msg.includes('secret or private key')) {
+      if (
+        msg.includes('secretOrPrivateKey') ||
+        msg.includes('secret or private key')
+      ) {
         throw new BadRequestException({
           message: 'Authentication unavailable: JWT secret not configured',
           code: 'JWT_SECRET_MISSING',
@@ -582,22 +690,28 @@ export class AuthService {
         throw error;
       }
       // Fallback generic error
-      throw new BadRequestException({ message: 'Login failed', code: 'LOGIN_FAILED' });
+      throw new BadRequestException({
+        message: 'Login failed',
+        code: 'LOGIN_FAILED',
+      });
     }
   }
 
   // NextAuth Google authentication handler
   async handleNextAuthGoogle(userData: any): Promise<AuthResponseDto> {
     try {
-      console.log('🔐 NextAuth Google - Starting authentication:', userData.email);
-      
+      console.log(
+        '🔐 NextAuth Google - Starting authentication:',
+        userData.email,
+      );
+
       // Check if user exists by Google ID
       let user = await this.usersService.findByGoogleId(userData.googleId);
 
       if (!user) {
         // Check if user exists by email (migration case)
         user = await this.usersService.findByEmail(userData.email);
-        
+
         if (!user) {
           console.log('🔐 NextAuth Google - Creating new user');
           // Create new user
@@ -609,9 +723,14 @@ export class AuthService {
             email_verified: true,
           });
         } else {
-          console.log('🔐 NextAuth Google - Linking existing email user to Google');
+          console.log(
+            '🔐 NextAuth Google - Linking existing email user to Google',
+          );
           // Link existing email user to Google ID
-          await this.usersService.linkGoogleId(String(user._id), userData.googleId);
+          await this.usersService.linkGoogleId(
+            String(user._id),
+            userData.googleId,
+          );
         }
       } else {
         console.log('🔐 NextAuth Google - Existing Google user login');
@@ -632,7 +751,7 @@ export class AuthService {
         isEmailVerified: user.isEmailVerified,
       };
 
-  const accessToken = this.signToken(payload);
+      const accessToken = this.signToken(payload);
 
       console.log('🔐 NextAuth Google - Success for user:', user.email);
 
@@ -653,21 +772,30 @@ export class AuthService {
     }
   }
 
-  async changePassword(userId: string, currentPassword: string, newPassword: string) {
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ) {
     try {
       const user = await this.usersService.findById(userId);
-      
+
       if (!user) {
         throw new UnauthorizedException('მომხმარებელი ვერ მოიძებნა');
       }
 
       // Check if user has a password (for Google OAuth users)
       if (!user.password) {
-        throw new BadRequestException('ამ ანგარიშისთვის პაროლის შეცვლა შეუძლებელია');
+        throw new BadRequestException(
+          'ამ ანგარიშისთვის პაროლის შეცვლა შეუძლებელია',
+        );
       }
 
-      const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
-      
+      const isPasswordValid = await bcrypt.compare(
+        currentPassword,
+        user.password,
+      );
+
       if (!isPasswordValid) {
         throw new UnauthorizedException('მიმდინარე პაროლი არასწორია');
       }

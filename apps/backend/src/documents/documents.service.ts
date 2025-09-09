@@ -13,13 +13,18 @@ import archiver from 'archiver';
 @Injectable()
 export class DocumentsService {
   constructor(
-    @InjectModel(Document.name) private documentModel: Model<Document>
+    @InjectModel(Document.name) private documentModel: Model<Document>,
   ) {}
 
-  async create(createDocumentDto: CreateDocumentDto, userId?: string): Promise<Document> {
+  async create(
+    createDocumentDto: CreateDocumentDto,
+    userId?: string,
+  ): Promise<Document> {
     try {
       console.log('💾 Creating document with data:', {
-        hazardsCount: Array.isArray(createDocumentDto.hazards) ? createDocumentDto.hazards.length : 0,
+        hazardsCount: Array.isArray(createDocumentDto.hazards)
+          ? createDocumentDto.hazards.length
+          : 0,
         photosCount: createDocumentDto.photos?.length || 0,
         userId: userId || 'anonymous',
         time: createDocumentDto.time,
@@ -27,12 +32,14 @@ export class DocumentsService {
         timeValid: createDocumentDto.time instanceof Date,
         date: createDocumentDto.date,
         dateType: typeof createDocumentDto.date,
-        hazardPhotos: Array.isArray(createDocumentDto.hazards) ? createDocumentDto.hazards.map((h: any) => ({
-          id: h.id,
-          photosCount: h.photos?.length || 0
-        })) : []
+        hazardPhotos: Array.isArray(createDocumentDto.hazards)
+          ? createDocumentDto.hazards.map((h: any) => ({
+              id: h.id,
+              photosCount: h.photos?.length || 0,
+            }))
+          : [],
       });
-      
+
       const createdDocument = new this.documentModel({
         ...createDocumentDto,
         authorId: userId || 'anonymous-user', // Use provided userId or default
@@ -40,27 +47,27 @@ export class DocumentsService {
         isFavorite: false,
         assessmentA: 0,
         assessmentSh: 0,
-  assessmentR: 0,
-  // ჩამოტვირთვების მრიცხველები ყოველთვის იწყება ნულიდან
-  downloadZipCount: 0,
-  downloadExcelCount: 0,
-  downloadPdfCount: 0,
+        assessmentR: 0,
+        // ჩამოტვირთვების მრიცხველები ყოველთვის იწყება ნულიდან
+        downloadZipCount: 0,
+        downloadExcelCount: 0,
+        downloadPdfCount: 0,
       });
-      
+
       console.log('💾 Saving document to database...');
       const savedDocument = await createdDocument.save();
       console.log('✅ Document saved successfully:', {
         id: savedDocument._id,
         hazardsCount: savedDocument.hazards?.length || 0,
-        photosCount: savedDocument.photos?.length || 0
+        photosCount: savedDocument.photos?.length || 0,
       });
-      
+
       return savedDocument.toJSON() as Document;
     } catch (error) {
       console.error('❌ Error creating document:', {
         message: error.message,
         stack: error.stack,
-        validation: error.errors
+        validation: error.errors,
       });
       throw error;
     }
@@ -70,22 +77,28 @@ export class DocumentsService {
     // If userId is provided, filter by authorId, otherwise return all (for backward compatibility)
     const filter = userId ? { authorId: userId } : {};
     const documents = await this.documentModel.find(filter).exec();
-    console.log('📋 Found', documents.length, 'documents for user:', userId || 'all users');
+    console.log(
+      '📋 Found',
+      documents.length,
+      'documents for user:',
+      userId || 'all users',
+    );
     documents.forEach((doc, index) => {
       console.log(`📋 Document ${index + 1}:`, {
         id: doc._id,
         authorId: doc.authorId,
         hazardsCount: doc.hazards?.length || 0,
         photosCount: doc.photos?.length || 0,
-        hazardPhotos: doc.hazards?.map((h: any) => ({
-          id: h.id,
-          photosCount: h.photos?.length || 0
-        })) || []
+        hazardPhotos:
+          doc.hazards?.map((h: any) => ({
+            id: h.id,
+            photosCount: h.photos?.length || 0,
+          })) || [],
       });
     });
-    
+
     // Convert to JSON to apply transform (_id -> id)
-    return documents.map(doc => doc.toJSON()) as Document[];
+    return documents.map((doc) => doc.toJSON()) as Document[];
   }
 
   async findOne(id: string, userId?: string): Promise<Document> {
@@ -94,7 +107,7 @@ export class DocumentsService {
     if (userId) {
       filter.authorId = userId;
     }
-    
+
     const document = await this.documentModel.findOne(filter).exec();
     if (!document) {
       throw new NotFoundException('დოკუმენტი ვერ მოიძებნა ან წვდომა არ გაქვთ');
@@ -104,19 +117,21 @@ export class DocumentsService {
 
   async remove(id: string, userId?: string): Promise<Document> {
     console.log('🗑️ Removing document with ID:', id, 'for user:', userId);
-    
+
     if (!id || id === 'undefined') {
       console.error('❌ Invalid ID provided for deletion:', id);
       throw new NotFoundException('არასწორი დოკუმენტის ID');
     }
-    
+
     // Build filter - if userId provided, ensure document belongs to user
     const filter: any = { _id: id };
     if (userId) {
       filter.authorId = userId;
     }
-    
-    const deletedDocument = await this.documentModel.findOneAndDelete(filter).exec();
+
+    const deletedDocument = await this.documentModel
+      .findOneAndDelete(filter)
+      .exec();
     if (!deletedDocument) {
       throw new NotFoundException('დოკუმენტი ვერ მოიძებნა ან წვდომა არ გაქვთ');
     }
@@ -124,7 +139,11 @@ export class DocumentsService {
     return deletedDocument.toJSON() as Document;
   }
 
-  async update(id: string, updateDocumentDto: UpdateDocumentDto, _userId?: string): Promise<Document> {
+  async update(
+    id: string,
+    updateDocumentDto: UpdateDocumentDto,
+    _userId?: string,
+  ): Promise<Document> {
     // მოვიძიოთ არსებული დოკუმენტი
     const existingDoc = await this.documentModel.findById(id);
     if (!existingDoc) {
@@ -136,7 +155,7 @@ export class DocumentsService {
     Object.keys(updateDocumentDto).forEach((key) => {
       const value = (updateDocumentDto as any)[key];
       if (value !== undefined) {
-        (updateData as any)[key] = value;
+        updateData[key] = value;
       }
     });
 
@@ -148,7 +167,7 @@ export class DocumentsService {
       .findByIdAndUpdate(
         id,
         { $set: updateData },
-        { new: true, runValidators: true }
+        { new: true, runValidators: true },
       )
       .exec();
 
@@ -192,11 +211,17 @@ export class DocumentsService {
       throw new NotFoundException(`Document with ID ${id} not found`);
     }
 
-  // Check if document has any photos (document photos or hazard photos)
-  const hasDocumentPhotos = document.photos && document.photos.length > 0;
-  const hasHazardPhotos = document.hazards && document.hazards.some(hazard => hazard.photos && hazard.photos.length > 0);
+    // Check if document has any photos (document photos or hazard photos)
+    const hasDocumentPhotos = document.photos && document.photos.length > 0;
+    const hasHazardPhotos =
+      document.hazards &&
+      document.hazards.some(
+        (hazard) => hazard.photos && hazard.photos.length > 0,
+      );
 
-    console.log(`🔍 Document ${id} - hasDocumentPhotos: ${hasDocumentPhotos}, hasHazardPhotos: ${hasHazardPhotos}`);
+    console.log(
+      `🔍 Document ${id} - hasDocumentPhotos: ${hasDocumentPhotos}, hasHazardPhotos: ${hasHazardPhotos}`,
+    );
 
     // If we have photos, decide whether they are file paths or base64 and build a ZIP accordingly
     if (hasDocumentPhotos || hasHazardPhotos) {
@@ -207,9 +232,14 @@ export class DocumentsService {
         try {
           if (typeof photo !== 'string') return;
           if (photo.startsWith('/uploads/')) {
-            const filePath = path.join(process.cwd(), photo.replace(/^\/+/, ''));
+            const filePath = path.join(
+              process.cwd(),
+              photo.replace(/^\/+/, ''),
+            );
             if (fs.existsSync(filePath)) {
-              archive.file(filePath, { name: `${namePrefix}-${index + 1}${path.extname(filePath)}` });
+              archive.file(filePath, {
+                name: `${namePrefix}-${index + 1}${path.extname(filePath)}`,
+              });
             }
             return;
           }
@@ -219,7 +249,9 @@ export class DocumentsService {
             const base64Data = matches[2];
             const buffer = Buffer.from(base64Data, 'base64');
             const extension = (mimeType.split('/')[1] || 'jpg').split(';')[0];
-            archive.append(buffer, { name: `${namePrefix}-${index + 1}.${extension}` });
+            archive.append(buffer, {
+              name: `${namePrefix}-${index + 1}.${extension}`,
+            });
           }
         } catch (e) {
           // ignore single photo failure
@@ -227,10 +259,14 @@ export class DocumentsService {
       };
 
       // Document photos
-      (document.photos || []).forEach((p: any, i: number) => addPhoto(p, 'document-photo', i));
+      (document.photos || []).forEach((p: any, i: number) =>
+        addPhoto(p, 'document-photo', i),
+      );
       // Hazard photos
       (document.hazards || []).forEach((h: any, hi: number) => {
-        (h.photos || []).forEach((p: any, pi: number) => addPhoto(p, `hazard-${hi + 1}-photo`, pi));
+        (h.photos || []).forEach((p: any, pi: number) =>
+          addPhoto(p, `hazard-${hi + 1}-photo`, pi),
+        );
       });
 
       archive.finalize();
@@ -244,7 +280,9 @@ export class DocumentsService {
 
     // Handle old documents with file paths (legacy support)
     if (!document.filePath) {
-      throw new NotFoundException(`No file or photos found for document with ID ${id}`);
+      throw new NotFoundException(
+        `No file or photos found for document with ID ${id}`,
+      );
     }
 
     const filePath = path.join(process.cwd(), 'uploads', document.filePath);
@@ -265,30 +303,32 @@ export class DocumentsService {
     }
 
     const archive = archiver('zip', {
-      zlib: { level: 9 }
+      zlib: { level: 9 },
     });
 
-    const files = documents.map(doc => {
-      if (!doc.filePath) {
-        return null;
-      }
+    const files = documents
+      .map((doc) => {
+        if (!doc.filePath) {
+          return null;
+        }
 
-      const filePath = path.join(process.cwd(), 'uploads', doc.filePath);
-      if (!fs.existsSync(filePath)) {
-        return null;
-      }
+        const filePath = path.join(process.cwd(), 'uploads', doc.filePath);
+        if (!fs.existsSync(filePath)) {
+          return null;
+        }
 
-      return {
-        name: doc.filePath,
-        path: filePath
-      };
-    }).filter(Boolean);
+        return {
+          name: doc.filePath,
+          path: filePath,
+        };
+      })
+      .filter(Boolean);
 
     if (files.length === 0) {
       throw new NotFoundException('No files found for the selected documents');
     }
 
-    files.forEach(file => {
+    files.forEach((file) => {
       if (file) {
         archive.file(file.path, { name: file.name });
       }
@@ -304,18 +344,24 @@ export class DocumentsService {
     });
   }
 
-  async incrementDownloadCounter(id: string, type: 'zip' | 'excel' | 'pdf'): Promise<void> {
+  async incrementDownloadCounter(
+    id: string,
+    type: 'zip' | 'excel' | 'pdf',
+  ): Promise<void> {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return; // ignore silently for invalid ids
     }
     const inc: any = {};
     switch (type) {
       case 'zip':
-        inc.downloadZipCount = 1; break;
+        inc.downloadZipCount = 1;
+        break;
       case 'excel':
-        inc.downloadExcelCount = 1; break;
+        inc.downloadExcelCount = 1;
+        break;
       case 'pdf':
-        inc.downloadPdfCount = 1; break;
+        inc.downloadPdfCount = 1;
+        break;
     }
     await this.documentModel.updateOne({ _id: id }, { $inc: inc }).exec();
   }
@@ -324,14 +370,14 @@ export class DocumentsService {
     return new Promise((resolve, reject) => {
       const chunks: Buffer[] = [];
       const archive = archiver('zip', {
-        zlib: { level: 9 }
+        zlib: { level: 9 },
       });
 
       archive.on('data', (chunk: Buffer) => chunks.push(chunk));
       archive.on('end', () => resolve(Buffer.concat(chunks)));
       archive.on('error', (err: Error) => reject(err));
 
-      files.forEach(file => {
+      files.forEach((file) => {
         if (file && file.path && file.originalname) {
           archive.file(file.path, { name: file.originalname });
         }
@@ -353,7 +399,7 @@ export class DocumentsService {
     if (document.photos && document.photos[photoIndex]) {
       document.photos.splice(photoIndex, 1);
     }
-    
+
     return document.save();
   }
 

@@ -1,6 +1,19 @@
-import { Controller, Post, UploadedFile, UseInterceptors, BadRequestException, Body, Get } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  UploadedFile,
+  UseInterceptors,
+  BadRequestException,
+  Body,
+  Get,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiOperation, ApiResponse, ApiConsumes } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiConsumes,
+} from '@nestjs/swagger';
 import { ExcelReaderService } from './excel-reader.service';
 
 @ApiTags('excel')
@@ -12,7 +25,10 @@ export class ExcelController {
   @UseInterceptors(FileInterceptor('file'))
   @ApiOperation({ summary: 'Excel ფაილის ანალიზი' })
   @ApiConsumes('multipart/form-data')
-  @ApiResponse({ status: 200, description: 'Excel ფაილი წარმატებით გაანალიზდა' })
+  @ApiResponse({
+    status: 200,
+    description: 'Excel ფაილი წარმატებით გაანალიზდა',
+  })
   @ApiResponse({ status: 400, description: 'არასწორი ფაილი ან ფორმატი' })
   async analyzeExcel(@UploadedFile() file: Express.Multer.File) {
     if (!file) {
@@ -24,18 +40,18 @@ export class ExcelController {
 
     console.log(`📊 Excel ანალიზი იწყება: ${file.originalname}`, {
       size: file.size,
-      mimetype: file.mimetype
+      mimetype: file.mimetype,
     });
 
     const analysis = await this.excelReaderService.readAndAnalyzeExcel(
-      file.buffer, 
-      file.originalname
+      file.buffer,
+      file.originalname,
     );
 
     return {
       success: true,
       message: 'Excel ფაილი წარმატებით გაანალიზდა',
-      data: analysis
+      data: analysis,
     };
   }
 
@@ -51,12 +67,14 @@ export class ExcelController {
 
     this.excelReaderService.validateExcelFile(file.buffer);
 
-    const structure = await this.excelReaderService.getExcelStructure(file.buffer);
+    const structure = await this.excelReaderService.getExcelStructure(
+      file.buffer,
+    );
 
     return {
       success: true,
       message: 'Excel სტრუქტურა წარმატებით გაანალიზდა',
-      data: structure
+      data: structure,
     };
   }
 
@@ -67,12 +85,13 @@ export class ExcelController {
   @ApiResponse({ status: 200, description: 'მონაცემები წარმატებით ექსტრაქტი' })
   async extractData(
     @UploadedFile() file: Express.Multer.File,
-    @Body() options: {
+    @Body()
+    options: {
       sheetName?: string;
       startRow?: number;
       endRow?: number;
       columns?: string[];
-    }
+    },
   ) {
     if (!file) {
       throw new BadRequestException('Excel ფაილი არ არის ატვირთული');
@@ -87,14 +106,14 @@ export class ExcelController {
       options.sheetName,
       options.startRow,
       options.endRow,
-      options.columns
+      options.columns,
     );
 
     return {
       success: true,
       message: `${data.length} სტრიქონი წარმატებით ექსტრაქტი`,
       data: data,
-      count: data.length
+      count: data.length,
     };
   }
 
@@ -102,10 +121,13 @@ export class ExcelController {
   @UseInterceptors(FileInterceptor('file'))
   @ApiOperation({ summary: 'Excel-ის JSON-ად კონვერტაცია' })
   @ApiConsumes('multipart/form-data')
-  @ApiResponse({ status: 200, description: 'Excel წარმატებით კონვერტირდა JSON-ად' })
+  @ApiResponse({
+    status: 200,
+    description: 'Excel წარმატებით კონვერტირდა JSON-ად',
+  })
   async convertToJSON(
     @UploadedFile() file: Express.Multer.File,
-    @Body('sheetName') sheetName?: string
+    @Body('sheetName') sheetName?: string,
   ) {
     if (!file) {
       throw new BadRequestException('Excel ფაილი არ არის ატვირთული');
@@ -115,7 +137,10 @@ export class ExcelController {
 
     console.log(`📊 JSON კონვერტაცია: ${file.originalname}`, { sheetName });
 
-    const jsonData = await this.excelReaderService.convertToJSON(file.buffer, sheetName);
+    const jsonData = await this.excelReaderService.convertToJSON(
+      file.buffer,
+      sheetName,
+    );
 
     return {
       success: true,
@@ -123,7 +148,7 @@ export class ExcelController {
       data: jsonData,
       count: jsonData.length,
       fileName: file.originalname,
-      sheetName: sheetName || 'Sheet1'
+      sheetName: sheetName || 'Sheet1',
     };
   }
 
@@ -140,10 +165,10 @@ export class ExcelController {
         'JSON კონვერტაცია',
         'მრავალი Sheet-ის მხარდაჭერა',
         'მონაცემების ტიპების ანალიზი',
-        'Headers-ის ავტომატური ამოცნობა'
+        'Headers-ის ავტომატური ამოცნობა',
       ],
       supportedFormats: ['.xlsx', '.xls'],
-      maxFileSize: '10MB'
+      maxFileSize: '10MB',
     };
   }
 }

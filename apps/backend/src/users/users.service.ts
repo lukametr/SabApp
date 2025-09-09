@@ -1,17 +1,24 @@
-  // ...existing code...
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+// ...existing code...
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { User, UserDocument, UserRole, UserStatus } from './schemas/user.schema';
+import {
+  User,
+  UserDocument,
+  UserRole,
+  UserStatus,
+} from './schemas/user.schema';
 import { GoogleUserInfo } from './dto/google-auth.dto';
 import * as bcrypt from 'bcryptjs';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @Injectable()
 export class UsersService {
-  constructor(
-    @InjectModel(User.name) private userModel: Model<UserDocument>,
-  ) {}
+  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
 
   async findByGoogleId(googleId: string): Promise<UserDocument | null> {
     // Input validation
@@ -19,23 +26,23 @@ export class UsersService {
       console.log('❌ findByGoogleId called with empty googleId');
       return null;
     }
-    
+
     // Clean and validate the Google ID
     const cleanGoogleId = String(googleId).trim();
     if (!cleanGoogleId) {
       console.log('❌ Invalid Google ID after cleaning');
       return null;
     }
-    
+
     console.log('🔍 Looking up user by Google ID:', cleanGoogleId);
-    
+
     try {
       // Use lean() for better performance, then convert to document if found
       const userLean = await this.userModel
         .findOne({ googleId: cleanGoogleId })
         .lean()
         .exec();
-      
+
       if (userLean) {
         console.log('✅ User found by Google ID:', userLean.email);
         // Convert back to full document
@@ -53,15 +60,15 @@ export class UsersService {
 
   async findByEmail(email: string): Promise<UserDocument | null> {
     console.log('🔍 Looking up user by email:', email);
-    
+
     try {
       const user = await this.userModel.findOne({ email }).exec();
       console.log('🔍 User lookup result:', {
         found: !!user,
         email: user?.email,
-        hasPassword: !!user?.password
+        hasPassword: !!user?.password,
       });
-      
+
       return user;
     } catch (error) {
       console.error('🔍 Error finding user by email:', error);
@@ -73,33 +80,32 @@ export class UsersService {
     return this.userModel.findById(id).exec();
   }
 
-
-  async createUser(
-    googleUserInfo: GoogleUserInfo
-  ): Promise<UserDocument> {
+  async createUser(googleUserInfo: GoogleUserInfo): Promise<UserDocument> {
     console.log('🆕 Creating new Google user:', googleUserInfo.email);
-    
+
     // Validate input
     if (!googleUserInfo.email || !googleUserInfo.sub) {
       console.error('❌ Invalid Google user info:', googleUserInfo);
-      throw new ConflictException('Invalid Google user info: email and sub are required');
+      throw new ConflictException(
+        'Invalid Google user info: email and sub are required',
+      );
     }
-    
+
     // Clean the Google ID
     const cleanGoogleId = String(googleUserInfo.sub).trim();
     const cleanEmail = googleUserInfo.email.toLowerCase().trim();
-    
+
     if (!cleanGoogleId || !cleanEmail) {
       throw new ConflictException('Invalid Google credentials');
     }
-    
+
     // Double-check user doesn't exist (race condition protection)
     const existingByGoogleId = await this.findByGoogleId(cleanGoogleId);
     if (existingByGoogleId) {
       console.log('⚠️ User already exists with this Google ID');
       return existingByGoogleId;
     }
-    
+
     const existingByEmail = await this.findByEmail(cleanEmail);
     if (existingByEmail) {
       if (existingByEmail.googleId) {
@@ -112,11 +118,11 @@ export class UsersService {
         return updatedUser as UserDocument;
       }
     }
-    
+
     // Create new user
     const now = new Date();
     const end = new Date(now.getTime() + 1000 * 60 * 60 * 24 * 14); // 14 დღე
-    
+
     const userToCreate = {
       name: googleUserInfo.name || cleanEmail.split('@')[0],
       email: cleanEmail,
@@ -135,23 +141,25 @@ export class UsersService {
 
     console.log('💾 Creating new user document...');
     const userDoc = new this.userModel(userToCreate);
-    
+
     try {
       const savedUser = await userDoc.save();
       console.log('✅ New Google user created successfully:', savedUser._id);
-      
+
       // Verify save was successful
       const verifyUser = await this.userModel.findById(savedUser._id).exec();
       if (!verifyUser) {
         throw new Error('User save verification failed');
       }
-      
+
       return savedUser;
     } catch (error) {
       // Handle duplicate key errors gracefully
       if (error.code === 11000) {
-        console.log('⚠️ Duplicate key error detected, trying to find existing user');
-        
+        console.log(
+          '⚠️ Duplicate key error detected, trying to find existing user',
+        );
+
         // Check if it's a googleId duplicate
         if (error.message.includes('googleId')) {
           const existing = await this.findByGoogleId(cleanGoogleId);
@@ -160,7 +168,7 @@ export class UsersService {
             return existing;
           }
         }
-        
+
         // Check if it's an email duplicate
         if (error.message.includes('email')) {
           const existing = await this.findByEmail(cleanEmail);
@@ -168,13 +176,15 @@ export class UsersService {
             console.log('✅ Found existing user by email');
             if (!existing.googleId) {
               await this.linkGoogleId(String(existing._id), cleanGoogleId);
-              return await this.findById(String(existing._id)) as UserDocument;
+              return (await this.findById(
+                String(existing._id),
+              )) as UserDocument;
             }
             return existing;
           }
         }
       }
-      
+
       console.error('❌ Error creating user:', error);
       throw error;
     }
@@ -191,7 +201,7 @@ export class UsersService {
   }): Promise<UserDocument> {
     try {
       console.log('≡ƒöº Creating email user - Starting validation...');
-      
+
       // Check if email is already taken
       const existingEmail = await this.findByEmail(userData.email);
       if (existingEmail) {
@@ -207,9 +217,14 @@ export class UsersService {
       if (!userData.password || userData.password.length < 4) {
         throw new Error('Invalid password for hashing');
       }
-      console.log('🔒 Password hashing starting...', { inputLength: userData.password.length });
+      console.log('🔒 Password hashing starting...', {
+        inputLength: userData.password.length,
+      });
       const hashedPassword = await bcrypt.hash(userData.password, saltRounds);
-      console.log('🔒 Password hashed', { hashPrefix: hashedPassword.substring(0, 7), length: hashedPassword.length });
+      console.log('🔒 Password hashed', {
+        hashPrefix: hashedPassword.substring(0, 7),
+        length: hashedPassword.length,
+      });
 
       console.log('🔧 Creating new user document...');
       const now = new Date();
@@ -238,7 +253,7 @@ export class UsersService {
       console.log('≡ƒöº Saving user to database...');
       const savedUser = await user.save();
       console.log('≡ƒöº User saved successfully with ID:', savedUser._id);
-      
+
       return savedUser;
     } catch (error) {
       console.error('≡ƒöº Error creating email user:', {
@@ -248,7 +263,7 @@ export class UsersService {
         userData: {
           email: userData.email,
           name: userData.name,
-        }
+        },
       });
       throw error;
     }
@@ -260,7 +275,10 @@ export class UsersService {
     });
   }
 
-  async updateUserPassword(userId: string, newPasswordHash: string): Promise<void> {
+  async updateUserPassword(
+    userId: string,
+    newPasswordHash: string,
+  ): Promise<void> {
     console.log('🔒 Updating password hash for user:', userId);
     await this.userModel.findByIdAndUpdate(userId, {
       password: newPasswordHash,
@@ -269,16 +287,25 @@ export class UsersService {
   }
 
   async linkGoogleId(userId: string, googleId: string): Promise<void> {
-    console.log('🔗 Linking Google ID to existing user:', userId, 'Google ID:', googleId);
-    const result = await this.userModel.findByIdAndUpdate(userId, {
-      googleId: googleId,
-      authProvider: 'google',
-    }, { new: true });
+    console.log(
+      '🔗 Linking Google ID to existing user:',
+      userId,
+      'Google ID:',
+      googleId,
+    );
+    const result = await this.userModel.findByIdAndUpdate(
+      userId,
+      {
+        googleId: googleId,
+        authProvider: 'google',
+      },
+      { new: true },
+    );
     console.log('🔗 Google ID linked successfully:', {
       userId: result?._id,
       email: result?.email,
       googleId: result?.googleId,
-      authProvider: result?.authProvider
+      authProvider: result?.authProvider,
     });
   }
 
@@ -288,25 +315,29 @@ export class UsersService {
 
   async debugAllUsers(): Promise<void> {
     console.log('🔍 DEBUG: All users in database:');
-    const users = await this.userModel.find().select('email googleId authProvider name').exec();
+    const users = await this.userModel
+      .find()
+      .select('email googleId authProvider name')
+      .exec();
     users.forEach((user, index) => {
       console.log(`🔍 User ${index + 1}:`, {
         id: user._id,
         email: user.email,
         googleId: user.googleId,
         authProvider: user.authProvider,
-        name: user.name
+        name: user.name,
       });
     });
     console.log(`🔍 Total users: ${users.length}`);
   }
 
-  async updateUserStatus(userId: string, status: UserStatus): Promise<UserDocument> {
-    const user = await this.userModel.findByIdAndUpdate(
-      userId,
-      { status },
-      { new: true },
-    ).exec();
+  async updateUserStatus(
+    userId: string,
+    status: UserStatus,
+  ): Promise<UserDocument> {
+    const user = await this.userModel
+      .findByIdAndUpdate(userId, { status }, { new: true })
+      .exec();
 
     if (!user) {
       throw new NotFoundException('User not found');
@@ -316,11 +347,9 @@ export class UsersService {
   }
 
   async updateUserRole(userId: string, role: UserRole): Promise<UserDocument> {
-    const user = await this.userModel.findByIdAndUpdate(
-      userId,
-      { role },
-      { new: true },
-    ).exec();
+    const user = await this.userModel
+      .findByIdAndUpdate(userId, { role }, { new: true })
+      .exec();
 
     if (!user) {
       throw new NotFoundException('User not found');
@@ -352,7 +381,10 @@ export class UsersService {
     console.log('✅ Email verified for user:', userId);
   }
 
-  async updateProfile(userId: string, data: UpdateProfileDto): Promise<UserDocument> {
+  async updateProfile(
+    userId: string,
+    data: UpdateProfileDto,
+  ): Promise<UserDocument> {
     // Normalize inputs and avoid saving empty strings/nulls into unique/sparse indexed fields
     const setData: Record<string, any> = {};
     const unsetData: Record<string, ''> = {};
@@ -387,7 +419,10 @@ export class UsersService {
 
     try {
       const user = await this.userModel
-        .findByIdAndUpdate(userId, updateOps, { new: true, runValidators: true })
+        .findByIdAndUpdate(userId, updateOps, {
+          new: true,
+          runValidators: true,
+        })
         .exec();
 
       if (!user) {
@@ -415,7 +450,11 @@ export class UsersService {
   async updatePassword(userId: string, hashedPassword: string): Promise<void> {
     try {
       const user = await this.userModel
-        .findByIdAndUpdate(userId, { $set: { password: hashedPassword } }, { new: true })
+        .findByIdAndUpdate(
+          userId,
+          { $set: { password: hashedPassword } },
+          { new: true },
+        )
         .exec();
 
       if (!user) {

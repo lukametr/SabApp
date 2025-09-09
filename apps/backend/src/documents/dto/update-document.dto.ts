@@ -1,4 +1,10 @@
-import { IsOptional, IsString, IsDate, IsArray, ValidateNested } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsDate,
+  IsArray,
+  ValidateNested,
+} from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 
 class RiskDto {

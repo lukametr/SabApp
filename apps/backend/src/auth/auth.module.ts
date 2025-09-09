@@ -32,4 +32,4 @@ import { SubscriptionModule } from '../subscription/subscription.module';
   providers: [AuthService, UsersService, JwtStrategy, SubscriptionGuard],
   exports: [AuthService, UsersService, SubscriptionGuard],
 })
-export class AuthModule {} 
+export class AuthModule {}

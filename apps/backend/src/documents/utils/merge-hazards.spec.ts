@@ -1,4 +1,8 @@
-import { mergeHazards, mergeHazardsAuthoritative, HazardLike } from './merge-hazards';
+import {
+  mergeHazards,
+  mergeHazardsAuthoritative,
+  HazardLike,
+} from './merge-hazards';
 
 describe('mergeHazardsAuthoritative', () => {
   it('merges existing by id and applies risk defaults and photos preservation', () => {
@@ -43,26 +47,30 @@ describe('mergeHazardsAuthoritative', () => {
 
 describe('mergeHazards', () => {
   it('preserves existing fields when incoming hazard omits them', () => {
-    const current: HazardLike[] = [{
-      id: 'h1',
-      hazardIdentification: 'Old',
-      affectedPersons: ['A'],
-      injuryDescription: 'Old inj',
-      existingControlMeasures: 'Old cm',
-      initialRisk: { probability: 3, severity: 4, total: 12 },
-      additionalControlMeasures: 'Old add',
-      residualRisk: { probability: 2, severity: 2, total: 4 },
-      requiredMeasures: 'Old req',
-      responsiblePerson: 'Old resp',
-      reviewDate: new Date('2024-01-01'),
-      photos: ['data:image/png;base64,AAA']
-    }];
+    const current: HazardLike[] = [
+      {
+        id: 'h1',
+        hazardIdentification: 'Old',
+        affectedPersons: ['A'],
+        injuryDescription: 'Old inj',
+        existingControlMeasures: 'Old cm',
+        initialRisk: { probability: 3, severity: 4, total: 12 },
+        additionalControlMeasures: 'Old add',
+        residualRisk: { probability: 2, severity: 2, total: 4 },
+        requiredMeasures: 'Old req',
+        responsiblePerson: 'Old resp',
+        reviewDate: new Date('2024-01-01'),
+        photos: ['data:image/png;base64,AAA'],
+      },
+    ];
 
-    const incoming: HazardLike[] = [{
-      id: 'h1',
-      hazardIdentification: 'New Title',
-      initialRisk: { probability: 5 },
-    }];
+    const incoming: HazardLike[] = [
+      {
+        id: 'h1',
+        hazardIdentification: 'New Title',
+        initialRisk: { probability: 5 },
+      },
+    ];
 
     const merged = mergeHazards(current, incoming);
     expect(merged).toHaveLength(1);
@@ -83,7 +91,14 @@ describe('mergeHazards', () => {
 
   it('adds new hazards when id not found', () => {
     const current: HazardLike[] = [];
-    const incoming: HazardLike[] = [{ id: 'new1', hazardIdentification: 'H New', initialRisk: { probability: 1, severity: 1, total: 1 }, residualRisk: { probability: 1, severity: 1, total: 1 } }];
+    const incoming: HazardLike[] = [
+      {
+        id: 'new1',
+        hazardIdentification: 'H New',
+        initialRisk: { probability: 1, severity: 1, total: 1 },
+        residualRisk: { probability: 1, severity: 1, total: 1 },
+      },
+    ];
     const merged = mergeHazards(current, incoming);
     expect(merged).toHaveLength(1);
     expect(merged[0].id).toBe('new1');
@@ -119,14 +134,22 @@ describe('mergeHazards', () => {
       expect(merged[0].hazardIdentification).toBe('New 1');
       expect(merged[1].id).toBe('h3');
       // h2 was removed because it is not present in incoming
-      expect(merged.find(h => h.id === 'h2')).toBeUndefined();
+      expect(merged.find((h) => h.id === 'h2')).toBeUndefined();
     });
 
     it('deep-merges nested risks when ids match', () => {
-      const current: HazardLike[] = [{ id: 'h1', initialRisk: { probability: 1, severity: 2, total: 3 } }];
-      const incoming: HazardLike[] = [{ id: 'h1', initialRisk: { severity: 5 } }];
+      const current: HazardLike[] = [
+        { id: 'h1', initialRisk: { probability: 1, severity: 2, total: 3 } },
+      ];
+      const incoming: HazardLike[] = [
+        { id: 'h1', initialRisk: { severity: 5 } },
+      ];
       const merged = mergeHazardsAuthoritative(current, incoming);
-      expect(merged[0].initialRisk).toEqual({ probability: 1, severity: 5, total: 3 });
+      expect(merged[0].initialRisk).toEqual({
+        probability: 1,
+        severity: 5,
+        total: 3,
+      });
     });
   });
 });

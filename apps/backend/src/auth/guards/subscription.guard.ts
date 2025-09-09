@@ -1,4 +1,10 @@
-import { Injectable, CanActivate, ExecutionContext, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { SubscriptionService } from '../../subscription/subscription.service';
 import { UserRole } from '../../users/schemas/user.schema';
 
@@ -11,7 +17,10 @@ export class SubscriptionGuard implements CanActivate {
     const user = request.user;
 
     if (!user) {
-      throw new HttpException('User not authenticated', HttpStatus.UNAUTHORIZED);
+      throw new HttpException(
+        'User not authenticated',
+        HttpStatus.UNAUTHORIZED,
+      );
     }
 
     // Admin users bypass subscription check
@@ -20,18 +29,18 @@ export class SubscriptionGuard implements CanActivate {
     }
 
     // Check if user has active subscription
-    const hasActiveSubscription = await this.subscriptionService.checkUserSubscription(
-      user._id || user.id
-    );
+    const hasActiveSubscription =
+      await this.subscriptionService.checkUserSubscription(user._id || user.id);
 
     if (!hasActiveSubscription) {
       throw new HttpException(
         {
           message: 'Subscription required',
           error: 'SUBSCRIPTION_REQUIRED',
-          details: 'Your subscription has expired. Please contact admin for renewal.',
+          details:
+            'Your subscription has expired. Please contact admin for renewal.',
         },
-        HttpStatus.PAYMENT_REQUIRED
+        HttpStatus.PAYMENT_REQUIRED,
       );
     }
 

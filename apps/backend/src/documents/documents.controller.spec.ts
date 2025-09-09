@@ -69,7 +69,7 @@ describe('DocumentsController', () => {
       hazardPhotos: [
         {
           mimetype: 'image/jpeg',
-          buffer: Buffer.from('file-bytes')
+          buffer: Buffer.from('file-bytes'),
         },
       ],
     };
@@ -79,7 +79,8 @@ describe('DocumentsController', () => {
     await controller.update(id, updateDto, files, req);
 
     expect(documentsService.update).toHaveBeenCalledTimes(1);
-    const [calledId, updatePayload] = (documentsService.update as any).mock.calls[0];
+    const [calledId, updatePayload] = (documentsService.update as any).mock
+      .calls[0];
     expect(calledId).toBe(id);
     expect(Array.isArray(updatePayload.hazards)).toBe(true);
     expect(updatePayload.hazards.length).toBe(1);
@@ -113,7 +114,10 @@ describe('DocumentsController', () => {
     const updateDto: any = { objectName: 'Changed' }; // no hazards field
     const files: any = {};
 
-    (documentsService.update as any).mockResolvedValue({ id, hazards: [{ id: 'h1' }] });
+    (documentsService.update as any).mockResolvedValue({
+      id,
+      hazards: [{ id: 'h1' }],
+    });
 
     await controller.update(id, updateDto, files, req);
     const [, updatePayload] = (documentsService.update as any).mock.calls[0];
@@ -146,9 +150,7 @@ describe('DocumentsController', () => {
       ]),
     };
     const files: any = {
-      photos: [
-        { mimetype: 'image/png', buffer: Buffer.from('doc-photo') },
-      ],
+      photos: [{ mimetype: 'image/png', buffer: Buffer.from('doc-photo') }],
       hazardPhotos: [
         { mimetype: 'image/jpeg', buffer: Buffer.from('haz-photo') },
       ],
@@ -173,25 +175,51 @@ describe('DocumentsController', () => {
 
   it('increments Excel download counter on excel download', async () => {
     const id = 'docX';
-    (documentsService as any).findOne = jest.fn().mockResolvedValue({ id, objectName: 'Obj' });
-    (documentsService as any).incrementDownloadCounter = jest.fn().mockResolvedValue(undefined);
-    const res: any = { set: jest.fn(), send: jest.fn(), status: jest.fn().mockReturnThis(), json: jest.fn() };
+    (documentsService as any).findOne = jest
+      .fn()
+      .mockResolvedValue({ id, objectName: 'Obj' });
+    (documentsService as any).incrementDownloadCounter = jest
+      .fn()
+      .mockResolvedValue(undefined);
+    const res: any = {
+      set: jest.fn(),
+      send: jest.fn(),
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
     const req: any = { user: { name: 'N' } };
 
     // stub report service via controller private field access not available; instead, spy on prototype method
-    (controller as any).reportService = { generateExcelReport: jest.fn().mockResolvedValue(Buffer.from('excel')) };
+    (controller as any).reportService = {
+      generateExcelReport: jest.fn().mockResolvedValue(Buffer.from('excel')),
+    };
     await controller.downloadExcelReport(id, res, req);
-    expect((documentsService as any).incrementDownloadCounter).toHaveBeenCalledWith(id, 'excel');
+    expect(
+      (documentsService as any).incrementDownloadCounter,
+    ).toHaveBeenCalledWith(id, 'excel');
   });
 
   it('increments PDF download counter on pdf download', async () => {
     const id = 'docY';
-    (documentsService as any).findOne = jest.fn().mockResolvedValue({ id, objectName: 'Obj' });
-    (documentsService as any).incrementDownloadCounter = jest.fn().mockResolvedValue(undefined);
-    const res: any = { set: jest.fn(), send: jest.fn(), status: jest.fn().mockReturnThis(), json: jest.fn() };
+    (documentsService as any).findOne = jest
+      .fn()
+      .mockResolvedValue({ id, objectName: 'Obj' });
+    (documentsService as any).incrementDownloadCounter = jest
+      .fn()
+      .mockResolvedValue(undefined);
+    const res: any = {
+      set: jest.fn(),
+      send: jest.fn(),
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
 
-    (controller as any).reportService = { generatePDFReport: jest.fn().mockResolvedValue(Buffer.from('pdf')) };
+    (controller as any).reportService = {
+      generatePDFReport: jest.fn().mockResolvedValue(Buffer.from('pdf')),
+    };
     await controller.downloadPDFReport(id, res);
-    expect((documentsService as any).incrementDownloadCounter).toHaveBeenCalledWith(id, 'pdf');
+    expect(
+      (documentsService as any).incrementDownloadCounter,
+    ).toHaveBeenCalledWith(id, 'pdf');
   });
 });

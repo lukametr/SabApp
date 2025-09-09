@@ -8,8 +8,9 @@ export class HealthController {
 
   @Get('health')
   async checkHealth() {
-    const mongoStatus = this.connection.readyState === 1 ? 'connected' : 'disconnected';
-    
+    const mongoStatus =
+      this.connection.readyState === 1 ? 'connected' : 'disconnected';
+
     return {
       status: 'ok',
       timestamp: new Date().toISOString(),
@@ -19,7 +20,7 @@ export class HealthController {
       memory: {
         used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
         total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024),
-      }
+      },
     };
   }
 }

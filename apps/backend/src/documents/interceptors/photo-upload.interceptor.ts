@@ -1,4 +1,9 @@
-import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
+import {
+  Injectable,
+  NestInterceptor,
+  ExecutionContext,
+  CallHandler,
+} from '@nestjs/common';
 import { Observable } from 'rxjs';
 
 @Injectable()
@@ -17,7 +22,10 @@ export class PhotoUploadInterceptor implements NestInterceptor {
         } else {
           // Validate each photo has required structure
           body.photos = body.photos.filter(
-            (photo: any) => photo && typeof photo === 'string' && photo.startsWith('data:image/')
+            (photo: any) =>
+              photo &&
+              typeof photo === 'string' &&
+              photo.startsWith('data:image/'),
           );
         }
       }
@@ -31,7 +39,10 @@ export class PhotoUploadInterceptor implements NestInterceptor {
             } else {
               // Validate each hazard photo
               hazard.photos = hazard.photos.filter(
-                (photo: any) => photo && typeof photo === 'string' && photo.startsWith('data:image/')
+                (photo: any) =>
+                  photo &&
+                  typeof photo === 'string' &&
+                  photo.startsWith('data:image/'),
               );
             }
           }
@@ -43,8 +54,9 @@ export class PhotoUploadInterceptor implements NestInterceptor {
         mainPhotos: body.photos?.length || 0,
         hazardPhotos:
           (body.hazards?.reduce(
-            (acc: number, h: any) => acc + (Array.isArray(h.photos) ? h.photos.length : 0),
-            0
+            (acc: number, h: any) =>
+              acc + (Array.isArray(h.photos) ? h.photos.length : 0),
+            0,
           ) as number) || 0,
       });
     } catch (error) {

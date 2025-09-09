@@ -33,17 +33,19 @@ export interface ExcelAnalysisResult {
 
 @Injectable()
 export class ExcelReaderService {
-  
   /**
    * Excel ფაილის წაკითხვა და ანალიზი
    */
-  async readAndAnalyzeExcel(buffer: Buffer, fileName: string): Promise<ExcelAnalysisResult> {
+  async readAndAnalyzeExcel(
+    buffer: Buffer,
+    fileName: string,
+  ): Promise<ExcelAnalysisResult> {
     try {
       const workbook = new ExcelJS.Workbook();
-      
+
       // Buffer-დან Excel ფაილის წაკითხვა
       await workbook.xlsx.load(buffer);
-      
+
       const result: ExcelAnalysisResult = {
         fileName,
         sheetCount: workbook.worksheets.length,
@@ -52,8 +54,8 @@ export class ExcelReaderService {
           creator: workbook.creator,
           created: workbook.created,
           modified: workbook.modified,
-          properties: workbook.properties
-        }
+          properties: workbook.properties,
+        },
       };
 
       // ყველა Sheet-ის ანალიზი
@@ -64,14 +66,22 @@ export class ExcelReaderService {
 
       console.log(`📊 Excel ანალიზი დასრულდა: ${fileName}`, {
         sheets: result.sheetCount,
-        totalRows: result.sheets.reduce((sum, sheet) => sum + sheet.rowCount, 0),
-        totalCells: result.sheets.reduce((sum, sheet) => sum + sheet.summary.totalCells, 0)
+        totalRows: result.sheets.reduce(
+          (sum, sheet) => sum + sheet.rowCount,
+          0,
+        ),
+        totalCells: result.sheets.reduce(
+          (sum, sheet) => sum + sheet.summary.totalCells,
+          0,
+        ),
       });
 
       return result;
     } catch (error) {
       console.error('❌ Excel წაკითხვის შეცდომა:', error);
-      throw new BadRequestException(`Excel ფაილის წაკითხვა ვერ მოხერხდა: ${error.message}`);
+      throw new BadRequestException(
+        `Excel ფაილის წაკითხვა ვერ მოხერხდა: ${error.message}`,
+      );
     }
   }
 
@@ -83,7 +93,7 @@ export class ExcelReaderService {
     const headers: string[] = [];
     let rowCount = 0;
     let columnCount = 0;
-    
+
     const summary = {
       totalCells: 0,
       emptyCells: 0,
@@ -93,8 +103,8 @@ export class ExcelReaderService {
         number: 0,
         date: 0,
         boolean: 0,
-        formula: 0
-      }
+        formula: 0,
+      },
     };
 
     // Headers-ის მოძებნა (პირველი სტრიქონი)
@@ -111,16 +121,16 @@ export class ExcelReaderService {
 
       row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
         summary.totalCells++;
-        
+
         let cellValue = cell.value;
-        
+
         // Cell-ის ტიპის განსაზღვრა
         if (cellValue === null || cellValue === undefined || cellValue === '') {
           summary.emptyCells++;
           cellValue = null;
         } else {
           summary.filledCells++;
-          
+
           // ტიპის კლასიფიკაცია
           if (cell.type === ExcelJS.ValueType.String) {
             summary.dataTypes.string++;
@@ -136,11 +146,11 @@ export class ExcelReaderService {
             cellValue = cell.result || cell.formula;
           }
         }
-        
+
         rowData[colNumber - 1] = cellValue;
         columnCount = Math.max(columnCount, colNumber);
       });
-      
+
       data.push(rowData);
     });
 
@@ -150,7 +160,7 @@ export class ExcelReaderService {
       columnCount,
       data,
       headers,
-      summary
+      summary,
     };
   }
 
@@ -158,28 +168,28 @@ export class ExcelReaderService {
    * Excel ფაილიდან კონკრეტული მონაცემების ექსტრაქტი
    */
   async extractSpecificData(
-    buffer: Buffer, 
-    sheetName?: string, 
-    startRow?: number, 
-    endRow?: number, 
-    columns?: string[]
+    buffer: Buffer,
+    sheetName?: string,
+    startRow?: number,
+    endRow?: number,
+    columns?: string[],
   ): Promise<any[]> {
     try {
       const workbook = new ExcelJS.Workbook();
       await workbook.xlsx.load(buffer);
-      
+
       // Sheet-ის მოძებნა
-      const worksheet = sheetName 
+      const worksheet = sheetName
         ? workbook.getWorksheet(sheetName)
         : workbook.worksheets[0];
-      
+
       if (!worksheet) {
         throw new BadRequestException(`Sheet '${sheetName}' ვერ მოიძებნა`);
       }
 
       const result: any[] = [];
       const headers: string[] = [];
-      
+
       // Headers-ის წაკითხვა პირველი სტრიქონიდან
       const headerRow = worksheet.getRow(1);
       headerRow.eachCell((cell, colNumber) => {
@@ -193,29 +203,33 @@ export class ExcelReaderService {
       for (let rowNumber = start; rowNumber <= end; rowNumber++) {
         const row = worksheet.getRow(rowNumber);
         const rowData: any = {};
-        
+
         row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
           const columnName = headers[colNumber - 1];
-          
+
           // თუ კონკრეტული სვეტები არის მითითებული
           if (columns && !columns.includes(columnName)) {
             return;
           }
-          
+
           let value = cell.value;
-          
+
           // ტიპის მიხედვით კონვერტაცია
           if (cell.type === ExcelJS.ValueType.Date) {
             value = new Date(value as Date).toISOString();
           } else if (cell.type === ExcelJS.ValueType.Formula) {
             value = cell.result;
           }
-          
+
           rowData[columnName] = value;
         });
-        
+
         // ცარიელი სტრიქონების გამოტოვება
-        if (Object.values(rowData).some(val => val !== null && val !== undefined && val !== '')) {
+        if (
+          Object.values(rowData).some(
+            (val) => val !== null && val !== undefined && val !== '',
+          )
+        ) {
           result.push(rowData);
         }
       }
@@ -224,7 +238,9 @@ export class ExcelReaderService {
       return result;
     } catch (error) {
       console.error('❌ მონაცემების ექსტრაქტის შეცდომა:', error);
-      throw new BadRequestException(`მონაცემების ექსტრაქტი ვერ მოხერხდა: ${error.message}`);
+      throw new BadRequestException(
+        `მონაცემების ექსტრაქტი ვერ მოხერხდა: ${error.message}`,
+      );
     }
   }
 
@@ -232,18 +248,18 @@ export class ExcelReaderService {
    * Excel ფაილის სტრუქტურის მარტივი ანალიზი
    */
   async getExcelStructure(buffer: Buffer): Promise<{
-    sheets: { name: string; rows: number; columns: number; }[];
+    sheets: { name: string; rows: number; columns: number }[];
     hasHeaders: boolean;
     possibleDataTypes: string[];
   }> {
     try {
       const workbook = new ExcelJS.Workbook();
       await workbook.xlsx.load(buffer);
-      
-      const sheets = workbook.worksheets.map(ws => ({
+
+      const sheets = workbook.worksheets.map((ws) => ({
         name: ws.name,
         rows: ws.rowCount,
-        columns: ws.columnCount
+        columns: ws.columnCount,
       }));
 
       // პირველი sheet-ის მიხედვით ანალიზი
@@ -254,7 +270,7 @@ export class ExcelReaderService {
       if (firstSheet && firstSheet.rowCount > 0) {
         // Headers-ის შემოწმება
         const firstRow = firstSheet.getRow(1);
-        
+
         firstRow.eachCell((cell) => {
           if (cell.type === ExcelJS.ValueType.String && cell.text) {
             hasHeaders = true;
@@ -262,7 +278,11 @@ export class ExcelReaderService {
         });
 
         // მონაცემების ტიპების ანალიზი
-        for (let rowNum = hasHeaders ? 2 : 1; rowNum <= Math.min(firstSheet.rowCount, 10); rowNum++) {
+        for (
+          let rowNum = hasHeaders ? 2 : 1;
+          rowNum <= Math.min(firstSheet.rowCount, 10);
+          rowNum++
+        ) {
           const row = firstSheet.getRow(rowNum);
           row.eachCell((cell) => {
             switch (cell.type) {
@@ -288,11 +308,13 @@ export class ExcelReaderService {
       return {
         sheets,
         hasHeaders,
-        possibleDataTypes: Array.from(possibleDataTypes)
+        possibleDataTypes: Array.from(possibleDataTypes),
       };
     } catch (error) {
       console.error('❌ Excel სტრუქტურის ანალიზის შეცდომა:', error);
-      throw new BadRequestException(`Excel სტრუქტურის ანალიზი ვერ მოხერხდა: ${error.message}`);
+      throw new BadRequestException(
+        `Excel სტრუქტურის ანალიზი ვერ მოხერხდა: ${error.message}`,
+      );
     }
   }
 
@@ -314,13 +336,13 @@ export class ExcelReaderService {
 
     // Excel ფაილის სიგნატურის შემოწმება
     const excelSignatures = [
-      [0x50, 0x4B, 0x03, 0x04], // .xlsx (ZIP format)
-      [0xD0, 0xCF, 0x11, 0xE0], // .xls (OLE format)
+      [0x50, 0x4b, 0x03, 0x04], // .xlsx (ZIP format)
+      [0xd0, 0xcf, 0x11, 0xe0], // .xls (OLE format)
     ];
 
     const fileHeader = Array.from(buffer.slice(0, 4));
-    const isValidExcel = excelSignatures.some(signature => 
-      signature.every((byte, index) => byte === fileHeader[index])
+    const isValidExcel = excelSignatures.some((signature) =>
+      signature.every((byte, index) => byte === fileHeader[index]),
     );
 
     if (!isValidExcel) {

@@ -3,7 +3,6 @@ import { Request, Response } from 'express';
 
 @Controller('auth')
 export class NextAuthController {
-  
   @Get('session')
   async getSession(@Res() res: Response) {
     // Proxy to NextAuth session endpoint
@@ -29,7 +28,7 @@ export class NextAuthController {
         id: 'credentials',
         name: 'Email',
         type: 'credentials',
-      }
+      },
     });
   }
 
@@ -56,7 +55,7 @@ export class NextAuthController {
   async error(@Req() req: Request, @Res() res: Response) {
     const error = req.query.error as string;
     console.log('NextAuth error:', error);
-    
+
     // Redirect to frontend error page
     const errorUrl = `/?error=${encodeURIComponent(error || 'Authentication failed')}`;
     res.redirect(errorUrl);

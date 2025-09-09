@@ -24,7 +24,10 @@ export interface HazardLike {
   [key: string]: any;
 }
 
-export const mergeHazards = (current: HazardLike[] = [], incoming: HazardLike[] = []): HazardLike[] => {
+export const mergeHazards = (
+  current: HazardLike[] = [],
+  incoming: HazardLike[] = [],
+): HazardLike[] => {
   const ensureRisk = (r?: Risk): Risk => ({
     probability: r?.probability ?? 0,
     severity: r?.severity ?? 0,
@@ -39,12 +42,12 @@ export const mergeHazards = (current: HazardLike[] = [], incoming: HazardLike[] 
     });
     if (h.initialRisk) {
       out.initialRisk = Object.fromEntries(
-        Object.entries(h.initialRisk).filter(([, v]) => v !== undefined)
+        Object.entries(h.initialRisk).filter(([, v]) => v !== undefined),
       );
     }
     if (h.residualRisk) {
       out.residualRisk = Object.fromEntries(
-        Object.entries(h.residualRisk).filter(([, v]) => v !== undefined)
+        Object.entries(h.residualRisk).filter(([, v]) => v !== undefined),
       );
     }
     return out as HazardLike;
@@ -58,7 +61,8 @@ export const mergeHazards = (current: HazardLike[] = [], incoming: HazardLike[] 
 
   incoming.forEach((_h) => {
     const h = sanitize(_h);
-    const key = h.id || `hazard_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    const key =
+      h.id || `hazard_${Date.now()}_${Math.random().toString(36).slice(2)}`;
     const existing = byId.get(key);
     if (!existing) {
       // New hazard, just add
@@ -96,9 +100,14 @@ export default mergeHazards;
 // Authoritative merge: returns exactly the incoming hazards list length,
 // deep-merging fields with existing when ids match. Hazards not present in
 // incoming are removed. Useful to avoid duplication and allow deletions.
-export const mergeHazardsAuthoritative = (current: HazardLike[] = [], incoming: HazardLike[] = []): HazardLike[] => {
+export const mergeHazardsAuthoritative = (
+  current: HazardLike[] = [],
+  incoming: HazardLike[] = [],
+): HazardLike[] => {
   const currentById = new Map<string, HazardLike>();
-  current.forEach((h, idx) => currentById.set(h.id || `existing_${idx}`, { ...h }));
+  current.forEach((h, idx) =>
+    currentById.set(h.id || `existing_${idx}`, { ...h }),
+  );
 
   const ensureRisk = (r?: Risk): Risk => ({
     probability: r?.probability ?? 0,
@@ -113,12 +122,12 @@ export const mergeHazardsAuthoritative = (current: HazardLike[] = [], incoming: 
     });
     if (h.initialRisk) {
       out.initialRisk = Object.fromEntries(
-        Object.entries(h.initialRisk).filter(([, v]) => v !== undefined)
+        Object.entries(h.initialRisk).filter(([, v]) => v !== undefined),
       );
     }
     if (h.residualRisk) {
       out.residualRisk = Object.fromEntries(
-        Object.entries(h.residualRisk).filter(([, v]) => v !== undefined)
+        Object.entries(h.residualRisk).filter(([, v]) => v !== undefined),
       );
     }
     return out as HazardLike;
@@ -140,10 +149,12 @@ export const mergeHazardsAuthoritative = (current: HazardLike[] = [], incoming: 
         requiredMeasures: h.requiredMeasures ?? '',
         responsiblePerson: h.responsiblePerson ?? '',
         implementationDeadlines: h.implementationDeadlines ?? '',
-        affectedPersons: Array.isArray(h.affectedPersons) ? h.affectedPersons : [],
+        affectedPersons: Array.isArray(h.affectedPersons)
+          ? h.affectedPersons
+          : [],
         initialRisk: ensureRisk(h.initialRisk),
         residualRisk: ensureRisk(h.residualRisk),
-        photos: Array.isArray(h.photos) ? h.photos : (h.photos ? [h.photos] : [])
+        photos: Array.isArray(h.photos) ? h.photos : h.photos ? [h.photos] : [],
       } as HazardLike;
       return created;
     }
