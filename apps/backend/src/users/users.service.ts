@@ -428,4 +428,36 @@ export class UsersService {
       throw error;
     }
   }
+
+  // Methods for version metrics
+  async getTotalUsersCount(): Promise<number> {
+    try {
+      return await this.userModel.countDocuments().exec();
+    } catch (error) {
+      console.error('Error getting total users count:', error);
+      return 0;
+    }
+  }
+
+  async getActiveUsersCount(since: Date): Promise<number> {
+    try {
+      return await this.userModel.countDocuments({
+        lastLoginAt: { $gte: since }
+      }).exec();
+    } catch (error) {
+      console.error('Error getting active users count:', error);
+      return 0;
+    }
+  }
+
+  async getNewUsersCount(since: Date): Promise<number> {
+    try {
+      return await this.userModel.countDocuments({
+        createdAt: { $gte: since }
+      }).exec();
+    } catch (error) {
+      console.error('Error getting new users count:', error);
+      return 0;
+    }
+  }
 }

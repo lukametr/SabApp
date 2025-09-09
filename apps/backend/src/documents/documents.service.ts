@@ -370,4 +370,16 @@ export class DocumentsService {
     // დავაბრუნოთ base64 string
     return document.photos[photoIndex];
   }
+
+  // Method for version metrics
+  async getDocumentsCreatedSince(since: Date): Promise<number> {
+    try {
+      return await this.documentModel.countDocuments({
+        createdAt: { $gte: since }
+      }).exec();
+    } catch (error) {
+      console.error('Error getting documents created since:', error);
+      return 0;
+    }
+  }
 }
