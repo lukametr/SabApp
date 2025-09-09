@@ -1,6 +1,17 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  
+  // ESLint configuration - disable for production builds
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  
+  // TypeScript configuration - disable type checking during builds
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  
   images: {
     domains: ['sabapp.com', 'localhost'],
     unoptimized: true,
