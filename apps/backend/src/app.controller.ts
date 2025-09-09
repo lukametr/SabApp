@@ -5,7 +5,7 @@ import { existsSync, readdirSync } from 'fs';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 @ApiTags('app')
-@Controller('api')
+@Controller()
 export class AppController {
   @Get()
   @ApiOperation({ summary: 'API Root endpoint' })
@@ -16,27 +16,12 @@ export class AppController {
       version: '1.0.0',
       timestamp: new Date().toISOString(),
       routes: {
-        api: '/api',
-        health: '/health',
-        docs: '/docs',
-        debug: '/debug'
+  api: '/api',
+  health: '/health',
+  docs: '/docs',
+  debug: '/debug'
       }
     });
-  }
-
-  @Get('health')
-  @ApiOperation({ summary: 'აპლიკაციის ჯანმრთელობის შემოწმება' })
-  @ApiResponse({ status: 200, description: 'აპლიკაცია მუშაობს' })
-  getHealth() {
-    return {
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV || 'development',
-      cors: 'enabled',
-      uptime: process.uptime(),
-      memory: process.memoryUsage(),
-      version: process.env.npm_package_version || '1.0.0',
-    };
   }
 
   @Get('debug')
@@ -78,7 +63,7 @@ export class AppController {
     }
   }
 
-  @Get('api/debug')
+  @Get('debug')
   getApiDebug() {
     return {
       message: 'API is working!',
