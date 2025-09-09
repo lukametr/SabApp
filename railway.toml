@@ -16,20 +16,11 @@ restartPolicyMaxRetries = 10
 [environments.production]
 [environments.production.variables]
 NODE_ENV = "production"
-# PORT = Railway auto-assigns this
-MONGODB_URI = "${{ MONGODB_URI }}" # Set in Railway UI
-JWT_SECRET = "${{ JWT_SECRET }}"   # Set in Railway UI
+MONGODB_URI = "${{ MONGODB_URI }}"
+JWT_SECRET = "${{ JWT_SECRET }}"
 JWT_EXPIRES_IN = "7d"
-GOOGLE_CLIENT_SECRET = "${{ GOOGLE_CLIENT_SECRET }}" # Set in Railway UI
+GOOGLE_CLIENT_SECRET = "${{ GOOGLE_CLIENT_SECRET }}"
 GOOGLE_CLIENT_ID = "${{ NEXT_PUBLIC_GOOGLE_CLIENT_ID }}"
 NEXT_PUBLIC_API_URL = "https://sabapp.com/api"
 NEXT_PUBLIC_GOOGLE_CLIENT_ID = "${{ NEXT_PUBLIC_GOOGLE_CLIENT_ID }}"
-CORS_ORIGIN = "https://sabapp.com"
-PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = "true"
-PUPPETEER_EXECUTABLE_PATH = "/usr/bin/google-chrome-stable"
-CHROME_BIN = "/usr/bin/google-chrome-stable"
-BACKEND_URL = "https://sabapp.com"
-NEXT_PUBLIC_BACKEND_URL = "https://sabapp.com"
-NEXTAUTH_URL = "https://sabapp.com"
-# Set this in Railway UI for security; placeholder here
-NEXTAUTH_SECRET = "${{ NEXTAUTH_SECRET }}"
+CORS_ORIGIN = "https://sabapp.com,https://www.sabapp.com"

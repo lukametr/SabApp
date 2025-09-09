@@ -1,82 +1,110 @@
-// Railway-compatible authentication service
-export class AuthService {
-  private baseUrl: string;
+import axios from 'axios';
 
-  constructor() {
-    // Detect environment and set correct base URL
-    this.baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:10000/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://sabapp.com/api';
+
+const api = axios.create({
+  baseURL: API_URL,
+  withCredentials: true,
+  timeout: 30000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Request interceptor
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    console.log(`🌐 API Request: ${config.method?.toUpperCase()} ${config.url}`);
+    return config;
+  },
+  (error) => {
+    console.error('❌ Request error:', error);
+    return Promise.reject(error);
   }
+);
 
+// Response interceptor
+api.interceptors.response.use(
+  (response) => {
+    console.log(`✅ API Response: ${response.status} ${response.config.url}`);
+    return response;
+  },
+  async (error) => {
+    console.error('❌ API Error:', {
+      url: error.config?.url,
+      status: error.response?.status,
+      message: error.response?.data?.message || error.message,
+    });
+    
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+    
+    return Promise.reject(error);
+  }
+);
+
+export const authService = {
   async signIn(email: string, password: string) {
     try {
-      const response = await fetch(`${this.baseUrl}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Login failed');
+      const response = await api.post('/auth/login', { email, password });
+      if (response.data.token) {
+        localStorage.setItem('token', response.data.token);
       }
-
-      const data = await response.json();
-      
-      // Store token in localStorage
-      if (data.access_token) {
-        localStorage.setItem('auth_token', data.access_token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Login error:', error);
-      throw error;
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'შესვლა ვერ მოხერხდა');
     }
-  }
+  },
 
-  async register(userData: any) {
+  async signUp(data: any) {
     try {
-      const response = await fetch(`${this.baseUrl}/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Registration failed');
+      const response = await api.post('/auth/register', data);
+      if (response.data.token) {
+        localStorage.setItem('token', response.data.token);
       }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Registration error:', error);
-      throw error;
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'რეგისტრაცია ვერ მოხერხდა');
     }
-  }
+  },
 
-  getToken() {
-    return localStorage.getItem('auth_token');
-  }
+  async googleAuth(tokenResponse: any) {
+    try {
+      const response = await api.post('/auth/google', {
+        token: tokenResponse.access_token,
+      });
+      if (response.data.token) {
+        localStorage.setItem('token', response.data.token);
+      }
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Google ავტორიზაცია ვერ მოხერხდა');
+    }
+  },
 
-  getUser() {
-    const userStr = localStorage.getItem('user');
-    return userStr ? JSON.parse(userStr) : null;
-  }
+  async logout() {
+    localStorage.removeItem('token');
+    try {
+      await api.post('/auth/logout');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  },
 
-  signOut() {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('user');
-    window.location.href = '/';
-  }
+  async getProfile() {
+    try {
+      const response = await api.get('/auth/profile');
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'პროფილის ჩატვირთვა ვერ მოხერხდა');
+    }
+  },
+};
 
-  isAuthenticated() {
-    return !!this.getToken();
-  }
-}
-
-export const authService = new AuthService();
+export default api;
