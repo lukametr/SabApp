@@ -5,31 +5,31 @@ import { User, UserDocument } from '../users/schemas/user.schema';
 
 @Controller('debug/migration')
 export class MigrationController {
-  constructor(
-    @InjectModel(User.name) private userModel: Model<UserDocument>,
-  ) {}
+  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
 
   @Get('check-null-googleid')
   async checkNullGoogleId() {
     try {
-      const nullGoogleIdUsers = await this.userModel.find({ googleId: null }).exec();
+      const nullGoogleIdUsers = await this.userModel
+        .find({ googleId: null })
+        .exec();
       return {
         status: 'success',
         nullGoogleIdCount: nullGoogleIdUsers.length,
-        users: nullGoogleIdUsers.map(user => ({
+        users: nullGoogleIdUsers.map((user) => ({
           id: user._id,
           email: user.email,
           name: user.name,
           authProvider: user.authProvider,
-          createdAt: user.createdAt
+          createdAt: user.createdAt,
         })),
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     } catch (error) {
       return {
         status: 'error',
         message: error.message,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     }
   }
@@ -38,22 +38,21 @@ export class MigrationController {
   async fixNullGoogleId() {
     try {
       // Update all users with googleId: null to remove the googleId field entirely
-      const result = await this.userModel.updateMany(
-        { googleId: null },
-        { $unset: { googleId: "" } }
-      ).exec();
+      const result = await this.userModel
+        .updateMany({ googleId: null }, { $unset: { googleId: '' } })
+        .exec();
 
       return {
         status: 'success',
         message: 'Successfully removed null googleId fields',
         modifiedCount: result.modifiedCount,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     } catch (error) {
       return {
         status: 'error',
         message: error.message,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     }
   }
@@ -65,13 +64,13 @@ export class MigrationController {
       return {
         status: 'success',
         indexes: indexes,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     } catch (error) {
       return {
         status: 'error',
         message: error.message,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     }
   }

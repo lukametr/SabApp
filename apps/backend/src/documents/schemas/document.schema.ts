@@ -8,7 +8,7 @@ export enum DocumentFormat {
   TXT = 'txt',
   JPG = 'jpg',
   PNG = 'png',
-  JPEG = 'jpeg'
+  JPEG = 'jpeg',
 }
 
 export enum PersonCategory {
@@ -46,13 +46,21 @@ class Hazard {
   @Prop({ required: false, default: '' })
   existingControlMeasures: string;
 
-  @Prop({ type: Risk, required: true, default: () => ({ probability: 0, severity: 0, total: 0 }) })
+  @Prop({
+    type: Risk,
+    required: true,
+    default: () => ({ probability: 0, severity: 0, total: 0 }),
+  })
   initialRisk: Risk;
 
   @Prop({ required: false, default: '' })
   additionalControlMeasures: string;
 
-  @Prop({ type: Risk, required: true, default: () => ({ probability: 0, severity: 0, total: 0 }) })
+  @Prop({
+    type: Risk,
+    required: true,
+    default: () => ({ probability: 0, severity: 0, total: 0 }),
+  })
   residualRisk: Risk;
 
   @Prop({ required: false, default: '' })
@@ -67,17 +75,17 @@ class Hazard {
   @Prop({ required: false, default: null })
   reviewDate: Date;
 
-  @Prop({ 
-    type: [String], 
+  @Prop({
+    type: [String],
     default: [],
     validate: {
-      validator: function(photos: string[]) {
+      validator: function (photos: string[]) {
         if (!Array.isArray(photos)) return false;
         const max = 5 * 1024 * 1024; // 5MB per photo (approx by string length)
-        return photos.every(p => typeof p === 'string' && p.length < max);
+        return photos.every((p) => typeof p === 'string' && p.length < max);
       },
-      message: 'Photo size exceeds 5MB limit'
-    }
+      message: 'Photo size exceeds 5MB limit',
+    },
   })
   photos: string[];
 }
@@ -134,17 +142,17 @@ export class Document extends MongoDocument {
   @Prop({ default: 0 })
   assessmentR: number;
 
-  @Prop({ 
-    type: [String], 
+  @Prop({
+    type: [String],
     default: [],
     validate: {
-      validator: function(photos: string[]) {
+      validator: function (photos: string[]) {
         if (!Array.isArray(photos)) return false;
         const max = 5 * 1024 * 1024; // 5MB per photo (approx by string length)
-        return photos.every(p => typeof p === 'string' && p.length < max);
+        return photos.every((p) => typeof p === 'string' && p.length < max);
       },
-      message: 'Photo size exceeds 5MB limit'
-    }
+      message: 'Photo size exceeds 5MB limit',
+    },
   })
   photos: string[];
 
@@ -167,10 +175,10 @@ export const DocumentSchema = SchemaFactory.createForClass(Document);
 
 // Transform _id to id for frontend compatibility
 DocumentSchema.set('toJSON', {
-  transform: function(_doc, ret) {
+  transform: function (_doc, ret) {
     ret.id = ret._id;
     delete ret._id;
     delete ret.__v;
     return ret;
-  }
-}); 
+  },
+});

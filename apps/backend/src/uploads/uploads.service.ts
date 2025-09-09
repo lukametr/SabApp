@@ -8,7 +8,10 @@ export class UploadsService {
       return base64String;
     }
 
-    if (typeof base64String !== 'string' || !base64String.startsWith('data:image/')) {
+    if (
+      typeof base64String !== 'string' ||
+      !base64String.startsWith('data:image/')
+    ) {
       throw new BadRequestException('Invalid image format');
     }
 

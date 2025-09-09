@@ -69,7 +69,11 @@ export class User {
   emailVerificationTokenExpires?: Date;
 
   // Subscription fields
-  @Prop({ type: String, enum: SubscriptionStatus, default: SubscriptionStatus.PENDING })
+  @Prop({
+    type: String,
+    enum: SubscriptionStatus,
+    default: SubscriptionStatus.PENDING,
+  })
   subscriptionStatus: SubscriptionStatus;
 
   @Prop()
@@ -97,4 +101,4 @@ export class User {
   updatedAt?: Date;
 }
 
-export const UserSchema = SchemaFactory.createForClass(User); 
+export const UserSchema = SchemaFactory.createForClass(User);

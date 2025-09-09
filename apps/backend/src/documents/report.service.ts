@@ -5,7 +5,6 @@ import { existsSync } from 'fs';
 
 @Injectable()
 export class ReportService {
-  
   /**
    * დოკუმენტის Excel ფაილის შექმნა
    */
@@ -14,8 +13,8 @@ export class ReportService {
     const worksheet = workbook.addWorksheet('ფორმა №1');
 
     // 0. მონაცემების ნორმალიზაცია - risks -> hazards
-    let processedDocument = { ...document };
-  if (document.risks && !document.hazards) {
+    const processedDocument = { ...document };
+    if (document.risks && !document.hazards) {
       processedDocument.hazards = document.risks.map((risk: any) => ({
         hazardIdentification: risk.riskName || risk.hazardIdentification || '',
         photos: risk.photos || [],
@@ -25,90 +24,190 @@ export class ReportService {
         initialRisk: {
           probability: risk.probability || risk.initialRisk?.probability || '',
           severity: risk.severity || risk.initialRisk?.severity || '',
-          total: (risk.probability && risk.severity) ? risk.probability * risk.severity : risk.initialRisk?.total || ''
+          total:
+            risk.probability && risk.severity
+              ? risk.probability * risk.severity
+              : risk.initialRisk?.total || '',
         },
-        residualRisk: risk.residualRisk || { probability: '', severity: '', total: '' },
+        residualRisk: risk.residualRisk || {
+          probability: '',
+          severity: '',
+          total: '',
+        },
         additionalControlMeasures: risk.additionalControlMeasures || '',
         requiredMeasures: risk.requiredMeasures || '',
         responsiblePerson: risk.responsiblePerson || '',
-        reviewDate: risk.reviewDate || ''
+        reviewDate: risk.reviewDate || '',
       }));
-      console.log(`✅ Converted ${processedDocument.hazards.length} risks to hazards format`);
+      console.log(
+        `✅ Converted ${processedDocument.hazards.length} risks to hazards format`,
+      );
     }
 
     // 1. Header Data (ზედა ნაწილი) - გაუმჯობესებული ექსტრაქცია მომხმარებლის ინფორმაციით
-    const evaluatorName = processedDocument.evaluatorName && processedDocument.evaluatorLastName 
-      ? `${processedDocument.evaluatorName} ${processedDocument.evaluatorLastName}`.trim()
-      : processedDocument.evaluatorName || processedDocument.evaluatorLastName || 
-        processedDocument.evaluator || processedDocument.inspector || 
-        processedDocument.createdBy || '';
-    
-  // მომხმარებლის დამატებითი ინფორმაცია ამოღებულია Excel-დან მოთხოვნის მიხედვით
-    
-    const objectName = processedDocument.objectName || 
-      processedDocument.project || 
-      processedDocument.facility || 
-      processedDocument.location || 
-      processedDocument.workSite || '';
-    
-    const workDescription = processedDocument.workDescription || 
-      processedDocument.title || 
-      processedDocument.description || 
-      processedDocument.summary || '';
-    
-    const dateSource = processedDocument.date || processedDocument.assessmentDate || processedDocument.createdAt || processedDocument.dateCreated;
+    const evaluatorName =
+      processedDocument.evaluatorName && processedDocument.evaluatorLastName
+        ? `${processedDocument.evaluatorName} ${processedDocument.evaluatorLastName}`.trim()
+        : processedDocument.evaluatorName ||
+          processedDocument.evaluatorLastName ||
+          processedDocument.evaluator ||
+          processedDocument.inspector ||
+          processedDocument.createdBy ||
+          '';
+
+    // მომხმარებლის დამატებითი ინფორმაცია ამოღებულია Excel-დან მოთხოვნის მიხედვით
+
+    const objectName =
+      processedDocument.objectName ||
+      processedDocument.project ||
+      processedDocument.facility ||
+      processedDocument.location ||
+      processedDocument.workSite ||
+      '';
+
+    const workDescription =
+      processedDocument.workDescription ||
+      processedDocument.title ||
+      processedDocument.description ||
+      processedDocument.summary ||
+      '';
+
+    const dateSource =
+      processedDocument.date ||
+      processedDocument.assessmentDate ||
+      processedDocument.createdAt ||
+      processedDocument.dateCreated;
     const date = dateSource
       ? new Date(dateSource).toLocaleDateString('ka-GE')
       : new Date().toLocaleDateString('ka-GE'); // fallback to today
     // 24-hour time (HH:mm). Prefer explicit time field if available, otherwise use the date's time.
-    const time = (processedDocument.time
-      ? new Date(processedDocument.time)
-      : (dateSource ? new Date(dateSource) : new Date())
-    ).toLocaleTimeString('ka-GE', { hour12: false, hour: '2-digit', minute: '2-digit' });
-    
-  // დრო გამოდის თარიღის ქვეშ (იმავე უჯრაში ახალ ხაზზე)
+    const time = (
+      processedDocument.time
+        ? new Date(processedDocument.time)
+        : dateSource
+          ? new Date(dateSource)
+          : new Date()
+    ).toLocaleTimeString('ka-GE', {
+      hour12: false,
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+    // დრო გამოდის თარიღის ქვეშ (იმავე უჯრაში ახალ ხაზზე)
 
     const headerData = [
-      ['რისკის შეფასების ფორმა №1', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''], // A1:P1 (16 სვეტი)
-  ['შემფასებლის სახელი და გვარი:', '', evaluatorName, '', '', '', '', '', 'თარიღი:', '', `${date}\n${time}`, '', '', '', '', ''], // A2: label/value და თარიღი+დრო (ახალ ხაზზე)
-      ['სამუშაო ობიექტის დასახელება:', '', objectName, '', '', '', '', '', '', '', '', '', '', '', '', ''], // A3: label/value
-      ['სამუშაოს აღწერა:', '', workDescription, '', '', '', '', '', '', '', '', '', '', '', '', ''] // A4: label/value
+      [
+        'რისკის შეფასების ფორმა №1',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+      ], // A1:P1 (16 სვეტი)
+      [
+        'შემფასებლის სახელი და გვარი:',
+        '',
+        evaluatorName,
+        '',
+        '',
+        '',
+        '',
+        '',
+        'თარიღი:',
+        '',
+        `${date}\n${time}`,
+        '',
+        '',
+        '',
+        '',
+        '',
+      ], // A2: label/value და თარიღი+დრო (ახალ ხაზზე)
+      [
+        'სამუშაო ობიექტის დასახელება:',
+        '',
+        objectName,
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+      ], // A3: label/value
+      [
+        'სამუშაოს აღწერა:',
+        '',
+        workDescription,
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+      ], // A4: label/value
     ];
 
     // 2. ცხრილის სათაურები - 15 სვეტი (თავიდან ამოღებულია "საწყისი რისკი" და "ნარჩენი რისკი" სვეტები)
-  const tableHeaders = [
+    const tableHeaders = [
       [
-        '№',                               // A - ნომერი
-    'საფრთხის იდენტიფიკაცია',        // B (aligned with frontend form)
-    'ამსახველი ფოტო/ვიდეო მასალა',               // C (requested wording)
-  'პირთა წრე', // D
-  'დაშავების / დაზიანების ტიპი',                 // E
-    'არსებული კონტროლის ღონისძიებები', // F (requested wording)
-  'საწყისი რისკის ალბათობა',               // G
-  'საწყისი რისკის შედეგი',                // H
-  'საწყისი რისკი',               // I
-  'გასატარებელი ზომები / რეაგირება',// J
-  'ნარჩენი რისკის ალბათობა',               // K
-  'ნარჩენი რისკის შედეგი',                // L
-  'ნარჩენი რისკი',               // M
-        'საჭირო ღონისძიებები',              // N
+        '№', // A - ნომერი
+        'საფრთხის იდენტიფიკაცია', // B (aligned with frontend form)
+        'ამსახველი ფოტო/ვიდეო მასალა', // C (requested wording)
+        'პირთა წრე', // D
+        'დაშავების / დაზიანების ტიპი', // E
+        'არსებული კონტროლის ღონისძიებები', // F (requested wording)
+        'საწყისი რისკის ალბათობა', // G
+        'საწყისი რისკის შედეგი', // H
+        'საწყისი რისკი', // I
+        'გასატარებელი ზომები / რეაგირება', // J
+        'ნარჩენი რისკის ალბათობა', // K
+        'ნარჩენი რისკის შედეგი', // L
+        'ნარჩენი რისკი', // M
+        'საჭირო ღონისძიებები', // N
         'შესრულებაზე პასუხისმგებელი პირი/ვადა', // O
-        'გადახედვის სავარაუდო თარიღი',      // P
-      ]
+        'გადახედვის სავარაუდო თარიღი', // P
+      ],
     ];
 
-  // 3. ცხრილის მონაცემები (hazards) - 15 სვეტი
-  const hazards = Array.isArray(processedDocument.hazards) ? processedDocument.hazards : [];
-  const tableRows: any[] = [];
+    // 3. ცხრილის მონაცემები (hazards) - 15 სვეტი
+    const hazards = Array.isArray(processedDocument.hazards)
+      ? processedDocument.hazards
+      : [];
+    const tableRows: any[] = [];
 
     if (hazards.length > 0) {
       for (const [index, hazard] of hazards.entries()) {
-        const photosCount = Array.isArray(hazard.photos) ? hazard.photos.length : 0;
+        const photosCount = Array.isArray(hazard.photos)
+          ? hazard.photos.length
+          : 0;
         const photoText = photosCount > 0 ? `იხილეთ დანართი №${index + 1}` : '';
 
         // ერთი row — რეალური მონაცემები (ფოტოს ველში ტექსტი)
         tableRows.push([
-          (index + 1),
+          index + 1,
           hazard.hazardIdentification || '',
           photoText, // ფოტო სვეტი — ტექსტი დანართზე
           hazard.affectedPersons?.join(', ') || '',
@@ -123,53 +222,55 @@ export class ReportService {
           hazard.residualRisk?.total ?? '',
           hazard.requiredMeasures || '',
           hazard.responsiblePerson || '',
-          hazard.reviewDate ? (() => {
-            const reviewDate = new Date(hazard.reviewDate);
-            const dateStr = reviewDate.toLocaleDateString('ka-GE');
-            const timeStr = reviewDate.toLocaleTimeString('ka-GE', { hour12: false, hour: '2-digit', minute: '2-digit' });
-            return `${dateStr}\n${timeStr}`;
-          })() : ''
+          hazard.reviewDate
+            ? (() => {
+                const reviewDate = new Date(hazard.reviewDate);
+                const dateStr = reviewDate.toLocaleDateString('ka-GE');
+                const timeStr = reviewDate.toLocaleTimeString('ka-GE', {
+                  hour12: false,
+                  hour: '2-digit',
+                  minute: '2-digit',
+                });
+                return `${dateStr}\n${timeStr}`;
+              })()
+            : '',
         ]);
       }
     } else {
-      for (let i = 0; i < 5; i++) tableRows.push(new Array(tableHeaders[0].length).fill(''));
+      for (let i = 0; i < 5; i++)
+        tableRows.push(new Array(tableHeaders[0].length).fill(''));
     }
 
     // 4. ყველა ერთად
-    const fullSheetData = [
-      ...headerData,
-      [],
-      ...tableHeaders,
-      ...tableRows
-    ];
+    const fullSheetData = [...headerData, [], ...tableHeaders, ...tableRows];
 
     // 5. Worksheet-ში ჩასმა
     worksheet.addRows(fullSheetData);
 
-  // 6. ფოტოების ემბედი ამოღებულია — სვეტში ჩაჯდება ტექსტი დანართზე მითითებით
+    // 6. ფოტოების ემბედი ამოღებულია — სვეტში ჩაჯდება ტექსტი დანართზე მითითებით
 
-  // 8. Merge-ები - სწორი ფორმატირებისთვის (16 სვეტი)
-  worksheet.mergeCells('A1:P1'); // სათაური spans all 16 columns
-  // A2:B2 label, C2:H2 value, I2:J2 label (თარიღი), K2:P2 value (თარიღი)
-  worksheet.mergeCells('A2:B2');
-  worksheet.mergeCells('C2:H2');
-  worksheet.mergeCells('I2:J2');
-  worksheet.mergeCells('K2:P2');
-  // A3:B3 label, C3:P3 value
-  worksheet.mergeCells('A3:B3');
-  worksheet.mergeCells('C3:P3');
-  // A4:B4 label, C4:P4 value
-  worksheet.mergeCells('A4:B4');
-  worksheet.mergeCells('C4:P4'); 
-    
+    // 8. Merge-ები - სწორი ფორმატირებისთვის (16 სვეტი)
+    worksheet.mergeCells('A1:P1'); // სათაური spans all 16 columns
+    // A2:B2 label, C2:H2 value, I2:J2 label (თარიღი), K2:P2 value (თარიღი)
+    worksheet.mergeCells('A2:B2');
+    worksheet.mergeCells('C2:H2');
+    worksheet.mergeCells('I2:J2');
+    worksheet.mergeCells('K2:P2');
+    // A3:B3 label, C3:P3 value
+    worksheet.mergeCells('A3:B3');
+    worksheet.mergeCells('C3:P3');
+    // A4:B4 label, C4:P4 value
+    worksheet.mergeCells('A4:B4');
+    worksheet.mergeCells('C4:P4');
+
     // 9. სვეტების სიგანის მორგება - 16 სვეტი
     worksheet.columns = [
-      { width: 5 },  // A - №
-  { width: 25 }, // B - საფრთხის იდენტიფიკაცია
+      { width: 5 }, // A - №
+      { width: 25 }, // B - საფრთხის იდენტიფიკაცია
       { width: 20 }, // C - ფოტო
       { width: 25 }, // D - პოტენციურად დაზარალებული პირები
       { width: 20 }, // E - ტრავმის ხასიათი
-  { width: 25 }, // F - არსებული კონტროლის ღონისძიებები
+      { width: 25 }, // F - არსებული კონტროლის ღონისძიებები
       { width: 12 }, // G - ალბათობა (საწყისი)
       { width: 12 }, // H - სიმძიმე (საწყისი)
       { width: 12 }, // I - ნამრავლი (საწყისი)
@@ -189,39 +290,42 @@ export class ReportService {
     titleCell.fill = {
       type: 'pattern',
       pattern: 'solid',
-      fgColor: { argb: '4472C4' }
+      fgColor: { argb: '4472C4' },
     };
     titleCell.border = {
       top: { style: 'thin' },
       left: { style: 'thin' },
       bottom: { style: 'thin' },
-      right: { style: 'thin' }
+      right: { style: 'thin' },
     };
 
     // Header rows styling - გაუმჯობესებული
-  for (let i = 2; i <= headerData.length + 1; i++) {
+    for (let i = 2; i <= headerData.length + 1; i++) {
       const row = worksheet.getRow(i);
       row.eachCell((cell, colNumber) => {
-  if (i === 2 && (colNumber === 1 || colNumber === 9)) { // Row 2 labels at A and I
+        if (i === 2 && (colNumber === 1 || colNumber === 9)) {
+          // Row 2 labels at A and I
           cell.font = { bold: true, size: 10, name: 'Arial' };
           cell.fill = {
             type: 'pattern',
             pattern: 'solid',
-            fgColor: { argb: 'F2F2F2' }
+            fgColor: { argb: 'F2F2F2' },
           };
-        } else if (i === 3 && colNumber === 1) { // Row 3 label at A
+        } else if (i === 3 && colNumber === 1) {
+          // Row 3 label at A
           cell.font = { bold: true, size: 10, name: 'Arial' };
           cell.fill = {
             type: 'pattern',
             pattern: 'solid',
-            fgColor: { argb: 'F2F2F2' }
+            fgColor: { argb: 'F2F2F2' },
           };
-        } else if (i === 4 && colNumber === 1) { // Row 4 label at A
+        } else if (i === 4 && colNumber === 1) {
+          // Row 4 label at A
           cell.font = { bold: true, size: 10, name: 'Arial' };
           cell.fill = {
             type: 'pattern',
             pattern: 'solid',
-            fgColor: { argb: 'F2F2F2' }
+            fgColor: { argb: 'F2F2F2' },
           };
         } else {
           cell.font = { size: 10, name: 'Arial' };
@@ -230,30 +334,34 @@ export class ReportService {
           top: { style: 'thin' },
           left: { style: 'thin' },
           bottom: { style: 'thin' },
-          right: { style: 'thin' }
+          right: { style: 'thin' },
         };
-  cell.alignment = { vertical: 'middle', wrapText: true };
+        cell.alignment = { vertical: 'middle', wrapText: true };
       });
-  // Increase row height for row 2 to fit date + time on two lines
-  row.height = i === 2 ? 35 : 25;
+      // Increase row height for row 2 to fit date + time on two lines
+      row.height = i === 2 ? 35 : 25;
     }
 
     // Table Header სტილი - გაუმჯობესებული ღია ნაცრისფერი ფონით
-  const headerRowIdx = headerData.length + 2;
+    const headerRowIdx = headerData.length + 2;
     const headerRow = worksheet.getRow(headerRowIdx);
-    headerRow.eachCell(cell => {
+    headerRow.eachCell((cell) => {
       cell.font = { bold: true, size: 10, name: 'Arial' };
       cell.fill = {
         type: 'pattern',
         pattern: 'solid',
-        fgColor: { argb: 'D3D3D3' } // ღია ნაცრისფერი
+        fgColor: { argb: 'D3D3D3' }, // ღია ნაცრისფერი
       };
-      cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+      cell.alignment = {
+        horizontal: 'center',
+        vertical: 'middle',
+        wrapText: true,
+      };
       cell.border = {
         top: { style: 'thin' },
         left: { style: 'thin' },
         bottom: { style: 'thin' },
-        right: { style: 'thin' }
+        right: { style: 'thin' },
       };
     });
 
@@ -264,14 +372,18 @@ export class ReportService {
     const dataStartRow = headerRowIdx + 1;
     for (let i = dataStartRow; i <= dataStartRow + tableRows.length; i++) {
       const row = worksheet.getRow(i);
-      row.eachCell(cell => {
+      row.eachCell((cell) => {
         cell.font = { size: 10, name: 'Arial' };
-        cell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: true };
+        cell.alignment = {
+          horizontal: 'left',
+          vertical: 'middle',
+          wrapText: true,
+        };
         cell.border = {
           top: { style: 'thin' },
           left: { style: 'thin' },
           bottom: { style: 'thin' },
-          right: { style: 'thin' }
+          right: { style: 'thin' },
         };
       });
       // Default row height
@@ -292,8 +404,8 @@ export class ReportService {
         top: 0.75,
         bottom: 0.75,
         header: 0.3,
-        footer: 0.3
-      }
+        footer: 0.3,
+      },
     };
 
     // დანართები Excel-ში - მეორე Sheet
@@ -301,15 +413,26 @@ export class ReportService {
       const attachmentSheet = workbook.addWorksheet('დანართები');
       // სათაური
       attachmentSheet.getCell('A1').value = 'ფოტო დანართები';
-      attachmentSheet.getCell('A1').font = { size: 16, bold: true, name: 'Arial' } as any;
+      attachmentSheet.getCell('A1').font = {
+        size: 16,
+        bold: true,
+        name: 'Arial',
+      } as any;
       attachmentSheet.mergeCells('A1:D1');
 
       let currentRow = 3;
 
       // დოკუმენტის ფოტოები
-      if (processedDocument.photos && Array.isArray(processedDocument.photos) && processedDocument.photos.length > 0) {
+      if (
+        processedDocument.photos &&
+        Array.isArray(processedDocument.photos) &&
+        processedDocument.photos.length > 0
+      ) {
         attachmentSheet.getCell(`A${currentRow}`).value = 'დოკუმენტის ფოტოები:';
-        attachmentSheet.getCell(`A${currentRow}`).font = { bold: true, name: 'Arial' } as any;
+        attachmentSheet.getCell(`A${currentRow}`).font = {
+          bold: true,
+          name: 'Arial',
+        } as any;
         currentRow += 1;
 
         processedDocument.photos.forEach((photo: string, index: number) => {
@@ -319,11 +442,18 @@ export class ReportService {
               // ExcelJS supports only 'png' and 'jpeg' extensions
               const lower = photo.toLowerCase();
               const extension = lower.includes('png') ? 'png' : 'jpeg';
-              const imageId = workbook.addImage({ base64: base64Data, extension } as any);
+              const imageId = workbook.addImage({
+                base64: base64Data,
+                extension,
+              } as any);
 
               // სურათის ჩასმა
-              attachmentSheet.addImage(imageId, { tl: { col: 1, row: currentRow - 1 }, ext: { width: 300, height: 200 } } as any);
-              attachmentSheet.getCell(`A${currentRow}`).value = `დოკუმენტის ფოტო ${index + 1}`;
+              attachmentSheet.addImage(imageId, {
+                tl: { col: 1, row: currentRow - 1 },
+                ext: { width: 300, height: 200 },
+              } as any);
+              attachmentSheet.getCell(`A${currentRow}`).value =
+                `დოკუმენტის ფოტო ${index + 1}`;
               // რიგის სიმაღლე (დაახლ. 15 პოინტი = 20px)
               for (let r = 0; r < 14; r++) {
                 const row = attachmentSheet.getRow(currentRow + r);
@@ -338,11 +468,21 @@ export class ReportService {
       }
 
       // საფრთხეების ფოტოები
-      const hazardsForAttachments = Array.isArray(processedDocument.hazards) ? processedDocument.hazards : [];
+      const hazardsForAttachments = Array.isArray(processedDocument.hazards)
+        ? processedDocument.hazards
+        : [];
       hazardsForAttachments.forEach((hazard: any, hazardIndex: number) => {
-        if (hazard && Array.isArray(hazard.photos) && hazard.photos.length > 0) {
-          attachmentSheet.getCell(`A${currentRow}`).value = `დანართი №${hazardIndex + 1} - ${hazard.hazardIdentification || 'საფრთხე'}`;
-          attachmentSheet.getCell(`A${currentRow}`).font = { bold: true, name: 'Arial' } as any;
+        if (
+          hazard &&
+          Array.isArray(hazard.photos) &&
+          hazard.photos.length > 0
+        ) {
+          attachmentSheet.getCell(`A${currentRow}`).value =
+            `დანართი №${hazardIndex + 1} - ${hazard.hazardIdentification || 'საფრთხე'}`;
+          attachmentSheet.getCell(`A${currentRow}`).font = {
+            bold: true,
+            name: 'Arial',
+          } as any;
           currentRow += 1;
 
           hazard.photos.forEach((photo: string, photoIndex: number) => {
@@ -352,10 +492,17 @@ export class ReportService {
                 // ExcelJS supports only 'png' and 'jpeg' extensions
                 const lower = photo.toLowerCase();
                 const extension = lower.includes('png') ? 'png' : 'jpeg';
-                const imageId = workbook.addImage({ base64: base64Data, extension } as any);
+                const imageId = workbook.addImage({
+                  base64: base64Data,
+                  extension,
+                } as any);
 
-                attachmentSheet.addImage(imageId, { tl: { col: 1, row: currentRow - 1 }, ext: { width: 300, height: 200 } } as any);
-                attachmentSheet.getCell(`A${currentRow}`).value = `ფოტო ${photoIndex + 1}`;
+                attachmentSheet.addImage(imageId, {
+                  tl: { col: 1, row: currentRow - 1 },
+                  ext: { width: 300, height: 200 },
+                } as any);
+                attachmentSheet.getCell(`A${currentRow}`).value =
+                  `ფოტო ${photoIndex + 1}`;
                 for (let r = 0; r < 14; r++) {
                   const row = attachmentSheet.getRow(currentRow + r);
                   if (!row.height || row.height < 18) row.height = 18;
@@ -376,7 +523,7 @@ export class ReportService {
         { width: 15 },
         { width: 40 },
         { width: 40 },
-        { width: 40 }
+        { width: 40 },
       ] as any;
     } catch (e) {
       // არა-კრიტიკული; დანართების ფურცელი ვერ გენერირდა
@@ -393,22 +540,30 @@ export class ReportService {
    */
   async generatePDFReport(document: any): Promise<Buffer> {
     let browser = null;
-    
+
     try {
-      console.log('📄 Starting PDF generation for document:', document._id || 'unknown');
+      console.log(
+        '📄 Starting PDF generation for document:',
+        document._id || 'unknown',
+      );
       const html = this.generateHTMLReport(document);
-      
+
       // Production-ისთვის Chrome executable path და arguments
       const isProduction = process.env.NODE_ENV === 'production';
-      const isRailway = process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_PROJECT_ID;
-      
-      console.log('🔍 Environment check:', { isProduction, isRailway, nodeEnv: process.env.NODE_ENV });
-      
-      const browserOptions: any = { 
+      const isRailway =
+        process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_PROJECT_ID;
+
+      console.log('🔍 Environment check:', {
+        isProduction,
+        isRailway,
+        nodeEnv: process.env.NODE_ENV,
+      });
+
+      const browserOptions: any = {
         headless: 'new',
         timeout: 60000,
         args: [
-          '--no-sandbox', 
+          '--no-sandbox',
           '--disable-setuid-sandbox',
           '--disable-dev-shm-usage',
           '--disable-accelerated-2d-canvas',
@@ -425,15 +580,15 @@ export class ReportService {
           '--enable-font-antialiasing',
           '--disable-font-subpixel-positioning',
           '--lang=ka-GE',
-          '--accept-lang=ka-GE,ka,en-US,en'
-        ]
+          '--accept-lang=ka-GE,ka,en-US,en',
+        ],
       };
 
       // Production environment-ისთვის additional args
       if (isProduction || isRailway) {
         browserOptions.args.push('--single-process');
         browserOptions.args.push('--max_old_space_size=512');
-        
+
         // Railway/Render-ისთვის Chrome path
         const possiblePaths = [
           process.env.PUPPETEER_EXECUTABLE_PATH,
@@ -443,11 +598,11 @@ export class ReportService {
           '/usr/bin/chromium-browser',
           '/usr/bin/chromium',
           '/opt/render/project/src/.chrome/chrome',
-          '/app/.apt/usr/bin/google-chrome-stable'
+          '/app/.apt/usr/bin/google-chrome-stable',
         ].filter(Boolean);
-        
+
         console.log('🔍 Checking possible Chrome paths:', possiblePaths);
-        
+
         let chromiumPath = null;
         for (const path of possiblePaths) {
           if (path && existsSync(path)) {
@@ -458,36 +613,39 @@ export class ReportService {
             console.log('❌ Chrome not found at:', path);
           }
         }
-        
+
         if (chromiumPath) {
           browserOptions.executablePath = chromiumPath;
         } else {
           console.log('⚠️ No Chrome executable found, using default Puppeteer');
         }
       }
-      
-      console.log('🚀 Launching Puppeteer with options:', JSON.stringify(browserOptions, null, 2));
+
+      console.log(
+        '🚀 Launching Puppeteer with options:',
+        JSON.stringify(browserOptions, null, 2),
+      );
       browser = await puppeteer.launch(browserOptions);
-      
+
       try {
         console.log('🌐 Creating new page...');
         const page = await browser.newPage();
-        
+
         // Set locale and encoding
         await page.setExtraHTTPHeaders({
-          'Accept-Language': 'ka-GE,ka,en-US,en'
+          'Accept-Language': 'ka-GE,ka,en-US,en',
         });
-        
+
         // Set viewport for consistent rendering
         await page.setViewport({ width: 1200, height: 800 });
-        
+
         // ქართული ფონტების მხარდაჭერისთვის - system fonts with DejaVu Sans
         await page.evaluateOnNewDocument(() => {
           // Force UTF-8 encoding
           const meta = document.createElement('meta');
           meta.setAttribute('charset', 'UTF-8');
           document.head.appendChild(meta);
-          
+
           // Add comprehensive font rule
           const style = document.createElement('style');
           style.textContent = `
@@ -507,41 +665,42 @@ export class ReportService {
           `;
           document.head.appendChild(style);
         });
-        
+
         console.log('📝 Setting page content...');
-        
+
         // Use regular HTML with enhanced font loading
-        await page.setContent(html, { 
+        await page.setContent(html, {
           waitUntil: 'networkidle0',
-          timeout: 30000 
+          timeout: 30000,
         });
 
         // Wait for fonts to load - simple timeout
-        await new Promise(resolve => setTimeout(resolve, 3000));
-        
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+
         console.log('⏳ Testing Georgian font rendering...');
-        
+
         // Test Georgian text rendering
         await page.evaluate(() => {
           // Create a test element to verify Georgian font loading
           const testDiv = document.createElement('div');
-          testDiv.textContent = 'ქართული ტექსტი - აბგდევზთიკლმნოპჟრსტუფქღყშჩცძწჭხჯჰ';
+          testDiv.textContent =
+            'ქართული ტექსტი - აბგდევზთიკლმნოპჟრსტუფქღყშჩცძწჭხჯჰ';
           testDiv.style.fontFamily = 'GeorgianPDF, DejaVu Sans, Arial';
           testDiv.style.position = 'absolute';
           testDiv.style.top = '-9999px';
           testDiv.style.fontSize = '12px';
           document.body.appendChild(testDiv);
-          
+
           // Force reflow
           testDiv.offsetHeight;
-          
+
           document.body.removeChild(testDiv);
         });
-        
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
+
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
         console.log('📄 Generating PDF...');
-        
+
         // First try with standard options
         let pdfBuffer;
         try {
@@ -549,13 +708,20 @@ export class ReportService {
             format: 'A4',
             landscape: true,
             printBackground: true,
-            margin: { top: '20mm', right: '20mm', bottom: '20mm', left: '20mm' },
+            margin: {
+              top: '20mm',
+              right: '20mm',
+              bottom: '20mm',
+              left: '20mm',
+            },
             displayHeaderFooter: false,
-            timeout: 60000
+            timeout: 60000,
           });
         } catch (pdfError) {
-          console.log('⚠️ First PDF attempt failed, trying fallback options...');
-          
+          console.log(
+            '⚠️ First PDF attempt failed, trying fallback options...',
+          );
+
           // Fallback with minimal options
           pdfBuffer = await page.pdf({
             format: 'A4',
@@ -564,16 +730,19 @@ export class ReportService {
             margin: {
               top: '10mm',
               right: '10mm',
-              bottom: '10mm', 
-              left: '10mm'
+              bottom: '10mm',
+              left: '10mm',
             },
-            timeout: 90000
+            timeout: 90000,
           });
         }
-        
-        console.log('✅ PDF generated successfully, size:', pdfBuffer.length, 'bytes');
+
+        console.log(
+          '✅ PDF generated successfully, size:',
+          pdfBuffer.length,
+          'bytes',
+        );
         return Buffer.from(pdfBuffer);
-        
       } catch (pageError) {
         console.error('❌ Page/PDF Generation Error:', pageError);
         throw pageError;
@@ -583,7 +752,6 @@ export class ReportService {
           await browser.close();
         }
       }
-      
     } catch (error) {
       console.error('❌ PDF Generation Error:', error);
       console.error('🔍 Error stack:', error.stack);
@@ -593,14 +761,14 @@ export class ReportService {
         PUPPETEER_EXECUTABLE_PATH: process.env.PUPPETEER_EXECUTABLE_PATH,
         CHROME_BIN: process.env.CHROME_BIN,
         platform: process.platform,
-        arch: process.arch
+        arch: process.arch,
       });
-      
+
       // Fallback error message
       const errorMessage = error.message?.includes('Error: Failed to launch')
         ? 'PDF სერვისი დროებით მიუწვდომელია. გთხოვთ, სცადოთ მოგვიანებით.'
         : `PDF გენერაცია ვერ მოხერხდა: ${error.message}`;
-        
+
       throw new Error(errorMessage);
     }
   }
@@ -610,23 +778,36 @@ export class ReportService {
    */
   private generateHTMLReport(document: any): string {
     // ძირითადი ინფორმაცია
-    const evaluatorName = `${document.evaluatorName || ''} ${document.evaluatorLastName || ''}`.trim();
+    const evaluatorName =
+      `${document.evaluatorName || ''} ${document.evaluatorLastName || ''}`.trim();
     const objectName = document.objectName || '';
     const workDescription = document.workDescription || '';
-    const date = document.date ? new Date(document.date).toLocaleDateString('ka-GE') : '';
+    const date = document.date
+      ? new Date(document.date).toLocaleDateString('ka-GE')
+      : '';
     const time = document.time
-      ? new Date(document.time).toLocaleTimeString('ka-GE', { hour12: false, hour: '2-digit', minute: '2-digit' })
+      ? new Date(document.time).toLocaleTimeString('ka-GE', {
+          hour12: false,
+          hour: '2-digit',
+          minute: '2-digit',
+        })
       : '';
 
     // საფრთხეების ცხრილი - 17 სვეტი (Excel-ის მსგავსი)
     const hazards = Array.isArray(document.hazards) ? document.hazards : [];
-  const hazardsHTML = hazards.length > 0
-      ? hazards.map((hazard: any, index: number) => {
-          // ფოტოების რაოდენობის ჩვენება binary მონაცემების ნაცვლად
-          const photosCount = hazard.photos && Array.isArray(hazard.photos) ? hazard.photos.length : 0;
-            const photosText = photosCount > 0 ? `იხილეთ დანართი №${index + 1}` : '';
-          
-          return `
+    const hazardsHTML =
+      hazards.length > 0
+        ? hazards
+            .map((hazard: any, index: number) => {
+              // ფოტოების რაოდენობის ჩვენება binary მონაცემების ნაცვლად
+              const photosCount =
+                hazard.photos && Array.isArray(hazard.photos)
+                  ? hazard.photos.length
+                  : 0;
+              const photosText =
+                photosCount > 0 ? `იხილეთ დანართი №${index + 1}` : '';
+
+              return `
           <tr>
             <td class="num-cell">${index + 1}</td>
             <td>${hazard.hazardIdentification || ''}</td>
@@ -643,16 +824,25 @@ export class ReportService {
             <td class="num-cell">${hazard.residualRisk?.total || ''}</td>
             <td>${hazard.requiredMeasures || ''}</td>
             <td>${hazard.responsiblePerson || ''}</td>
-            <td>${hazard.reviewDate ? (() => {
-              const reviewDate = new Date(hazard.reviewDate);
-              const dateStr = reviewDate.toLocaleDateString('ka-GE');
-              const timeStr = reviewDate.toLocaleTimeString('ka-GE', { hour12: false, hour: '2-digit', minute: '2-digit' });
-              return `${dateStr} ${timeStr}`;
-            })() : ''}</td>
+            <td>${
+              hazard.reviewDate
+                ? (() => {
+                    const reviewDate = new Date(hazard.reviewDate);
+                    const dateStr = reviewDate.toLocaleDateString('ka-GE');
+                    const timeStr = reviewDate.toLocaleTimeString('ka-GE', {
+                      hour12: false,
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    });
+                    return `${dateStr} ${timeStr}`;
+                  })()
+                : ''
+            }</td>
           </tr>
         `;
-        }).join('')
-      : '<tr><td colspan="18">საფრთხეები არ იქნა იდენტიფიცირებული</td></tr>';
+            })
+            .join('')
+        : '<tr><td colspan="18">საფრთხეები არ იქნა იდენტიფიცირებული</td></tr>';
 
     // დანართების HTML სექცია (ბოლო გვერდები)
     let attachmentsHTML = `
@@ -680,7 +870,11 @@ export class ReportService {
 
     let hasHazardPhotos = false;
     hazards.forEach((hazard: any, hazardIndex: number) => {
-      if (hazard.photos && Array.isArray(hazard.photos) && hazard.photos.length > 0) {
+      if (
+        hazard.photos &&
+        Array.isArray(hazard.photos) &&
+        hazard.photos.length > 0
+      ) {
         hasHazardPhotos = true;
         attachmentsHTML += `
           <div style="page-break-inside: avoid; margin-top: 30px;">
@@ -896,5 +1090,4 @@ export class ReportService {
       </html>
     `;
   }
-
 }

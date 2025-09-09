@@ -53,11 +53,19 @@ export class SubscriptionController {
   @Post('grant')
   // @UseGuards(RolesGuard)  // TEMPORARILY COMMENTED OUT FOR TESTING
   // @Roles(UserRole.ADMIN)  // TEMPORARILY COMMENTED OUT FOR TESTING
-  async grantSubscription(@Body() grantDto: GrantSubscriptionDto, @GetUser() user: any) {
+  async grantSubscription(
+    @Body() grantDto: GrantSubscriptionDto,
+    @GetUser() user: any,
+  ) {
     try {
-      console.log('🔍 Grant subscription called by user:', user?.email, 'role:', user?.role);
+      console.log(
+        '🔍 Grant subscription called by user:',
+        user?.email,
+        'role:',
+        user?.role,
+      );
       console.log('📋 Grant data:', grantDto);
-      
+
       const result = await this.subscriptionService.grantSubscription(grantDto);
       return {
         message: 'Subscription granted successfully',
@@ -104,7 +112,7 @@ export class SubscriptionController {
       const isActive = await this.subscriptionService.checkUserSubscription(
         user._id || user.id,
       );
-      
+
       return {
         subscription,
         isActive,
@@ -123,7 +131,8 @@ export class SubscriptionController {
   @Roles(UserRole.ADMIN)
   async getAllUsersWithSubscription() {
     try {
-      const users = await this.subscriptionService.getAllUsersWithSubscription();
+      const users =
+        await this.subscriptionService.getAllUsersWithSubscription();
       return {
         message: 'Users retrieved successfully',
         data: users,
@@ -142,9 +151,11 @@ export class SubscriptionController {
   @Roles(UserRole.ADMIN)
   async getUserSubscription(@Param('userId') userId: string) {
     try {
-      const subscription = await this.subscriptionService.getSubscriptionInfo(userId);
-      const isActive = await this.subscriptionService.checkUserSubscription(userId);
-      
+      const subscription =
+        await this.subscriptionService.getSubscriptionInfo(userId);
+      const isActive =
+        await this.subscriptionService.checkUserSubscription(userId);
+
       return {
         subscription,
         isActive,
@@ -161,12 +172,16 @@ export class SubscriptionController {
   @Post('check-multiple')
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN)
-  async checkMultipleUsersSubscription(@Body() { userIds }: { userIds: string[] }) {
+  async checkMultipleUsersSubscription(
+    @Body() { userIds }: { userIds: string[] },
+  ) {
     try {
       const results = await Promise.all(
         userIds.map(async (userId) => {
-          const subscription = await this.subscriptionService.getSubscriptionInfo(userId);
-          const isActive = await this.subscriptionService.checkUserSubscription(userId);
+          const subscription =
+            await this.subscriptionService.getSubscriptionInfo(userId);
+          const isActive =
+            await this.subscriptionService.checkUserSubscription(userId);
           return {
             userId,
             subscription,
@@ -174,7 +189,7 @@ export class SubscriptionController {
           };
         }),
       );
-      
+
       return {
         message: 'Subscription status checked',
         data: results,

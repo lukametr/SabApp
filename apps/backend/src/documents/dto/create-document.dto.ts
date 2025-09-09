@@ -1,4 +1,12 @@
-import { IsString, IsOptional, IsDate, IsArray, IsNumber, ValidateNested, IsObject } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsDate,
+  IsArray,
+  IsNumber,
+  ValidateNested,
+  IsObject,
+} from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 
 // Transform helpers
@@ -8,7 +16,9 @@ const transformToStringArray = ({ value }: { value: any }) => {
   if (typeof value === 'string') {
     try {
       const parsed = JSON.parse(value);
-      return Array.isArray(parsed) ? parsed.filter((v) => typeof v === 'string') : [value];
+      return Array.isArray(parsed)
+        ? parsed.filter((v) => typeof v === 'string')
+        : [value];
     } catch {
       return value.startsWith('data:image/') ? [value] : [value];
     }
@@ -70,7 +80,9 @@ class HazardDto {
     if (typeof value === 'string') {
       try {
         const parsed = JSON.parse(value);
-        return typeof parsed === 'object' && parsed !== null ? parsed : undefined;
+        return typeof parsed === 'object' && parsed !== null
+          ? parsed
+          : undefined;
       } catch {
         return undefined;
       }
@@ -92,7 +104,9 @@ class HazardDto {
     if (typeof value === 'string') {
       try {
         const parsed = JSON.parse(value);
-        return typeof parsed === 'object' && parsed !== null ? parsed : undefined;
+        return typeof parsed === 'object' && parsed !== null
+          ? parsed
+          : undefined;
       } catch {
         return undefined;
       }
@@ -133,22 +147,22 @@ class HazardDto {
 
 export class CreateDocumentDto {
   @Transform(({ value }) => {
-  if (typeof value === 'string') return value;
-  return String(value || '');
+    if (typeof value === 'string') return value;
+    return String(value || '');
   })
   @IsString()
   evaluatorName: string;
 
   @Transform(({ value }) => {
-  if (typeof value === 'string') return value;
-  return String(value || '');
+    if (typeof value === 'string') return value;
+    return String(value || '');
   })
   @IsString()
   evaluatorLastName: string;
 
   @Transform(({ value }) => {
-  if (typeof value === 'string') return value;
-  return String(value || '');
+    if (typeof value === 'string') return value;
+    return String(value || '');
   })
   @IsString()
   objectName: string;
@@ -220,4 +234,4 @@ export class CreateDocumentDto {
   @IsOptional()
   @Transform(transformToStringArray)
   photos?: string[];
-} 
+}

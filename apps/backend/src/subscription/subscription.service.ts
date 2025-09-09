@@ -1,7 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { User, UserDocument, SubscriptionStatus, UserStatus } from '../users/schemas/user.schema';
+import {
+  User,
+  UserDocument,
+  SubscriptionStatus,
+  UserStatus,
+} from '../users/schemas/user.schema';
 import { Cron, CronExpression } from '@nestjs/schedule';
 
 export interface GrantSubscriptionDto {
@@ -15,15 +20,13 @@ export interface GrantSubscriptionDto {
 export class SubscriptionService {
   private readonly logger = new Logger(SubscriptionService.name);
 
-  constructor(
-    @InjectModel(User.name) private userModel: Model<UserDocument>,
-  ) {}
+  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
 
   async grantSubscription(dto: GrantSubscriptionDto): Promise<UserDocument> {
     const { userId, days, paymentAmount, paymentNote } = dto;
-    
+
     this.logger.log(`Granting ${days} days subscription to user ${userId}`);
-    
+
     let user = await this.userModel.findById(userId);
     if (!user) {
       // Try to find by string conversion
@@ -37,9 +40,11 @@ export class SubscriptionService {
     let endDate = new Date(now);
 
     // If user has active subscription, extend from current end date
-    if (user.subscriptionStatus === SubscriptionStatus.ACTIVE && 
-        user.subscriptionEndDate && 
-        user.subscriptionEndDate > now) {
+    if (
+      user.subscriptionStatus === SubscriptionStatus.ACTIVE &&
+      user.subscriptionEndDate &&
+      user.subscriptionEndDate > now
+    ) {
       endDate = new Date(user.subscriptionEndDate);
     }
 
@@ -58,20 +63,25 @@ export class SubscriptionService {
         paymentNote: paymentNote || '',
         status: UserStatus.ACTIVE, // Reactivate user if suspended
       },
-      { new: true }
+      { new: true },
     );
 
     if (!updatedUser) {
       throw new Error('Failed to update user subscription');
     }
 
-    this.logger.log(`Subscription granted to ${user.email} until ${endDate.toISOString()}`);
+    this.logger.log(
+      `Subscription granted to ${user.email} until ${endDate.toISOString()}`,
+    );
     return updatedUser;
   }
 
-  async revokeSubscription(userId: string, reason?: string): Promise<UserDocument> {
+  async revokeSubscription(
+    userId: string,
+    reason?: string,
+  ): Promise<UserDocument> {
     this.logger.log(`Revoking subscription for user ${userId}`);
-    
+
     const updatedUser = await this.userModel.findByIdAndUpdate(
       userId,
       {
@@ -79,7 +89,7 @@ export class SubscriptionService {
         status: UserStatus.SUSPENDED,
         paymentNote: reason || 'Subscription revoked by admin',
       },
-      { new: true }
+      { new: true },
     );
 
     if (!updatedUser) {
@@ -95,18 +105,22 @@ export class SubscriptionService {
     if (!user) return false;
 
     const now = new Date();
-    
+
     // Check if subscription is active and not expired
-    if (user.subscriptionStatus === SubscriptionStatus.ACTIVE &&
-        user.subscriptionEndDate &&
-        user.subscriptionEndDate > now) {
+    if (
+      user.subscriptionStatus === SubscriptionStatus.ACTIVE &&
+      user.subscriptionEndDate &&
+      user.subscriptionEndDate > now
+    ) {
       return true;
     }
 
     // If subscription expired, update status
-    if (user.subscriptionStatus === SubscriptionStatus.ACTIVE &&
-        user.subscriptionEndDate &&
-        user.subscriptionEndDate <= now) {
+    if (
+      user.subscriptionStatus === SubscriptionStatus.ACTIVE &&
+      user.subscriptionEndDate &&
+      user.subscriptionEndDate <= now
+    ) {
       await this.userModel.findByIdAndUpdate(userId, {
         subscriptionStatus: SubscriptionStatus.EXPIRED,
         status: UserStatus.SUSPENDED,
@@ -122,12 +136,19 @@ export class SubscriptionService {
     if (!user) return null;
 
     const now = new Date();
-    const isActive = user.subscriptionStatus === SubscriptionStatus.ACTIVE &&
-                    user.subscriptionEndDate &&
-                    user.subscriptionEndDate > now;
+    const isActive =
+      user.subscriptionStatus === SubscriptionStatus.ACTIVE &&
+      user.subscriptionEndDate &&
+      user.subscriptionEndDate > now;
 
-    const daysRemaining = user.subscriptionEndDate 
-      ? Math.max(0, Math.ceil((user.subscriptionEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
+    const daysRemaining = user.subscriptionEndDate
+      ? Math.max(
+          0,
+          Math.ceil(
+            (user.subscriptionEndDate.getTime() - now.getTime()) /
+              (1000 * 60 * 60 * 24),
+          ),
+        )
       : 0;
 
     return {
@@ -149,9 +170,9 @@ export class SubscriptionService {
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async checkExpiredSubscriptions() {
     this.logger.log('Running daily subscription check...');
-    
+
     const now = new Date();
-    
+
     // Find users with active subscriptions that have expired
     const expiredUsers = await this.userModel.find({
       subscriptionStatus: SubscriptionStatus.ACTIVE,
@@ -165,7 +186,7 @@ export class SubscriptionService {
         subscriptionStatus: SubscriptionStatus.EXPIRED,
         status: UserStatus.SUSPENDED,
       });
-      
+
       this.logger.log(`Expired subscription for user: ${user.email}`);
     }
 
@@ -174,22 +195,34 @@ export class SubscriptionService {
 
   // Get all users with subscription info for admin panel
   async getAllUsersWithSubscription() {
-    const users = await this.userModel.find({}, {
-      password: 0, // Exclude password
-    }).sort({ createdAt: -1 });
+    const users = await this.userModel
+      .find(
+        {},
+        {
+          password: 0, // Exclude password
+        },
+      )
+      .sort({ createdAt: -1 });
 
-    return users.map(user => {
+    return users.map((user) => {
       const now = new Date();
-      const isActive = user.subscriptionStatus === SubscriptionStatus.ACTIVE &&
-                      user.subscriptionEndDate &&
-                      user.subscriptionEndDate > now;
+      const isActive =
+        user.subscriptionStatus === SubscriptionStatus.ACTIVE &&
+        user.subscriptionEndDate &&
+        user.subscriptionEndDate > now;
 
-      const daysRemaining = user.subscriptionEndDate 
-        ? Math.max(0, Math.ceil((user.subscriptionEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
+      const daysRemaining = user.subscriptionEndDate
+        ? Math.max(
+            0,
+            Math.ceil(
+              (user.subscriptionEndDate.getTime() - now.getTime()) /
+                (1000 * 60 * 60 * 24),
+            ),
+          )
         : 0;
 
       const userObject = user.toObject();
-      
+
       // Ensure we have both _id and id fields for frontend compatibility
       const result = {
         ...userObject,
@@ -199,7 +232,7 @@ export class SubscriptionService {
           isActive,
           daysRemaining,
           status: user.subscriptionStatus,
-        }
+        },
       };
 
       return result;

@@ -24,6 +24,8 @@ export class UpdateProfileDto {
 
   @IsOptional()
   @IsString()
-  @ApiPropertyOptional({ description: 'Phone number in international or local format' })
+  @ApiPropertyOptional({
+    description: 'Phone number in international or local format',
+  })
   phoneNumber?: string | null;
 }

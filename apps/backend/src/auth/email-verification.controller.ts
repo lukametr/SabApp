@@ -1,4 +1,10 @@
-import { Controller, Get, Query, Res, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Query,
+  Res,
+  BadRequestException,
+} from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { Response } from 'express';
 
@@ -16,6 +22,8 @@ export class EmailVerificationController {
     user.emailVerificationTokenExpires = undefined;
     await user.save();
     // Redirect to frontend with success
-    return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?success=1`);
+    return res.redirect(
+      `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?success=1`,
+    );
   }
 }
