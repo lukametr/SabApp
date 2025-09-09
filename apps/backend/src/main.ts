@@ -79,11 +79,14 @@ async function bootstrap() {
   app.use(json({ limit: '50mb' }));
   app.use(urlencoded({ limit: '50mb', extended: true }));
 
-  // Set global prefix for all API routes, but keep /health and /docs at root
+  // Set global prefix for all API routes, but keep /health, /docs, and root at root
   app.setGlobalPrefix('api', {
     exclude: [
+      { path: '', method: RequestMethod.ALL }, // Root path
       { path: 'health', method: RequestMethod.ALL },
       { path: 'docs', method: RequestMethod.ALL },
+      { path: 'debug', method: RequestMethod.ALL },
+      { path: 'api-status', method: RequestMethod.ALL },
     ],
   });
 

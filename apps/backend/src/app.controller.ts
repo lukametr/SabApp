@@ -63,8 +63,8 @@ export class AppController {
     }
   }
 
-  @Get('debug')
-  getApiDebug() {
+  @Get('api-status')
+  getApiStatus() {
     return {
       message: 'API is working!',
       timestamp: new Date().toISOString(),
