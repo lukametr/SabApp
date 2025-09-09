@@ -1,56 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Production configuration for Railway
-  trailingSlash: true,
-  skipTrailingSlashRedirect: true,
-
-  // ESLint configuration - disable for production builds
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-
-  // TypeScript configuration - disable type checking during builds
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-
-  // Disable environment validation during builds
-  swcMinify: false,
-
+  reactStrictMode: true,
   images: {
+    domains: ['sabapp.com', 'localhost'],
     unoptimized: true,
   },
-  experimental: {
-    esmExternals: false,
-  },
-
-  // Environment variables for NextAuth
-  env: {
-    NEXTAUTH_URL: process.env.NEXTAUTH_URL || 'http://localhost:3000',
-    NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
-    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
-    GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
-  },
-
-  // Only use export mode in production
-  ...(process.env.NODE_ENV === 'production' && {
-    output: 'export',
-    distDir: 'out',
-  }),
-
-  // Environment variables configuration
-  env: {
-    NEXT_PUBLIC_GOOGLE_CLIENT_ID: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '',
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:10000/api',
-  },
-
-  // Public runtime config for client-side access
-  publicRuntimeConfig: {
-    googleClientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '',
-    apiUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:10000/api',
-  },
-
-  // CSP Headers
   async headers() {
     return [
       {
@@ -58,38 +12,45 @@ const nextConfig = {
         headers: [
           {
             key: 'Content-Security-Policy',
-            value: `
-              default-src 'self';
-              script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.googleapis.com https://*.google.com;
-              style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-              font-src 'self' data: https://fonts.gstatic.com;
-              img-src 'self' data: blob: https:;
-              connect-src 'self' https://sabapp.com http://localhost:10000 https://*.googleapis.com *.google.com https://*.gstatic.com data: blob:;
-              media-src 'self' blob:;
-              object-src 'none';
-              frame-src 'self';
-              base-uri 'self';
-              form-action 'self';
-              frame-ancestors 'none';
-              upgrade-insecure-requests;
-            `
-              .replace(/\s{2,}/g, ' ')
-              .trim(),
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com",
+              "style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com",
+              "font-src 'self' https://fonts.gstatic.com data:",
+              "img-src 'self' data: blob: https:",
+              "connect-src 'self' https://sabapp.com https://*.googleapis.com https://*.google.com https://*.gstatic.com data: blob:",
+              "frame-src 'self' https://accounts.google.com",
+              "frame-ancestors 'none'",
+              "object-src 'none'",
+              "base-uri 'self'",
+              "form-action 'self'",
+              "upgrade-insecure-requests"
+            ].join('; '),
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(self), microphone=(self), geolocation=(self)',
           },
         ],
       },
     ];
   },
-
-  webpack: (config, { isServer }) => {
-    config.resolve.fallback = {
-      ...config.resolve.fallback,
-      fs: false,
-      net: false,
-      tls: false,
-    };
-
-    return config;
+  env: {
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://sabapp.com/api',
+    NEXT_PUBLIC_GOOGLE_CLIENT_ID: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
   },
 };
 
