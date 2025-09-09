@@ -7,11 +7,11 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "pnpm run --parallel dev",
-    "build": "pnpm run --filter=frontend build && pnpm run --filter=backend build",
+  "dev": "pnpm run --parallel dev",
+  "build": "pnpm run --filter=frontend build && pnpm run --filter=backend build",
     "build:render": "echo 'This script is deprecated. Use Railway build process instead.' && exit 0",
-    "start": "pnpm run --parallel start",
-    "start:prod": "cd apps/backend && pnpm start:prod",
+  "start": "pnpm --filter=backend start",
+  "start:prod": "cd apps/backend && pnpm start:prod",
     "lint": "pnpm run --parallel lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "clean": "pnpm run --parallel clean",

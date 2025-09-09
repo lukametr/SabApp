@@ -63,6 +63,8 @@ const nextConfig = {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://sabapp.com/api',
     NEXT_PUBLIC_GOOGLE_CLIENT_ID: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
   },
+  // Generate static export for deployment; Dockerfile copies from out/
+  output: 'export',
 };
 
 module.exports = nextConfig;
