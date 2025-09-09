@@ -5,6 +5,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { AppController } from './app.controller';
+import { SpaController } from './spa.controller';
 import { DocumentsModule } from './documents/documents.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
@@ -22,8 +23,11 @@ import { SubscriptionModule } from './subscription/subscription.module';
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => {
-        const mongoUri = configService.get<string>('MONGODB_URI') || 'mongodb://localhost:27017/sabap';
-        console.log('🔧 MongoDB - Connecting to:', mongoUri.replace(/\/\/([^:]+):([^@]+)@/, '//<credentials>@'));
+        const mongoUri = configService.get<string>('MONGODB_URI') || 'mongodb://localhost:27017/sabapp';
+        
+        // უსაფრთხო ლოგირება
+        const maskedUri = mongoUri.replace(/\/\/([^:]+):([^@]+)@/, '//<credentials>@');
+        console.log('🔧 MongoDB - კავშირდება:', maskedUri);
         
         return {
           uri: mongoUri,
@@ -32,25 +36,6 @@ import { SubscriptionModule } from './subscription/subscription.module';
           maxPoolSize: 10,
           serverSelectionTimeoutMS: 5000,
           socketTimeoutMS: 45000,
-          // Enhanced retry options
-          retryAttempts: 5,
-          retryDelay: 3000,
-          // Connection event handlers for debugging
-          connectionFactory: (connection: any) => {
-            connection.on('connected', () => {
-              console.log('✅ MongoDB connected successfully');
-            });
-            connection.on('error', (error: any) => {
-              console.error('❌ MongoDB connection error:', error);
-            });
-            connection.on('disconnected', () => {
-              console.warn('⚠️ MongoDB disconnected');
-            });
-            connection.on('reconnected', () => {
-              console.log('🔄 MongoDB reconnected');
-            });
-            return connection;
-          },
         };
       },
       inject: [ConfigService],
@@ -67,7 +52,11 @@ import { SubscriptionModule } from './subscription/subscription.module';
     DebugModule,
     SubscriptionModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, SpaController],
   providers: [],
 })
-export class AppModule {}
+export class AppModule {
+  constructor() {
+    console.log('✅ AppModule ინიციალიზებულია');
+  }
+}

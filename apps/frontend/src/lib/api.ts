@@ -3,7 +3,8 @@ import axios, { AxiosResponse, AxiosError } from 'axios';
 // Use relative URL when served from backend, external URL for development
 const getApiUrl = () => {
   // Always use env variable or fallback, regardless of environment
-  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+  // ლოკალურად backend იყენებს პორტ 3001-ს; Production-ში გამოიყენეთ სრული URL env-დან
+  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 };
 
 const API_URL = getApiUrl();

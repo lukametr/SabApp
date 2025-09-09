@@ -9,6 +9,7 @@ import compression from 'compression';
 import { UsersService } from './users/users.service';
 import { getConnectionToken } from '@nestjs/mongoose';
 import { UserRole } from './users/schemas/user.schema';
+import * as mongoose from 'mongoose';
 
 async function createDefaultAdmin(app: any) {
   try {
@@ -75,6 +76,19 @@ async function bootstrap() {
 
   console.log('✅ NestJS application created successfully');
 
+  // MongoDB connection events
+  mongoose.connection.on('connected', () => {
+    console.log('✅ MongoDB დაკავშირებულია');
+  });
+
+  mongoose.connection.on('error', (err) => {
+    console.error('❌ MongoDB შეცდომა:', err);
+  });
+
+  mongoose.connection.on('disconnected', () => {
+    console.warn('⚠️ MongoDB კავშირი გაწყდა');
+  });
+
   // Increase request body size limits to support base64 images
   app.use(json({ limit: '50mb' }));
   app.use(urlencoded({ limit: '50mb', extended: true }));
@@ -136,18 +150,28 @@ async function bootstrap() {
   // Compression
   app.use(compression());
 
-  // CORS კონფიგურაცია
-  const allowedOrigins = [
+  // CORS კონფიგურაცია: გამოიყენე CORS_ORIGIN როგორც coma-separated list; წინააღმდეგ შემთხვევაში გამოიყენე უსაფრთხო ნაგულისხმევები
+  const envOrigins = (process.env.CORS_ORIGIN || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const defaultOrigins = [
     'http://localhost:3000',
-    'http://localhost:3001', 
+    'http://localhost:3001',
     'https://sabapp.com',
     'https://www.sabapp.com',
-    'https://saba-latest.vercel.app', // თუ Vercel-ზეა
-    process.env.FRONTEND_URL // environment variable-დან
+    'https://saba-latest.vercel.app',
+    process.env.FRONTEND_URL,
   ].filter(Boolean) as string[];
+  const allowedOrigins = Array.from(new Set([...envOrigins, ...defaultOrigins]));
 
   app.enableCors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      // allow server-to-server or tools without Origin header
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      return callback(new Error(`Not allowed by CORS: ${origin}`));
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],

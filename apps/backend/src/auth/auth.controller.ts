@@ -42,7 +42,8 @@ export class AuthController {
       return res.redirect(googleAuthUrl);
     } catch (error) {
       console.error('Google OAuth initiation error:', error);
-      return res.redirect('/?error=Google OAuth initialization failed');
+  const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'https://sabapp.com';
+  return res.redirect(`${frontendUrl}/auth/error?error=oauth_init_failed`);
     }
   }
 

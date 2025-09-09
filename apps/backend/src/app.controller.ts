@@ -27,18 +27,18 @@ export class AppController {
   @Get('debug')
   debugInfo() {
     const currentDir = process.cwd();
-    // Railway-ზე ფრონტენდის ფაილები არიან /app/apps/frontend/out-ზე
-    const frontendPath = join(currentDir, '../frontend/out');
-    const indexPath = join(frontendPath, 'index.html');
+  // Dockerfile აკოპირებს frontend build-ს apps/backend/public-ში
+  const publicPath = join(__dirname, '..', 'public');
+  const indexPath = join(publicPath, 'index.html');
     
     try {
-      const frontendExists = existsSync(frontendPath);
+      const frontendExists = existsSync(publicPath);
       const indexExists = existsSync(indexPath);
-      const frontendContents = frontendExists ? readdirSync(frontendPath) : [];
+      const frontendContents = frontendExists ? readdirSync(publicPath) : [];
       
       return {
         currentDir,
-        frontendPath,
+        publicPath,
         indexPath,
         frontendExists,
         indexExists,
@@ -57,7 +57,7 @@ export class AppController {
       return {
         error: error.message,
         currentDir,
-        frontendPath,
+  publicPath,
         indexPath,
       };
     }

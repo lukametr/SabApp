@@ -108,6 +108,9 @@ export class AuthService {
         }
         const tokens = await tokenResponse.json() as { id_token: string; access_token: string; };
         googleUserInfo = await this.validateGoogleToken(tokens.id_token);
+      } else if ((authDto as any).idToken) {
+        // Support direct Google ID token (One Tap / Credentials API)
+        googleUserInfo = await this.validateGoogleToken((authDto as any).idToken);
       } else if (authDto.accessToken) {
         // Fallback: use access_token to get userinfo
         const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
