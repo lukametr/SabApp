@@ -7,7 +7,6 @@ NEXT_PUBLIC_GOOGLE_CLIENT_ID = "${{ NEXT_PUBLIC_GOOGLE_CLIENT_ID }}"
 NEXT_PUBLIC_API_URL = "https://sabapp.com/api"
 
 [deploy]
-startCommand = "node dist/main.js"
 healthcheckPath = "/health"
 healthcheckTimeout = 100
 restartPolicyType = "always"
@@ -16,7 +15,6 @@ restartPolicyMaxRetries = 10
 [environments.production]
 [environments.production.variables]
 NODE_ENV = "production"
-PORT = "3001"
 MONGODB_URI = "mongodb+srv://lukametr:akukelaAIO12@cluster0.l56lnkq.mongodb.net/saba?retryWrites=true&w=majority"
 JWT_SECRET = "super-secret-jwt-key-for-production-saba-app-123456789"
 JWT_EXPIRES_IN = "7d"
