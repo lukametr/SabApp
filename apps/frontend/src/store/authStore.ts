@@ -7,7 +7,7 @@ interface AuthState {
   token: string | null;
   loading: boolean;
   error: string | null;
-  login: (data: AuthResponse) => Promise<void>;
+  login: (data: AuthResponse | string, type?: 'email' | 'google') => Promise<void>;
   logout: () => void;
   setUser: (user: User | null) => void;
   setToken: (token: string | null) => void;
@@ -78,20 +78,34 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
   
-  login: async (data) => {
+  login: async (data, type = 'email') => {
     try {
+      let authResponse: AuthResponse;
+      
+      if (type === 'google' && typeof data === 'string') {
+        console.log('🗃️ AuthStore Google login with credential');
+        // Google credential login
+        const response = await authApi.googleLogin(data);
+        authResponse = response;
+      } else if (typeof data === 'object' && data.accessToken) {
+        console.log('🗃️ AuthStore email login');
+        authResponse = data as AuthResponse;
+      } else {
+        throw new Error('Invalid login data');
+      }
+      
       console.log('🗃️ AuthStore login:', { 
-        hasUser: !!data?.user, 
-        hasToken: !!data?.accessToken,
-        userEmail: data?.user?.email 
+        hasUser: !!authResponse?.user, 
+        hasToken: !!authResponse?.accessToken,
+        userEmail: authResponse?.user?.email 
       });
       
-      if (!data.accessToken || !data.user) {
+      if (!authResponse.accessToken || !authResponse.user) {
         throw new Error('Invalid login data');
       }
       
       // Validate token
-      const payload = JSON.parse(atob(data.accessToken.split('.')[1]));
+      const payload = JSON.parse(atob(authResponse.accessToken.split('.')[1]));
       if (payload.exp * 1000 < Date.now()) {
         throw new Error('Token expired');
       }
@@ -99,18 +113,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       // Save to localStorage first
       if (typeof window !== 'undefined') {
         console.log('🗃️ Saving to localStorage:', { 
-          token: data.accessToken?.substring(0, 20) + '...',
-          user: data.user?.email 
+          token: authResponse.accessToken?.substring(0, 20) + '...',
+          user: authResponse.user?.email 
         });
         
-        localStorage.setItem('token', data.accessToken);
-        localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('token', authResponse.accessToken);
+        localStorage.setItem('user', JSON.stringify(authResponse.user));
       }
       
       // Then update state
       set({ 
-        user: data.user, 
-        token: data.accessToken, 
+        user: authResponse.user, 
+        token: authResponse.accessToken, 
         loading: false,
         error: null
       });

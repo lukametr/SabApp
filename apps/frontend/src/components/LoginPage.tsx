@@ -106,18 +106,81 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
     }
   };
 
+  const handleCallbackResponse = React.useCallback(
+    async (response: any) => {
+      console.log('📧 Google Sign-In Response received:', response);
+      
+      if (!response?.credential) {
+        console.error('❌ No credential in response');
+        setError('არ მოიძებნა Google ავტორიზაციის მონაცემები');
+        return;
+      }
+
+      setLoading(true);
+      setError('');
+
+      try {
+        console.log('� Sending credential to backend...');
+        const result = await login(response.credential, 'google');
+        
+        console.log('✅ Login result:', result);
+        
+        if (result.success) {
+          console.log('🎉 Login successful, redirecting...');
+          // ცოტა დაყოვნება redirect-მდე რომ state განახლდეს
+          setTimeout(() => {
+            router.push('/dashboard');
+          }, 100);
+        } else {
+          console.error('❌ Login failed:', result.error);
+          setError(result.error || 'ავტორიზაცია ვერ მოხერხდა');
+        }
+      } catch (error) {
+        console.error('❌ Login error:', error);
+        setError('სერვერთან დაკავშირების შეცდომა');
+      } finally {
+        setLoading(false);
+      }
+    },
+    [login, router]
+  );
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined' && window.google?.accounts?.id) {
+      console.log('🔧 Initializing Google Sign-In with callback...');
+      
+      window.google.accounts.id.initialize({
+        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
+        callback: handleCallbackResponse,
+        auto_select: false,
+        cancel_on_tap_outside: true,
+      });
+
+      // რენდერი ღილაკისთვის
+      const buttonDiv = document.getElementById('googleSignInButton');
+      if (buttonDiv) {
+        window.google.accounts.id.renderButton(buttonDiv, {
+          theme: 'outline',
+          size: 'large',
+          width: '100%',
+          text: 'signin_with',
+          locale: 'ka',
+        });
+        console.log('✅ Google Sign-In button rendered');
+      }
+    }
+  }, [handleCallbackResponse]);
+
   const handleGoogleLogin = () => {
     try {
-      console.log('🔧 Google Login - Starting redirect flow...');
-      
-      // Use same redirect flow as RegisterPage
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
-      const googleOAuthUrl = `${baseUrl}/auth/google`;
-      
-      console.log('🔧 Google Login - Redirecting to:', googleOAuthUrl);
-      window.location.href = googleOAuthUrl;
+      console.log('🔧 Google Login - Using One Tap sign-in...');
+      if (window.google?.accounts?.id) {
+        window.google.accounts.id.prompt();
+      } else {
+        setError('Google Sign-In არ არის ჩატვირთული');
+      }
     } catch (error) {
-      console.error('Google login redirect error:', error);
+      console.error('Google login error:', error);
       setError('Google-ით შესვლისას დაფიქსირდა შეცდომა');
     }
   };
@@ -178,7 +241,10 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
             </Alert>
           )}
 
-          {/* Google Login Button - moved to top */}
+          {/* Google Login Button - native Google button */}
+          <div id="googleSignInButton" style={{ marginBottom: '24px' }}></div>
+          
+          {/* Fallback button */}
           <Button
             fullWidth
             variant="outlined"

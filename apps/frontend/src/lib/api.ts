@@ -144,6 +144,21 @@ export const authApi = {
       }
     }
   },
+  googleLogin: async (credential: string) => {
+    try {
+      console.log('🔄 Google credential login to:', `${API_URL}/auth/google/credential`);
+      const response = await api.post('/auth/google/credential', { credential });
+      console.log('✅ Google login successful');
+      return response.data;
+    } catch (error: any) {
+      console.error('❌ Google login error:', error);
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      } else {
+        throw new Error('Google-ით ავტორიზაცია ვერ მოხერხდა');
+      }
+    }
+  },
   googleCallback: (data: { code: string; state?: string }) =>
     api.post('/auth/google/callback', data),
   updateProfile: (data: { name?: string; organization?: string | null; position?: string | null; phoneNumber?: string | null }) =>

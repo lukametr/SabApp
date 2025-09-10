@@ -1,9 +1,9 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
-  const response = NextResponse.next()
-  
+  const response = NextResponse.next();
+
   // დაამატე CSP header რომელიც უშვებს sabapp.com API-ს
   response.headers.set(
     'Content-Security-Policy',
@@ -22,12 +22,14 @@ export function middleware(request: NextRequest) {
       form-action 'self';
       frame-ancestors 'none';
       upgrade-insecure-requests;
-    `.replace(/\s{2,}/g, ' ').trim()
-  )
-  
-  return response
+    `
+      .replace(/\s{2,}/g, ' ')
+      .trim()
+  );
+
+  return response;
 }
 
 export const config = {
   matcher: '/:path*',
-}
+};
