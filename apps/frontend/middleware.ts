@@ -9,14 +9,15 @@ export function middleware(request: NextRequest) {
     'Content-Security-Policy',
     `
       default-src 'self';
-      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.googleapis.com https://*.google.com;
-      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-      font-src 'self' data: https://fonts.gstatic.com;
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com;
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com https://accounts.google.com/gsi/style;
+      style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com https://accounts.google.com/gsi/style;
+      font-src 'self' https://fonts.gstatic.com data:;
       img-src 'self' data: blob: https:;
-      connect-src 'self' https://sabapp.com http://localhost:10000 https://*.googleapis.com *.google.com https://*.gstatic.com data: blob:;
+      connect-src 'self' https://sabapp.com https://*.googleapis.com https://*.google.com https://*.gstatic.com data: blob:;
       media-src 'self' blob:;
       object-src 'none';
-      frame-src 'self';
+      frame-src 'self' https://accounts.google.com;
       base-uri 'self';
       form-action 'self';
       frame-ancestors 'none';
