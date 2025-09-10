@@ -7,7 +7,7 @@ interface AuthState {
   token: string | null;
   loading: boolean;
   error: string | null;
-  login: (data: AuthResponse | string, type?: 'email' | 'google') => Promise<void>;
+  login: (data: AuthResponse) => Promise<void>;
   logout: () => void;
   setUser: (user: User | null) => void;
   setToken: (token: string | null) => void;
@@ -63,11 +63,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   token: null,
   loading: true, // Start with loading true
   error: null,
-  
+
   isAuthenticated: () => {
     const state = get();
     if (!state.token || !state.user) return false;
-    
+
     try {
       // Check token expiration
       const payload = JSON.parse(atob(state.token.split('.')[1]));
@@ -77,58 +77,44 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       return false;
     }
   },
-  
-  login: async (data, type = 'email') => {
+
+  login: async (data) => {
     try {
-      let authResponse: AuthResponse;
-      
-      if (type === 'google' && typeof data === 'string') {
-        console.log('🗃️ AuthStore Google login with credential');
-        // Google credential login
-        const response = await authApi.googleLogin(data);
-        authResponse = response;
-      } else if (typeof data === 'object' && data.accessToken) {
-        console.log('🗃️ AuthStore email login');
-        authResponse = data as AuthResponse;
-      } else {
-        throw new Error('Invalid login data');
-      }
-      
-      console.log('🗃️ AuthStore login:', { 
-        hasUser: !!authResponse?.user, 
-        hasToken: !!authResponse?.accessToken,
-        userEmail: authResponse?.user?.email 
+      console.log('🗃️ AuthStore login:', {
+        hasUser: !!data?.user,
+        hasToken: !!data?.accessToken,
+        userEmail: data?.user?.email,
       });
-      
-      if (!authResponse.accessToken || !authResponse.user) {
+
+      if (!data.accessToken || !data.user) {
         throw new Error('Invalid login data');
       }
-      
+
       // Validate token
-      const payload = JSON.parse(atob(authResponse.accessToken.split('.')[1]));
+      const payload = JSON.parse(atob(data.accessToken.split('.')[1]));
       if (payload.exp * 1000 < Date.now()) {
         throw new Error('Token expired');
       }
-      
+
       // Save to localStorage first
       if (typeof window !== 'undefined') {
-        console.log('🗃️ Saving to localStorage:', { 
-          token: authResponse.accessToken?.substring(0, 20) + '...',
-          user: authResponse.user?.email 
+        console.log('🗃️ Saving to localStorage:', {
+          token: data.accessToken?.substring(0, 20) + '...',
+          user: data.user?.email,
         });
-        
-        localStorage.setItem('token', authResponse.accessToken);
-        localStorage.setItem('user', JSON.stringify(authResponse.user));
+
+        localStorage.setItem('token', data.accessToken);
+        localStorage.setItem('user', JSON.stringify(data.user));
       }
-      
+
       // Then update state
-      set({ 
-        user: authResponse.user, 
-        token: authResponse.accessToken, 
+      set({
+        user: data.user,
+        token: data.accessToken,
         loading: false,
-        error: null
+        error: null,
       });
-      
+
       console.log('✅ AuthStore state updated successfully');
     } catch (error) {
       console.error('❌ Login failed:', error);
@@ -138,21 +124,21 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
   logout: () => {
     console.log('� Logging out...');
-    
+
     // Clear all auth data
-    set({ 
-      user: null, 
-      token: null, 
+    set({
+      user: null,
+      token: null,
       loading: false,
-      error: null
+      error: null,
     });
-    
+
     // Clear localStorage
     if (typeof window !== 'undefined') {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       console.log('🗃️ localStorage cleared');
-      
+
       // Clear any Google session
       if (window.google?.accounts?.id) {
         try {
@@ -162,7 +148,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
       }
     }
-    
+
     console.log('✅ Logout complete');
   },
   setUser: (user) => set({ user }),
@@ -171,33 +157,33 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   setLoading: (loading) => set({ loading }),
   loadFromStorage: () => {
     console.log('🗃️ Loading from localStorage...');
-    
+
     // Prevent multiple simultaneous calls
     if (typeof window === 'undefined') {
       console.log('🗃️ Server-side rendering, skipping localStorage');
       set({ loading: false });
       return;
     }
-    
+
     try {
       const token = localStorage.getItem('token');
       const user = localStorage.getItem('user');
-      
-      console.log('🗃️ Storage data found:', { 
-        hasToken: !!token, 
+
+      console.log('🗃️ Storage data found:', {
+        hasToken: !!token,
         hasUser: !!user,
-        tokenPrefix: token?.substring(0, 20) + '...' || 'none'
+        tokenPrefix: token?.substring(0, 20) + '...' || 'none',
       });
-      
+
       if (token && user) {
         const parsedUser = JSON.parse(user);
         console.log('🗃️ Restored user from storage:', parsedUser.email);
-        
+
         // Validate that the token is not expired (basic check)
         try {
           const tokenPayload = JSON.parse(atob(token.split('.')[1]));
           const isExpired = tokenPayload.exp * 1000 < Date.now();
-          
+
           if (isExpired) {
             console.log('🗃️ Token expired, clearing storage');
             localStorage.removeItem('token');
@@ -212,7 +198,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           set({ user: null, token: null, loading: false });
           return;
         }
-        
+
         set({ token, user: parsedUser, loading: false });
         console.log('🗃️ Auth state restored successfully');
       } else {
@@ -229,7 +215,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
   fetchUserData: async () => {
     console.log('🔄 Fetching user data from /auth/me...');
-    
+
     // Only run on client side
     if (typeof window === 'undefined') {
       console.log('🔄 Server-side, skipping fetchUserData');
@@ -245,33 +231,33 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const response = await authApi.me();
       console.log('✅ User data fetched successfully:', response.data);
-      
-      set({ 
-        user: response.data, 
+
+      set({
+        user: response.data,
         loading: false,
-        error: null 
+        error: null,
       });
-      
+
       // Update localStorage with fresh user data
       localStorage.setItem('user', JSON.stringify(response.data));
-      
+
       return true;
     } catch (error: any) {
       console.error('❌ Failed to fetch user data:', error);
-      
+
       // If token is invalid, clear auth state
       if (error.response?.status === 401) {
         console.log('🔄 Token invalid, clearing auth state');
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        set({ 
-          user: null, 
-          token: null, 
+        set({
+          user: null,
+          token: null,
           loading: false,
-          error: 'Session expired' 
+          error: 'Session expired',
         });
       }
-      
+
       return false;
     }
   },

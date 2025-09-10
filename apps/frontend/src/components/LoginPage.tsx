@@ -106,83 +106,26 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
     }
   };
 
-  const handleCallbackResponse = React.useCallback(
-    async (response: any) => {
-      console.log('📧 Google Sign-In Response received:', response);
-      
-      if (!response?.credential) {
-        console.error('❌ No credential in response');
-        setError('არ მოიძებნა Google ავტორიზაციის მონაცემები');
-        return;
-      }
-
-      setLoading(true);
-      setError('');
-
-      try {
-        console.log('� Sending credential to backend...');
-        const result = await login(response.credential, 'google');
-        
-        console.log('✅ Login result:', result);
-        
-        if (result.success) {
-          console.log('🎉 Login successful, redirecting...');
-          // ცოტა დაყოვნება redirect-მდე რომ state განახლდეს
-          setTimeout(() => {
-            router.push('/dashboard');
-          }, 100);
-        } else {
-          console.error('❌ Login failed:', result.error);
-          setError(result.error || 'ავტორიზაცია ვერ მოხერხდა');
-        }
-      } catch (error) {
-        console.error('❌ Login error:', error);
-        setError('სერვერთან დაკავშირების შეცდომა');
-      } finally {
-        setLoading(false);
-      }
-    },
-    [login, router]
-  );
-
-  React.useEffect(() => {
-    if (typeof window !== 'undefined' && window.google?.accounts?.id) {
-      console.log('🔧 Initializing Google Sign-In with callback...');
-      
-      window.google.accounts.id.initialize({
-        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
-        callback: handleCallbackResponse,
-        auto_select: false,
-        cancel_on_tap_outside: true,
-      });
-
-      // რენდერი ღილაკისთვის
-      const buttonDiv = document.getElementById('googleSignInButton');
-      if (buttonDiv) {
-        window.google.accounts.id.renderButton(buttonDiv, {
-          theme: 'outline',
-          size: 'large',
-          width: '100%',
-          text: 'signin_with',
-          locale: 'ka',
-        });
-        console.log('✅ Google Sign-In button rendered');
-      }
+  const handleGoogleLogin = async () => {
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    if (!clientId) {
+      setError('Google შესვლა ამჟამად მიუწვდომელია');
+      return;
     }
-  }, [handleCallbackResponse]);
 
-  const handleGoogleLogin = () => {
-    try {
-      console.log('🔧 Google Login - Using One Tap sign-in...');
-      if (window.google?.accounts?.id) {
-        window.google.accounts.id.prompt();
-      } else {
-        setError('Google Sign-In არ არის ჩატვირთული');
-      }
-    } catch (error) {
-      console.error('Google login error:', error);
-      setError('Google-ით შესვლისას დაფიქსირდა შეცდომა');
-    }
+    setLoading(true);
+    const redirectUri = `${window.location.origin}/auth/google/callback`;
+    const scope = 'openid email profile';
+    const responseType = 'code';
+    
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+      `client_id=${clientId}&` +
+      `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+      `response_type=${responseType}&` +
+      `scope=${encodeURIComponent(scope)}&` +
+      `prompt=select_account`;
+
+    window.location.href = authUrl;
   };
 
   return (
@@ -241,16 +184,13 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
             </Alert>
           )}
 
-          {/* Google Login Button - native Google button */}
-          <div id="googleSignInButton" style={{ marginBottom: '24px' }}></div>
-          
-          {/* Fallback button */}
+          {/* Google Login Button - moved to top */}
           <Button
             fullWidth
             variant="outlined"
             size="large"
             startIcon={<Google />}
-            onClick={() => handleGoogleLogin()}
+            onClick={handleGoogleLogin}
             disabled={loading}
             sx={{ 
               mb: 3,

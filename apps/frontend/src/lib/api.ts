@@ -19,7 +19,7 @@ const api = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
-    'Accept': 'application/json',
+    Accept: 'application/json',
   },
   timeout: 15000,
 });
@@ -31,14 +31,14 @@ api.interceptors.request.use(
     if (config.url && !config.url.startsWith('http')) {
       config.url = config.url.replace(/^\/+/, ''); // Remove leading slashes
     }
-    
+
     console.log('🚀 API Request:', {
       method: config.method?.toUpperCase(),
       url: config.url,
       baseURL: config.baseURL,
       fullURL: config.url ? `${config.baseURL}/${config.url}`.replace(/\/+/g, '/') : config.baseURL,
     });
-    
+
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('token');
       if (token) {
@@ -72,9 +72,11 @@ api.interceptors.response.use(
       data: error.response?.data,
       url: error.config?.url,
       baseURL: error.config?.baseURL,
-      fullURL: error.config?.url ? `${error.config?.baseURL}/${error.config?.url}`.replace(/\/+/g, '/') : error.config?.baseURL,
+      fullURL: error.config?.url
+        ? `${error.config?.baseURL}/${error.config?.url}`.replace(/\/+/g, '/')
+        : error.config?.baseURL,
     });
-    
+
     // Handle specific error cases
     if (error.response?.status === 401) {
       // Clear invalid token
@@ -84,7 +86,7 @@ api.interceptors.response.use(
         window.location.href = '/';
       }
     }
-    
+
     return Promise.reject(error);
   }
 );
@@ -95,13 +97,13 @@ export const authApi = {
   login: async (credentials: { email: string; password: string }) => {
     try {
       console.log('🔄 Attempting login to:', `${API_URL}/auth/login`);
-      
+
       const response = await api.post('/auth/login', credentials);
       console.log('✅ Login successful');
       return response;
     } catch (error: any) {
       console.error('❌ Login error:', error);
-      
+
       if (error.code === 'ECONNREFUSED' || error.message === 'Network Error') {
         throw new Error('კავშირი სერვერთან ვერ დამყარდა. შეამოწმეთ ინტერნეტ კავშირი.');
       } else if (error.response?.status === 0) {
@@ -122,13 +124,13 @@ export const authApi = {
   register: async (userData: any) => {
     try {
       console.log('🔄 Attempting registration to:', `${API_URL}/auth/register`);
-      
+
       const response = await api.post('/auth/register', userData);
       console.log('✅ Registration successful');
       return response;
     } catch (error: any) {
       console.error('❌ Registration error:', error);
-      
+
       if (error.code === 'ECONNREFUSED' || error.message === 'Network Error') {
         throw new Error('სერვერთან კავშირი ვერ დამყარდა. შეამოწმეთ ინტერნეტ კავშირი.');
       } else if (error.response?.status === 0) {
@@ -144,25 +146,14 @@ export const authApi = {
       }
     }
   },
-  googleLogin: async (credential: string) => {
-    try {
-      console.log('🔄 Google credential login to:', `${API_URL}/auth/google/credential`);
-      const response = await api.post('/auth/google/credential', { credential });
-      console.log('✅ Google login successful');
-      return response.data;
-    } catch (error: any) {
-      console.error('❌ Google login error:', error);
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
-      } else {
-        throw new Error('Google-ით ავტორიზაცია ვერ მოხერხდა');
-      }
-    }
-  },
   googleCallback: (data: { code: string; state?: string }) =>
     api.post('/auth/google/callback', data),
-  updateProfile: (data: { name?: string; organization?: string | null; position?: string | null; phoneNumber?: string | null }) =>
-    api.patch('/auth/profile', data),
+  updateProfile: (data: {
+    name?: string;
+    organization?: string | null;
+    position?: string | null;
+    phoneNumber?: string | null;
+  }) => api.patch('/auth/profile', data),
 };
 
 export default api;
