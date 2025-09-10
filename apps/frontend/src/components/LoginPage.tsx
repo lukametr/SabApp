@@ -1,19 +1,19 @@
 'use client';
 
 import React, { useState } from 'react';
-import { 
-  Box, 
-  Container, 
-  Paper, 
-  Typography, 
-  Button, 
-  TextField, 
+import {
+  Box,
+  Container,
+  Paper,
+  Typography,
+  Button,
+  TextField,
   Link,
   Alert,
   CircularProgress,
   Divider,
   IconButton,
-  InputAdornment
+  InputAdornment,
 } from '@mui/material';
 import { Google, Shield, Visibility, VisibilityOff } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
@@ -36,7 +36,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
   const [retryCount, setRetryCount] = useState(0);
 
   const handleRetry = () => {
-    setRetryCount(prev => prev + 1);
+    setRetryCount((prev) => prev + 1);
     setError('');
     // Retry the last action
     if (email && password) {
@@ -53,43 +53,43 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
     try {
       console.log('🔐 Login attempt:', { email, passwordLength: password.length });
       console.log('🔐 API URL:', process.env.NEXT_PUBLIC_API_URL);
-      
+
       // Call the real backend API
       const response = await authApi.login({
         email: email,
         password: password,
       });
-      
+
       if (response?.user && response.user.isEmailVerified === false) {
         setError('გთხოვთ, დაადასტურეთ ელფოსტა ანგარიშის გასააქტიურებლად');
         setLoading(false);
         return;
       }
 
-      console.log('🔐 Login response received:', { 
-        hasUser: !!response?.user, 
+      console.log('🔐 Login response received:', {
+        hasUser: !!response?.user,
         hasToken: !!response?.accessToken,
-        userEmail: response?.user?.email 
+        userEmail: response?.user?.email,
       });
-      
+
       // Store in auth store
       login(response);
       console.log('🔐 Auth store updated');
-      
+
       if (onLogin) {
         onLogin(response.user);
       }
-      
+
       console.log('🔐 Navigating to dashboard...');
       router.push('/dashboard');
     } catch (err: any) {
       console.error('🔐 Login error:', err);
-      console.error('🔐 Error details:', { 
+      console.error('🔐 Error details:', {
         message: err.message,
         stack: err.stack,
-        response: err.response 
+        response: err.response,
       });
-      
+
       // უფრო დეტალური error messages
       if (err.message) {
         setError(err.message);
@@ -117,8 +117,9 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
     const redirectUri = `${window.location.origin}/auth/google/callback`;
     const scope = 'openid email profile';
     const responseType = 'code';
-    
-    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+
+    const authUrl =
+      `https://accounts.google.com/o/oauth2/v2/auth?` +
       `client_id=${clientId}&` +
       `redirect_uri=${encodeURIComponent(redirectUri)}&` +
       `response_type=${responseType}&` +
@@ -129,13 +130,15 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
   };
 
   return (
-    <Box sx={{ 
-      minHeight: '100vh', 
-      backgroundColor: '#f5f5f5',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center'
-    }}>
+    <Box
+      sx={{
+        minHeight: '100vh',
+        backgroundColor: '#f5f5f5',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
       <Container maxWidth="sm">
         <Paper elevation={3} sx={{ p: 4 }}>
           <Box sx={{ textAlign: 'center', mb: 4 }}>
@@ -146,8 +149,8 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
           </Box>
 
           {error && (
-            <Alert 
-              severity="error" 
+            <Alert
+              severity="error"
               sx={{ mb: 3 }}
               action={
                 <Button color="inherit" size="small" onClick={handleRetry}>
@@ -192,7 +195,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
             startIcon={<Google />}
             onClick={handleGoogleLogin}
             disabled={loading}
-            sx={{ 
+            sx={{
               mb: 3,
               color: '#4285f4',
               borderColor: '#4285f4',
@@ -214,7 +217,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
           <Box component="form" onSubmit={handleEmailLogin} sx={{ mb: 3 }}>
             <TextField
               fullWidth
-              label={email ? "" : "ელ. ფოსტა"}
+              label={email ? '' : 'ელ. ფოსტა'}
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -223,7 +226,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
             />
             <TextField
               fullWidth
-              label={password ? "" : "პაროლი"}
+              label={password ? '' : 'პაროლი'}
               type={showPassword ? 'text' : 'password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -266,7 +269,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
           </Box>
 
           <Box sx={{ textAlign: 'center', mt: 3 }}>
-            <Link 
+            <Link
               onClick={() => router.push('/')}
               sx={{ cursor: 'pointer', color: 'text.secondary' }}
             >
