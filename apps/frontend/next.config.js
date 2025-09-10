@@ -16,6 +16,21 @@ const nextConfig = {
     domains: ['sabapp.com', 'localhost'],
     unoptimized: true,
   },
+  
+  // Proxy API calls to backend in production
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'http://localhost:3001/api/:path*',
+      },
+      {
+        source: '/health',
+        destination: 'http://localhost:3001/health',
+      },
+    ];
+  },
+  
   async headers() {
     return [
       {
