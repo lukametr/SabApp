@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 import { AppController } from './app.controller';
 import { DocumentsModule } from './documents/documents.module';
 import { AuthModule } from './auth/auth.module';
@@ -58,7 +60,11 @@ import { SubscriptionModule } from './subscription/subscription.module';
       },
       inject: [ConfigService],
     }),
-    // Note: ServeStaticModule removed - frontend now runs as separate Next.js server
+    // Serve the prebuilt frontend from /public (populated in Dockerfile)
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'public'),
+      exclude: ['/api*', '/health*', '/docs*'],
+    }),
     DocumentsModule,
     AuthModule,
     UsersModule,

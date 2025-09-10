@@ -1,18 +1,20 @@
-/** @type {import('next').NextConfig} */ const nextConfig = {
-  output: 'standalone',
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   reactStrictMode: true,
 
-  eslint: { ignoreDuringBuilds: true },
-  typescript: { ignoreBuildErrors: true },
+  // ESLint configuration - disable for production builds
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 
-  images: { domains: ['sabapp.com', 'localhost'], unoptimized: true },
+  // TypeScript configuration - disable type checking during builds
+  typescript: {
+    ignoreBuildErrors: true,
+  },
 
-  // Proxy API calls to backend (running in the same container on port 3001)
-  async rewrites() {
-    return [
-      { source: '/api/:path*', destination: 'http://127.0.0.1:3001/api/:path*' },
-      { source: '/health', destination: 'http://127.0.0.1:3001/health' },
-    ];
+  images: {
+    domains: ['sabapp.com', 'localhost'],
+    unoptimized: true,
   },
 
   async headers() {
@@ -25,8 +27,8 @@
             value: [
               "default-src 'self'",
               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com",
-              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com https://accounts.google.com/gsi/style",
-              "style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com https://accounts.google.com/gsi/style",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com",
+              "style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com",
               "font-src 'self' https://fonts.gstatic.com data:",
               "img-src 'self' data: blob: https:",
               "connect-src 'self' https://sabapp.com https://*.googleapis.com https://*.google.com https://*.gstatic.com data: blob:",
@@ -38,9 +40,18 @@
               'upgrade-insecure-requests',
             ].join('; '),
           },
-          { key: 'X-Frame-Options', value: 'DENY' },
-          { key: 'X-Content-Type-Options', value: 'nosniff' },
-          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
           {
             key: 'Permissions-Policy',
             value: 'camera=(self), microphone=(self), geolocation=(self)',
@@ -49,11 +60,12 @@
       },
     ];
   },
-
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://sabapp.com/api',
     NEXT_PUBLIC_GOOGLE_CLIENT_ID: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
   },
+  // Generate static export for deployment; Dockerfile copies from out/
+  output: 'export',
 };
 
 module.exports = nextConfig;
