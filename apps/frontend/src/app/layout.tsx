@@ -51,12 +51,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ka" className={inter.variable}>
       <head>
-        {/* CSP Meta Tag */}
-        <meta
-          httpEquiv="Content-Security-Policy"
-          content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com https://accounts.google.com/gsi/style; style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com https://accounts.google.com/gsi/style; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://sabapp.com https://*.googleapis.com https://*.google.com https://*.gstatic.com data: blob:; frame-src 'self' https://accounts.google.com"
-        />
-
         {/* PWA Meta Tags */}
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />

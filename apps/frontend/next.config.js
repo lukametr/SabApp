@@ -1,36 +1,20 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+/** @type {import('next').NextConfig} */ const nextConfig = {
+  output: 'standalone',
   reactStrictMode: true,
 
-  // ESLint configuration - disable for production builds
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  eslint: { ignoreDuringBuilds: true },
+  typescript: { ignoreBuildErrors: true },
 
-  // TypeScript configuration - disable type checking during builds
-  typescript: {
-    ignoreBuildErrors: true,
-  },
+  images: { domains: ['sabapp.com', 'localhost'], unoptimized: true },
 
-  images: {
-    domains: ['sabapp.com', 'localhost'],
-    unoptimized: true,
-  },
-  
-  // Proxy API calls to backend in production
+  // Proxy API calls to backend (running in the same container on port 3001)
   async rewrites() {
     return [
-      {
-        source: '/api/:path*',
-        destination: 'http://localhost:3001/api/:path*',
-      },
-      {
-        source: '/health',
-        destination: 'http://localhost:3001/health',
-      },
+      { source: '/api/:path*', destination: 'http://127.0.0.1:3001/api/:path*' },
+      { source: '/health', destination: 'http://127.0.0.1:3001/health' },
     ];
   },
-  
+
   async headers() {
     return [
       {
@@ -54,18 +38,9 @@ const nextConfig = {
               'upgrade-insecure-requests',
             ].join('; '),
           },
-          {
-            key: 'X-Frame-Options',
-            value: 'DENY',
-          },
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          {
-            key: 'Referrer-Policy',
-            value: 'strict-origin-when-cross-origin',
-          },
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           {
             key: 'Permissions-Policy',
             value: 'camera=(self), microphone=(self), geolocation=(self)',
@@ -74,12 +49,11 @@ const nextConfig = {
       },
     ];
   },
+
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://sabapp.com/api',
     NEXT_PUBLIC_GOOGLE_CLIENT_ID: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
   },
-  // Use standalone output for Docker deployment with dynamic routes support
-  output: 'standalone',
 };
 
 module.exports = nextConfig;

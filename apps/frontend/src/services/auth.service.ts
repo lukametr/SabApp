@@ -3,8 +3,12 @@ export class AuthService {
   private baseUrl: string;
 
   constructor() {
-    // Detect environment and set correct base URL
-    this.baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:10000/api';
+    // Use relative API path in browser so Next rewrites proxy to backend
+    if (typeof window !== 'undefined') {
+      this.baseUrl = '/api';
+    } else {
+      this.baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+    }
   }
 
   async signIn(email: string, password: string) {
@@ -23,7 +27,7 @@ export class AuthService {
       }
 
       const data = await response.json();
-      
+
       // Store token in localStorage
       if (data.access_token) {
         localStorage.setItem('auth_token', data.access_token);

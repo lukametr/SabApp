@@ -1,8 +1,11 @@
 import axios, { AxiosResponse, AxiosError } from 'axios';
 
-// Use relative URL when served from backend, external URL for development
+// Prefer relative URL in browser so Next.js rewrites proxy to backend.
 const getApiUrl = () => {
-  // Always use env variable or fallback, regardless of environment
+  if (typeof window !== 'undefined') {
+    return '/api';
+  }
+  // On server, still respect env for SSR/server actions
   return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
 };
 

@@ -20,9 +20,14 @@ import { SubscriptionModule } from './subscription/subscription.module';
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => {
-        const mongoUri = configService.get<string>('MONGODB_URI') || 'mongodb://localhost:27017/sabap';
-        console.log('🔧 MongoDB - Connecting to:', mongoUri.replace(/\/\/([^:]+):([^@]+)@/, '//<credentials>@'));
-        
+        const mongoUri =
+          configService.get<string>('MONGODB_URI') ||
+          'mongodb://localhost:27017/sabap';
+        console.log(
+          '🔧 MongoDB - Connecting to:',
+          mongoUri.replace(/\/\/([^:]+):([^@]+)@/, '//<credentials>@'),
+        );
+
         return {
           uri: mongoUri,
           retryWrites: true,
