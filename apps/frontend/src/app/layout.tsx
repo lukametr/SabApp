@@ -67,14 +67,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Font preconnect for better performance */}
         <link rel="preconnect" href="https://fonts.googleapis.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-
-        {/* Google Sign-In Script */}
-        <Script
-          src="https://accounts.google.com/gsi/client?hl=ka"
-          async
-          defer
-          strategy="beforeInteractive"
-        />
       </head>
       <body className={`${inter.className} font-sans`}>
         <Providers>
