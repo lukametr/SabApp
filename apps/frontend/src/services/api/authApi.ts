@@ -14,15 +14,7 @@ export interface LoginData {
   password: string;
 }
 
-export interface GoogleAuthData {
-  code?: string;
-  accessToken?: string;
-}
-
-export interface GoogleCallbackData {
-  code: string;
-  state: string;
-}
+// Google OAuth types removed
 
 export interface AuthResponse {
   accessToken: string;
@@ -93,60 +85,7 @@ export const authApi = {
     return result;
   },
 
-  async googleAuth(data: GoogleAuthData): Promise<AuthResponse> {
-    let body: any = {};
-    if (data.code) {
-      body.code = data.code;
-    }
-    if (data.accessToken) {
-      body.accessToken = data.accessToken;
-    }
-    const response = await fetch(`${API_BASE_URL}/auth/google`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Google authentication failed');
-    }
-
-    return response.json();
-  },
-
-  async googleCallback(data: GoogleCallbackData): Promise<AuthResponse> {
-    console.log('🌐 [authApi] Google Callback API გამოძახება:', {
-      apiUrl: `${API_BASE_URL}/auth/google/callback`,
-      data
-    });
-    const response = await fetch(`${API_BASE_URL}/auth/google/callback`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
-
-    console.log('🌐 [authApi] Google Callback API პასუხის სტატუსი:', response.status);
-    let responseBody;
-    try {
-      responseBody = await response.clone().json();
-      console.log('🌐 [authApi] Google Callback API პასუხი:', responseBody);
-    } catch (e) {
-      responseBody = null;
-      console.error('🌐 [authApi] Google Callback API პასუხის წაკითხვის შეცდომა:', e);
-    }
-
-    if (!response.ok) {
-      console.error('🌐 [authApi] Google Callback API შეცდომა:', responseBody);
-      throw new Error((responseBody && responseBody.message) || 'Google callback failed');
-    }
-
-    return responseBody;
-  },
+  // googleAuth and googleCallback removed
 
   async getProfile(token: string): Promise<any> {
     const response = await fetch(`${API_BASE_URL}/auth/profile`, {

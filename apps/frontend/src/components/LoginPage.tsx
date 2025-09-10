@@ -15,7 +15,7 @@ import {
   IconButton,
   InputAdornment,
 } from '@mui/material';
-import { Google, Shield, Visibility, VisibilityOff } from '@mui/icons-material';
+import { Shield, Visibility, VisibilityOff } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { authApi } from '../services/api';
 import { useAuthStore } from '../store/authStore';
@@ -97,7 +97,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
         setError(err.response.data.message);
       } else if (err.response?.data?.code === 'GOOGLE_ACCOUNT_ONLY') {
         setIsGoogleAccount(true);
-        setError('ეს ანგარიში შექმნილია Google-ით. გთხოვთ, გამოიყენოთ "Google-ით შესვლა" ღილაკი.');
+        setError('ეს ანგარიში შექმნილია Google-ით. გთხოვთ, გამოიყენეთ ელფოსტა/პაროლი ან დაგვიკავშირდით მხარდაჭერაში.');
       } else {
         setError('შესვლა ვერ მოხერხდა. სცადეთ მოგვიანებით.');
       }
@@ -106,28 +106,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-    if (!clientId) {
-      setError('Google შესვლა ამჟამად მიუწვდომელია');
-      return;
-    }
-
-    setLoading(true);
-    const redirectUri = `${window.location.origin}/auth/google/callback`;
-    const scope = 'openid email profile';
-    const responseType = 'code';
-
-    const authUrl =
-      `https://accounts.google.com/o/oauth2/v2/auth?` +
-      `client_id=${clientId}&` +
-      `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-      `response_type=${responseType}&` +
-      `scope=${encodeURIComponent(scope)}&` +
-      `prompt=select_account`;
-
-    window.location.href = authUrl;
-  };
+  // Google login disabled
 
   return (
     <Box
@@ -166,47 +145,15 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
               )}
               {isGoogleAccount && (
                 <Box sx={{ mt: 2 }}>
-                  <Button
-                    fullWidth
-                    variant="outlined"
-                    startIcon={<Google />}
-                    onClick={handleGoogleLogin}
-                    sx={{
-                      color: '#4285f4',
-                      borderColor: '#4285f4',
-                      '&:hover': {
-                        backgroundColor: 'rgba(66, 133, 244, 0.1)',
-                        borderColor: '#4285f4',
-                      },
-                    }}
-                  >
-                    Google-ით შესვლა
-                  </Button>
+                  <Typography variant="body2" color="text.secondary">
+                    საკონტაქტო: info.sabapp@gmail.com
+                  </Typography>
                 </Box>
               )}
             </Alert>
           )}
 
-          {/* Google Login Button - moved to top */}
-          <Button
-            fullWidth
-            variant="outlined"
-            size="large"
-            startIcon={<Google />}
-            onClick={handleGoogleLogin}
-            disabled={loading}
-            sx={{
-              mb: 3,
-              color: '#4285f4',
-              borderColor: '#4285f4',
-              '&:hover': {
-                backgroundColor: 'rgba(66, 133, 244, 0.1)',
-                borderColor: '#4285f4',
-              },
-            }}
-          >
-            Google-ით შესვლა
-          </Button>
+          {/* Google login ამოღებულია */}
 
           <Divider sx={{ my: 3 }}>
             <Typography variant="body2" color="text.secondary">

@@ -302,19 +302,7 @@ function LoginPage(_a) {
       });
     });
   };
-  var handleGoogleLogin = function () {
-    try {
-      console.log('🔧 Google Login - Starting redirect flow...');
-      // Use same redirect flow as RegisterPage
-      var baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
-      var googleOAuthUrl = ''.concat(baseUrl, '/auth/google');
-      console.log('🔧 Google Login - Redirecting to:', googleOAuthUrl);
-      window.location.href = googleOAuthUrl;
-    } catch (error) {
-      console.error('Google login redirect error:', error);
-      setError('Google-ით შესვლისას დაფიქსირდა შეცდომა');
-    }
-  };
+  // Google login გამორთულია
   return (
     <material_1.Box
       sx={{
@@ -340,26 +328,7 @@ function LoginPage(_a) {
           {error && (
             <material_1.Alert severity="error" sx={{ mb: 3 }}>
               {error}
-              {isGoogleAccount && (
-                <material_1.Box sx={{ mt: 2 }}>
-                  <material_1.Button
-                    fullWidth
-                    variant="outlined"
-                    startIcon={<icons_material_1.Google />}
-                    onClick={handleGoogleLogin}
-                    sx={{
-                      color: '#4285f4',
-                      borderColor: '#4285f4',
-                      '&:hover': {
-                        backgroundColor: 'rgba(66, 133, 244, 0.1)',
-                        borderColor: '#4285f4',
-                      },
-                    }}
-                  >
-                    Google-ით შესვლა
-                  </material_1.Button>
-                </material_1.Box>
-              )}
+              {/* Google account-only notice: Google login disabled */}
             </material_1.Alert>
           )}
 

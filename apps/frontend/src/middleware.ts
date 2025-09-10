@@ -3,16 +3,16 @@ import { NextRequest, NextResponse } from 'next/server'
 export function middleware(request: NextRequest) {
   const cspHeader = `
     default-src 'self';
-    script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.googleapis.com https://*.gstatic.com *.google.com https://*.ggpht.com *.googleusercontent.com https://accounts.google.com blob:;
+  script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:;
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-    img-src 'self' data: blob: https://*.googleapis.com https://*.gstatic.com *.google.com *.googleusercontent.com;
+  img-src 'self' data: blob:;
     font-src 'self' https://fonts.gstatic.com;
     object-src 'none';
     base-uri 'self';
     form-action 'self';
     frame-ancestors 'none';
-  connect-src 'self' https://*.googleapis.com *.google.com https://*.gstatic.com data: blob: http://localhost:3000;
-    frame-src *.google.com;
+  connect-src 'self' data: blob: http://localhost:3000;
+  frame-src 'self';
     worker-src blob:;
   `
   

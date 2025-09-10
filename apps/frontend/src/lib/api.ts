@@ -149,8 +149,7 @@ export const authApi = {
       }
     }
   },
-  googleCallback: (data: { code: string; state?: string }) =>
-    api.post('/auth/google/callback', data),
+  // Google OAuth removed
   updateProfile: (data: {
     name?: string;
     organization?: string | null;

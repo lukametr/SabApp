@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useAuthStore } from '../store/authStore';
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { CredentialResponse, useGoogleLogin } from '@react-oauth/google';
+// Google OAuth removed
 import Image from 'next/image';
 import api from '../lib/api';
 import RegistrationModal from './RegistrationModal';
@@ -27,42 +27,14 @@ interface RegistrationFormData {
   phoneNumber: string;
 }
 
-declare global {
-  interface Window {
-    google: {
-      accounts: {
-        id: {
-          initialize: (config: {
-            client_id: string;
-            callback: (response: CredentialResponse) => void;
-            auto_select?: boolean;
-            cancel_on_tap_outside?: boolean;
-            prompt_parent_id?: string;
-            ux_mode?: string;
-            scope?: string;
-            locale?: string;
-          }) => void;
-          renderButton: (
-            element: HTMLElement,
-            options: {
-              theme?: string;
-              size?: string;
-            }
-          ) => void;
-          prompt: () => void;
-        };
-      };
-    };
-  }
-}
+// No window.google declarations needed
 
 export default function Navigation() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout, login } = useAuthStore();
   const [showRegistration, setShowRegistration] = useState(false);
-  const [pendingIdToken, setPendingIdToken] = useState<string | null>(null);
-  const [pendingUserInfo, setPendingUserInfo] = useState<any>(null);
+  // Google registration flow removed
   const [loading, setLoading] = useState(false);
   const [authError, setAuthError] = useState<string>('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -86,122 +58,11 @@ export default function Navigation() {
 
   // No need to call loadFromStorage here - handled by AuthProvider
 
-  // Removed handleGoogleSuccess callback - using redirect flow instead
-
-  // Use the same working Google login logic as LoginPage
-  const handleWorkingGoogleLogin = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      try {
-        setLoading(true);
-        setAuthError('');
-
-        console.log('🔧 Google login success, getting user info...');
-
-        // Get user info from Google
-        const userInfoResponse = await fetch(
-          `https://www.googleapis.com/oauth2/v2/userinfo?access_token=${tokenResponse.access_token}`,
-          {
-            headers: {
-              Authorization: `Bearer ${tokenResponse.access_token}`,
-              Accept: 'application/json',
-            },
-          }
-        );
-
-        if (userInfoResponse.ok) {
-          const userInfo = await userInfoResponse.json();
-          console.log('🔧 User info received:', userInfo);
-
-          // Try to authenticate with backend using Google user info
-          try {
-            const res = await api.post('/auth/google', {
-              // Send user info to backend for authentication
-              googleId: userInfo.id,
-              email: userInfo.email,
-              name: userInfo.name,
-              picture: userInfo.picture,
-            });
-
-            console.log('🔧 Backend auth response:', res.data);
-            login(res.data);
-            router.push('/dashboard');
-            router.refresh();
-          } catch (err: unknown) {
-            const error = err as ApiError;
-            console.error('� Backend auth error:', error);
-
-            // Check if this is a registration required error
-            if (
-              error?.response?.status === 400 &&
-              error?.response?.data?.code === 'REGISTRATION_REQUIRED'
-            ) {
-              // Show registration form with Google user info
-              setPendingUserInfo(userInfo);
-              setShowRegistration(true);
-              setAuthError('');
-            } else {
-              setAuthError(
-                'ავტორიზაციის შეცდომა: ' +
-                  (error?.response?.data?.message || error?.message || 'უცნობი შეცდომა')
-              );
-            }
-          }
-        } else {
-          console.error('🔧 Failed to get user info from Google');
-          setAuthError('Google-დან მომხმარებლის ინფორმაციის მიღება ვერ მოხერხდა');
-        }
-      } catch (error) {
-        console.error('🔧 Google login error:', error);
-        setAuthError('Google-ით შესვლისას დაფიქსირდა შეცდომა');
-      } finally {
-        setLoading(false);
-      }
-    },
-    onError: (error) => {
-      console.error('🔧 Google login error:', error);
-      setAuthError('Google-ით შესვლისას დაფიქსირდა შეცდომა');
-    },
-  });
-
-  const handleCustomGoogleSignIn = () => {
-    // Use the working Google login implementation
-    handleWorkingGoogleLogin();
-  };
-
-  // Removed Google API initialization since we're using redirect flow
+  // Google login removed
 
   const isActive = (path: string) => pathname === path;
 
-  const handleRegistrationSubmit = async (data: {
-    personalNumber: string;
-    phoneNumber: string;
-  }) => {
-    if (!pendingIdToken) return;
-
-    setLoading(true);
-    setAuthError('');
-    try {
-      const res = await api.post('/auth/google/complete-registration', {
-        idToken: pendingIdToken,
-        personalNumber: data.personalNumber,
-        phoneNumber: data.phoneNumber,
-      });
-      login(res.data);
-      setShowRegistration(false);
-      setPendingIdToken(null);
-      setPendingUserInfo(null);
-      router.push('/dashboard');
-      router.refresh();
-    } catch (err: unknown) {
-      const error = err as ApiError;
-      setAuthError(
-        'რეგისტრაციის შეცდომა: ' +
-          (error?.response?.data?.message || error?.message || 'უცნობი შეცდომა')
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Registration via Google removed
 
   const handleLogout = () => {
     logout();
@@ -582,12 +443,9 @@ export default function Navigation() {
         open={showRegistration}
         onClose={() => {
           setShowRegistration(false);
-          setPendingIdToken(null);
-          setPendingUserInfo(null);
           setAuthError('');
         }}
-        onSubmit={handleRegistrationSubmit}
-        userInfo={pendingUserInfo}
+        onSubmit={async () => { setShowRegistration(false); }}
         loading={loading}
         error={authError}
       />

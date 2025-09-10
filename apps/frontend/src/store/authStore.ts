@@ -138,15 +138,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       console.log('🗃️ localStorage cleared');
-
-      // Clear any Google session
-      if (window.google?.accounts?.id) {
-        try {
-          (window.google.accounts.id as any).disableAutoSelect();
-        } catch (e) {
-          console.log('🔧 Could not disable Google auto-select:', e);
-        }
-      }
     }
 
     console.log('✅ Logout complete');
