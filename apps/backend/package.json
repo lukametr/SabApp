@@ -11,7 +11,7 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "sh -c 'if [ -f /app/apps/frontend/.next/standalone/server.js ]; then (cd /app/apps/frontend/.next/standalone && node server.js &) elif [ -f /app/apps/frontend/.next/standalone/apps/frontend/server.js ]; then node /app/apps/frontend/.next/standalone/apps/frontend/server.js & else echo \"Next.js standalone server not found\"; fi; PORT=3001 node dist/main.js'",
+    "start:prod": "sh -c 'NEXT_RUN=\"\"; if [ -f /app/server.js ]; then NEXT_RUN=\"node /app/server.js\"; elif [ -f /app/apps/frontend/server.js ]; then NEXT_RUN=\"node /app/apps/frontend/server.js\"; elif [ -f /app/apps/frontend/.next/standalone/server.js ]; then NEXT_RUN=\"(cd /app/apps/frontend/.next/standalone && node server.js)\"; elif [ -f /app/apps/frontend/.next/standalone/apps/frontend/server.js ]; then NEXT_RUN=\"node /app/apps/frontend/.next/standalone/apps/frontend/server.js\"; else echo \"Next.js standalone server not found\"; fi; if [ -n \"$NEXT_RUN\" ]; then echo \"Starting Next.js\"; sh -c \"$NEXT_RUN\" & fi; PORT=3001 node dist/main.js'",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",
