@@ -79,50 +79,7 @@ export default function Navigation() {
 
   // No need to call loadFromStorage here - handled by AuthProvider
 
-  const handleGoogleSuccess = useCallback(async (credentialResponse: CredentialResponse) => {
-    try {
-      console.log('Google Sign-In response:', credentialResponse);
-      const idToken = credentialResponse.credential
-      if (!idToken) {
-        console.error('No ID token received from Google');
-        alert('Google ავტორიზაციის შეცდომა: ტოკენი ვერ მოიძებნა')
-        return
-      }
-      
-      console.log('ID token received, length:', idToken.length);
-      
-      // Check if user already exists
-      try {
-        const res = await api.post('/auth/google', {
-          idToken,
-          // Don't send empty personalNumber and phoneNumber for initial check
-        })
-        console.log('Auth response:', res.data);
-        login(res.data)
-        router.push('/dashboard')
-        router.refresh()
-      } catch (err: unknown) {
-        const error = err as ApiError
-        console.error('Auth API error:', error);
-        
-        // Check if this is a registration required error
-        if (error?.response?.status === 400 && 
-            error?.response?.data?.code === 'REGISTRATION_REQUIRED') {
-          // User doesn't exist, show registration form
-          setPendingIdToken(idToken)
-          setPendingUserInfo(error.response.data.userInfo)
-          setShowRegistration(true)
-          setAuthError('')
-        } else {
-          setAuthError('ავტორიზაციის შეცდომა: ' + (error?.response?.data?.message || error?.message || 'უცნობი შეცდომა'))
-        }
-      }
-    } catch (err: unknown) {
-      const error = err as ApiError
-      console.error('Google Sign-In error:', error);
-      setAuthError('ავტორიზაციის შეცდომა: ' + (error?.response?.data?.message || error?.message || 'უცნობი შეცდომა'))
-    }
-  }, [login, router])
+  // Removed handleGoogleSuccess callback - using redirect flow instead
 
   // Use the same working Google login logic as LoginPage
   const handleWorkingGoogleLogin = useGoogleLogin({
@@ -199,56 +156,7 @@ export default function Navigation() {
     handleWorkingGoogleLogin();
   };
 
-  useEffect(() => {
-    // Initialize Google Sign-In
-    console.log('🔧 Initializing Google Sign-In...');
-    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-    console.log('🔑 Google Client ID:', {
-      clientId,
-      isConfigured: clientId && clientId !== 'YOUR_GOOGLE_CLIENT_ID_HERE',
-      envVars: {
-        NODE_ENV: process.env.NODE_ENV,
-        NEXT_PUBLIC_GOOGLE_CLIENT_ID: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
-      }
-    });
-    
-    if (!clientId || clientId === 'YOUR_GOOGLE_CLIENT_ID_HERE') {
-      console.error('❌ Google Client ID not configured properly');
-      console.error('💡 Please set NEXT_PUBLIC_GOOGLE_CLIENT_ID in your environment variables');
-      return;
-    }
-    
-    // Initialize Google API for both development and production
-    if (window.google && window.google.accounts) {
-      console.log('✅ Google API loaded, initializing...');
-      try {
-        // Check if we're on mobile
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        
-        window.google.accounts.id.initialize({
-          client_id: clientId,
-          callback: handleGoogleSuccess,
-          auto_select: false,
-          cancel_on_tap_outside: true,
-          prompt_parent_id: 'google-signin-container',
-          ux_mode: 'redirect', // Use redirect mode for consistent session handling
-          scope: 'openid email profile',
-          locale: 'ka', // Georgian locale
-          // Mobile-specific optimizations
-          ...(isMobile && {
-            context: 'signin',
-            itp_support: true,
-          }),
-        });
-        
-        console.log('✅ Google Sign-In initialized successfully');
-      } catch (error) {
-        console.error('❌ Google Sign-In initialization failed:', error);
-      }
-    } else {
-      console.error('❌ Google API not loaded - script may not have loaded yet');
-    }
-  }, [handleGoogleSuccess, user]);
+  // Removed Google API initialization since we're using redirect flow
 
   const isActive = (path: string) => pathname === path
 
