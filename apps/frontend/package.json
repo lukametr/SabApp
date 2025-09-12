@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
   "dev": "next dev",
-  "build": "next build",
+  "build": "NEXT_CONFIG_OUTPUT=standalone next build",
   "start": "next start",
     "lint": "next lint --max-warnings=0 || true",
     "clean": "rm -rf .next out node_modules",
