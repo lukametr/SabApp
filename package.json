@@ -7,11 +7,11 @@
     "packages/*"
   ],
   "scripts": {
-  "dev": "pnpm run --parallel dev",
-  "build": "pnpm run --filter=frontend build && pnpm run --filter=backend build",
+    "dev": "pnpm run --parallel dev",
+    "build": "pnpm run --filter=frontend build && pnpm run --filter=backend build",
     "build:render": "echo 'This script is deprecated. Use Railway build process instead.' && exit 0",
-  "start": "pnpm --filter=backend start",
-  "start:prod": "cd apps/backend && pnpm start:prod",
+    "start": "/app/start.sh",
+    "start:prod": "cd apps/backend && pnpm start:prod",
     "lint": "pnpm run --parallel lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "clean": "pnpm run --parallel clean",
@@ -32,8 +32,9 @@
   },
   "engines": {
     "node": ">=20.11.1",
-    "pnpm": ">=8.0.0"
+    "pnpm": ">=10.0.0"
   },
+  "packageManager": "pnpm@10.15.1",
   "dependencies": {
     "@types/bcrypt": "^5.0.2",
     "@types/next-auth": "^3.15.0",
