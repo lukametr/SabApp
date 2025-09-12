@@ -58,6 +58,7 @@ RUN echo '#!/bin/sh' > /app/start.sh && \
   echo 'export BACKEND_PORT=${BACKEND_PORT:-10000}' >> /app/start.sh && \
   echo 'export FRONTEND_PORT=${FRONTEND_PORT:-3001}' >> /app/start.sh && \
   echo 'if [ -n "$PORT" ]; then export FRONTEND_PORT="$PORT"; fi' >> /app/start.sh && \
+  echo 'export BACKEND_INTERNAL_ORIGIN=${BACKEND_INTERNAL_ORIGIN:-http://localhost:$BACKEND_PORT}' >> /app/start.sh && \
   echo 'export HOSTNAME=0.0.0.0' >> /app/start.sh && \
   echo 'echo "Starting backend on PORT=${BACKEND_PORT}"' >> /app/start.sh && \
   echo 'PORT=$BACKEND_PORT node apps/backend/dist/main.js &' >> /app/start.sh && \

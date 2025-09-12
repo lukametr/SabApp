@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { authApi } from '../../lib/api';
 
 export default function ProfileClient() {
-  const { user, loading, setUser } = useAuthStore();
+  const { user, loading, setUser, token } = useAuthStore();
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
@@ -18,13 +18,13 @@ export default function ProfileClient() {
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Password change states
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
-    confirmPassword: ''
+    confirmPassword: '',
   });
   const [passwordError, setPasswordError] = useState('');
 
@@ -57,30 +57,29 @@ export default function ProfileClient() {
     try {
       setSaving(true);
       setError('');
-      
+
       // მონაცემების მომზადება
       const payload = {
         name: form.name,
         organization: form.organization,
         position: form.position,
-        phoneNumber: form.phoneNumber
+        phoneNumber: form.phoneNumber,
       };
-      
+
       // API call
       const response = await authApi.updateProfile(payload);
-      
+
       // გადმოღებული მონაცემების შენახვა
       const updatedUser = response.data;
-      
+
       // Store-ში განახლება
       setUser(updatedUser);
-      
+
       // localStorage-ში განახლება
       localStorage.setItem('user', JSON.stringify(updatedUser));
-      
+
       // რედაქტირების დახურვა
       setEditing(false);
-      
     } catch (err: any) {
       console.error('Save error:', err);
       const status = err?.response?.status;
@@ -114,16 +113,17 @@ export default function ProfileClient() {
     }
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/change-password`, {
+      const response = await fetch(`/api/auth/change-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user.token || localStorage.getItem('token')}`
+          // Prefer token from auth store; fallback to localStorage
+          Authorization: `Bearer ${token || (typeof window !== 'undefined' ? localStorage.getItem('token') : '')}`,
         },
         body: JSON.stringify({
           currentPassword: passwordData.currentPassword,
-          newPassword: passwordData.newPassword
-        })
+          newPassword: passwordData.newPassword,
+        }),
       });
 
       if (response.ok) {
@@ -145,36 +145,52 @@ export default function ProfileClient() {
       <h1 className="text-2xl font-bold mb-4">პროფილი</h1>
       <div className="flex items-center space-x-4 mb-4">
         {user.picture && (
-          <Image 
-            src={user.picture} 
-            alt="profile" 
-            width={64}
-            height={64}
-            className="rounded-full"
-          />
+          <Image src={user.picture} alt="profile" width={64} height={64} className="rounded-full" />
         )}
         <div>
           <div className="font-semibold text-lg">{user.name}</div>
           <div className="text-gray-600">{user.email}</div>
-  </div>
+        </div>
       </div>
       {!editing ? (
         <>
           {user.phoneNumber && (
-            <div className="mb-2">ტელეფონი: <span className="font-mono">{user.phoneNumber}</span></div>
+            <div className="mb-2">
+              ტელეფონი: <span className="font-mono">{user.phoneNumber}</span>
+            </div>
           )}
           {user.organization && (
-            <div className="mb-2">ორგანიზაცია: <span className="font-mono">{user.organization}</span></div>
+            <div className="mb-2">
+              ორგანიზაცია: <span className="font-mono">{user.organization}</span>
+            </div>
           )}
           {user.position && (
-            <div className="mb-2">პოზიცია: <span className="font-mono">{user.position}</span></div>
+            <div className="mb-2">
+              პოზიცია: <span className="font-mono">{user.position}</span>
+            </div>
           )}
-          <div className="mb-2">სტატუსი: <span className="font-mono">{user.status}</span></div>
-          <div className="mb-2">როლი: <span className="font-mono">{user.role}</span></div>
-          <div className="mb-2">ელფოსტის დადასტურება: <span className="font-mono">{user.isEmailVerified ? 'დადასტურებულია' : 'ვერ დადასტურდა'}</span></div>
+          <div className="mb-2">
+            სტატუსი: <span className="font-mono">{user.status}</span>
+          </div>
+          <div className="mb-2">
+            როლი: <span className="font-mono">{user.role}</span>
+          </div>
+          <div className="mb-2">
+            ელფოსტის დადასტურება:{' '}
+            <span className="font-mono">
+              {user.isEmailVerified ? 'დადასტურებულია' : 'ვერ დადასტურდა'}
+            </span>
+          </div>
           <div className="mt-4 flex gap-2">
-            <button onClick={startEdit} className="px-4 py-2 bg-blue-600 text-white rounded">რედაქტირება</button>
-            <button onClick={() => setShowPasswordModal(true)} className="px-4 py-2 bg-orange-600 text-white rounded">პაროლის შეცვლა</button>
+            <button onClick={startEdit} className="px-4 py-2 bg-blue-600 text-white rounded">
+              რედაქტირება
+            </button>
+            <button
+              onClick={() => setShowPasswordModal(true)}
+              className="px-4 py-2 bg-orange-600 text-white rounded"
+            >
+              პაროლის შეცვლა
+            </button>
           </div>
         </>
       ) : (
@@ -182,27 +198,55 @@ export default function ProfileClient() {
           {error && <div className="text-red-600">{error}</div>}
           <div>
             <label className="block text-sm text-gray-700 mb-1">სახელი და გვარი</label>
-            <input value={form.name} onChange={e=>setForm({...form, name: e.target.value})} className="w-full border rounded px-3 py-2" />
+            <input
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              className="w-full border rounded px-3 py-2"
+            />
           </div>
           <div>
             <label className="block text-sm text-gray-700 mb-1">ორგანიზაცია</label>
-            <input value={form.organization} onChange={e=>setForm({...form, organization: e.target.value})} className="w-full border rounded px-3 py-2" />
+            <input
+              value={form.organization}
+              onChange={(e) => setForm({ ...form, organization: e.target.value })}
+              className="w-full border rounded px-3 py-2"
+            />
           </div>
           <div>
             <label className="block text-sm text-gray-700 mb-1">პოზიცია</label>
-            <input value={form.position} onChange={e=>setForm({...form, position: e.target.value})} className="w-full border rounded px-3 py-2" />
+            <input
+              value={form.position}
+              onChange={(e) => setForm({ ...form, position: e.target.value })}
+              className="w-full border rounded px-3 py-2"
+            />
           </div>
           <div>
             <label className="block text-sm text-gray-700 mb-1">ტელეფონი</label>
-            <input value={form.phoneNumber} onChange={e=>setForm({...form, phoneNumber: e.target.value})} className="w-full border rounded px-3 py-2" />
+            <input
+              value={form.phoneNumber}
+              onChange={(e) => setForm({ ...form, phoneNumber: e.target.value })}
+              className="w-full border rounded px-3 py-2"
+            />
           </div>
           <div className="flex gap-2 pt-2">
-            <button disabled={saving} onClick={save} className="px-4 py-2 bg-green-600 text-white rounded disabled:opacity-50">შენახვა</button>
-            <button disabled={saving} onClick={()=>setEditing(false)} className="px-4 py-2 bg-gray-200 rounded">გაუქმება</button>
+            <button
+              disabled={saving}
+              onClick={save}
+              className="px-4 py-2 bg-green-600 text-white rounded disabled:opacity-50"
+            >
+              შენახვა
+            </button>
+            <button
+              disabled={saving}
+              onClick={() => setEditing(false)}
+              className="px-4 py-2 bg-gray-200 rounded"
+            >
+              გაუქმება
+            </button>
           </div>
         </div>
       )}
-      
+
       {/* Password Change Modal */}
       {showPasswordModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -212,38 +256,56 @@ export default function ProfileClient() {
             <div className="space-y-3">
               <div>
                 <label className="block text-sm text-gray-700 mb-1">მიმდინარე პაროლი</label>
-                <input 
+                <input
                   type="password"
-                  value={passwordData.currentPassword} 
-                  onChange={e => setPasswordData({...passwordData, currentPassword: e.target.value})} 
-                  className="w-full border rounded px-3 py-2" 
+                  value={passwordData.currentPassword}
+                  onChange={(e) =>
+                    setPasswordData({ ...passwordData, currentPassword: e.target.value })
+                  }
+                  className="w-full border rounded px-3 py-2"
                 />
               </div>
               <div>
                 <label className="block text-sm text-gray-700 mb-1">ახალი პაროლი</label>
-                <input 
+                <input
                   type="password"
-                  value={passwordData.newPassword} 
-                  onChange={e => setPasswordData({...passwordData, newPassword: e.target.value})} 
-                  className="w-full border rounded px-3 py-2" 
+                  value={passwordData.newPassword}
+                  onChange={(e) =>
+                    setPasswordData({ ...passwordData, newPassword: e.target.value })
+                  }
+                  className="w-full border rounded px-3 py-2"
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-700 mb-1">ახალი პაროლის დადასტურება</label>
-                <input 
+                <label className="block text-sm text-gray-700 mb-1">
+                  ახალი პაროლის დადასტურება
+                </label>
+                <input
                   type="password"
-                  value={passwordData.confirmPassword} 
-                  onChange={e => setPasswordData({...passwordData, confirmPassword: e.target.value})} 
-                  className="w-full border rounded px-3 py-2" 
+                  value={passwordData.confirmPassword}
+                  onChange={(e) =>
+                    setPasswordData({ ...passwordData, confirmPassword: e.target.value })
+                  }
+                  className="w-full border rounded px-3 py-2"
                 />
               </div>
               <div className="flex gap-2 pt-2">
-                <button onClick={handlePasswordChange} className="px-4 py-2 bg-green-600 text-white rounded">შეცვლა</button>
-                <button onClick={() => {
-                  setShowPasswordModal(false);
-                  setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-                  setPasswordError('');
-                }} className="px-4 py-2 bg-gray-200 rounded">გაუქმება</button>
+                <button
+                  onClick={handlePasswordChange}
+                  className="px-4 py-2 bg-green-600 text-white rounded"
+                >
+                  შეცვლა
+                </button>
+                <button
+                  onClick={() => {
+                    setShowPasswordModal(false);
+                    setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+                    setPasswordError('');
+                  }}
+                  className="px-4 py-2 bg-gray-200 rounded"
+                >
+                  გაუქმება
+                </button>
               </div>
             </div>
           </div>
@@ -251,4 +313,4 @@ export default function ProfileClient() {
       )}
     </div>
   );
-} 
+}

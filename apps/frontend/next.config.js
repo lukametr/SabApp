@@ -66,6 +66,25 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://sabapp.com/api',
   },
+  // Proxy browser calls to /api/* to the backend service at runtime
+  async rewrites() {
+    // Always proxy to the internal backend in the same container by default.
+    // Allow override via BACKEND_INTERNAL_ORIGIN at build/start time.
+    const origin = process.env.BACKEND_INTERNAL_ORIGIN || 'http://127.0.0.1:10000';
+
+    return [
+      // Special-case backend health (backend exposes /health without /api prefix)
+      {
+        source: '/api/health',
+        destination: `${origin}/health`,
+      },
+      // General proxy for all backend API endpoints
+      {
+        source: '/api/:path*',
+        destination: `${origin}/api/:path*`,
+      },
+    ];
+  },
   // Use standalone output for deployment - supports API routes unlike static export
   output: 'standalone',
 };

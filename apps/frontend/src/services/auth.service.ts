@@ -28,9 +28,9 @@ export class AuthService {
 
       const data = await response.json();
 
-      // Store token in localStorage
+      // Store token in localStorage using the same key used across the app
       if (data.access_token) {
-        localStorage.setItem('auth_token', data.access_token);
+        localStorage.setItem('token', data.access_token);
         localStorage.setItem('user', JSON.stringify(data.user));
       }
 
@@ -64,7 +64,7 @@ export class AuthService {
   }
 
   getToken() {
-    return localStorage.getItem('auth_token');
+    return localStorage.getItem('token');
   }
 
   getUser() {
@@ -73,7 +73,7 @@ export class AuthService {
   }
 
   signOut() {
-    localStorage.removeItem('auth_token');
+    localStorage.removeItem('token');
     localStorage.removeItem('user');
     window.location.href = '/';
   }

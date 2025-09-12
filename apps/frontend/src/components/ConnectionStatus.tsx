@@ -11,23 +11,23 @@ export default function ConnectionStatus() {
     // Check browser online status
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
-    
+
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
-    
-    // Check API status
+
+    // Check API status (go through Next.js proxy so it works in all envs)
     const checkAPI = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/health`);
+        const response = await fetch(`/api/health`);
         setApiStatus(response.ok ? 'online' : 'offline');
       } catch {
         setApiStatus('offline');
       }
     };
-    
+
     checkAPI();
     const interval = setInterval(checkAPI, 30000); // Check every 30 seconds
-    
+
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
@@ -37,9 +37,9 @@ export default function ConnectionStatus() {
 
   if (!isOnline) {
     return (
-      <Chip 
-        label="ინტერნეტი არ არის" 
-        color="error" 
+      <Chip
+        label="ინტერნეტი არ არის"
+        color="error"
         size="small"
         sx={{ position: 'fixed', bottom: 20, right: 20, zIndex: 9999 }}
       />
@@ -48,9 +48,9 @@ export default function ConnectionStatus() {
 
   if (apiStatus === 'offline') {
     return (
-      <Chip 
-        label="სერვერი მიუწვდომელია" 
-        color="warning" 
+      <Chip
+        label="სერვერი მიუწვდომელია"
+        color="warning"
         size="small"
         sx={{ position: 'fixed', bottom: 20, right: 20, zIndex: 9999 }}
       />
