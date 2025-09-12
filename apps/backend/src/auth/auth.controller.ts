@@ -1,14 +1,12 @@
-import { Controller, Post, Body, Get, UseGuards, Request, Res, BadRequestException, Query, NotFoundException, Patch } from '@nestjs/common';
+import { Controller, Post, Body, Get, UseGuards, Request, BadRequestException, Query, NotFoundException, Patch } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
-import { AuthResponseDto, CompleteRegistrationDto } from '../users/dto/google-auth.dto';
+import { AuthResponseDto } from '../users/dto/auth-response.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { Roles } from './decorators/roles.decorator';
 import { UserRole } from '../users/schemas/user.schema';
-import { Response } from 'express';
 import { UpdateProfileDto } from '../users/dto/update-profile.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 
@@ -18,141 +16,7 @@ export class AuthController {
   constructor(
     private authService: AuthService,
     private usersService: UsersService,
-    private configService: ConfigService,
   ) {}
-
-  @Get('google')
-  @ApiOperation({ summary: 'Initiate Google OAuth flow' })
-  @ApiResponse({ status: 302, description: 'Redirect to Google OAuth' })
-  async initiateGoogleAuth(@Res() res: Response) {
-    try {
-      const googleClientId = process.env.GOOGLE_CLIENT_ID;
-      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://sabapp.com/api';
-      const redirectUri = `${backendUrl}/auth/google/callback`;
-      
-      const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-        `client_id=${googleClientId}&` +
-        `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-        `response_type=code&` +
-        `scope=email profile&` +
-        `access_type=offline&` +
-        `prompt=consent`;
-      
-      console.log('🔗 Redirecting to Google OAuth:', googleAuthUrl);
-      return res.redirect(googleAuthUrl);
-    } catch (error) {
-      console.error('Google OAuth initiation error:', error);
-      return res.redirect('/?error=Google OAuth initialization failed');
-    }
-  }
-
-  @Post('google')
-  @ApiOperation({ summary: 'Google OAuth authentication' })
-  @ApiResponse({ status: 200, description: 'Successfully authenticated', type: AuthResponseDto })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 409, description: 'User already exists or data conflict' })
-  async googleAuth(@Body() authDto: any): Promise<AuthResponseDto> {
-    // Handle NextAuth Google provider payload
-    if (authDto.googleId && authDto.email && authDto.name) {
-      return this.authService.handleNextAuthGoogle(authDto);
-    }
-    // Handle legacy Google auth
-    return this.authService.googleAuth(authDto);
-  }
-
-  @Post('google/complete-registration')
-  @ApiOperation({ summary: 'Complete Google user registration with additional info' })
-  @ApiResponse({ status: 200, description: 'Registration completed successfully', type: AuthResponseDto })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 400, description: 'Bad Request' })
-  async completeGoogleRegistration(@Body() registrationDto: CompleteRegistrationDto): Promise<AuthResponseDto> {
-    return this.authService.googleAuth(registrationDto);
-  }
-
-  @Get('google/callback')
-  @ApiOperation({ summary: 'Google OAuth callback' })
-  @ApiResponse({ status: 200, description: 'Successfully authenticated' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async googleCallback(@Request() req: any, @Res() res: Response) {
-    try {
-      // Handle Google OAuth callback
-      const { code, state } = req.query;
-      
-      console.log('🧪 OAuth Callback Debug:', {
-        hasCode: !!code,
-        codeLength: code?.length || 0,
-        state: state,
-        fullQuery: req.query
-      });
-      
-      if (!code) {
-        console.error('❌ No authorization code received');
-        const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'https://sabapp.com';
-        return res.redirect(`${frontendUrl}/login?error=no_code`);
-      }
-
-      console.log('🔄 OAuth: Starting token exchange...');
-      const authResponse = await this.authService.handleGoogleCallback(code, state);
-      console.log('✅ OAuth: Token exchange successful');
-      console.log('✅ OAuth: Auth response received:', {
-        hasToken: !!authResponse.accessToken,
-        userEmail: authResponse.user?.email
-      });
-
-      // Redirect with token
-      const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'https://sabapp.com';
-      const redirectUrl = `${frontendUrl}/auth/callback?token=${authResponse.accessToken}`;
-      
-      console.log('✅ OAuth: Redirecting to frontend with token');
-      console.log('✅ OAuth: Redirect URL:', redirectUrl);
-      
-      return res.redirect(redirectUrl);
-    } catch (error) {
-      console.error('❌ OAuth callback error:', error);
-      console.error('❌ Error message:', error.message);
-      console.error('❌ Error stack:', error.stack);
-      
-      const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'https://sabapp.com';
-      const errorMessage = encodeURIComponent(error.message || 'oauth_error');
-      return res.redirect(`${frontendUrl}/login?error=${errorMessage}`);
-    }
-  }
-
-  @Post('google/callback')
-  @ApiOperation({ summary: 'Google OAuth callback (POST)' })
-  @ApiResponse({ status: 200, description: 'Successfully authenticated' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async googleCallbackPost(@Body() body: { code: string; state: string }) {
-    console.log('🔧 BACKEND Google Callback POST called with:', {
-      hasCode: !!body.code,
-      codeLength: body.code?.length || 0,
-      state: body.state,
-      bodyKeys: Object.keys(body || {})
-    });
-    
-    try {
-      const { code, state } = body;
-      console.log('🔧 BACKEND Calling handleGoogleCallback...');
-      
-      const result = await this.authService.handleGoogleCallback(code, state);
-      
-      console.log('🔧 BACKEND Google callback result:', {
-        hasUser: !!result.user,
-        hasAccessToken: !!result.accessToken,
-        userEmail: result.user?.email,
-        userId: result.user?.id
-      });
-      
-      return result;
-    } catch (error) {
-      console.error('🔧 BACKEND Google callback error:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      });
-      throw error;
-    }
-  }
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
@@ -186,7 +50,6 @@ export class AuthController {
       role: user.role,
   status: user.status,
   isEmailVerified: user.isEmailVerified,
-      googleId: user.googleId,
   phoneNumber: user.phoneNumber,
       organization: user.organization,
       position: user.position,

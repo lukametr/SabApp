@@ -108,9 +108,7 @@ exports.authApi = {
   register: function (userData) {
     return api.post('/auth/register', userData);
   },
-  googleCallback: function (data) {
-    return api.post('/auth/google/callback', data);
-  },
+  // Google OAuth removed
   updateProfile: function (data) {
     return api.patch('/auth/profile', data);
   },

@@ -15,7 +15,7 @@ import { Error as ErrorIcon } from '@mui/icons-material';
 export default function AuthErrorPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const error = searchParams.get('error');
+  const error = searchParams ? searchParams.get('error') : null;
 
   const getErrorMessage = (error: string | null) => {
     switch (error) {
@@ -28,17 +28,17 @@ export default function AuthErrorPage() {
       case 'Default':
         return 'ავტენტიფიკაციის შეცდომა. გთხოვ, სცადეთ ხელახლა.';
       case 'OAuthSignin':
-        return 'Google-ით შესვლის შეცდომა. შეამოწმეთ თქვენი Google ანგარიში.';
+  return 'შესვლის შეცდომა. სცადეთ ისევ ან გამოიყენეთ ელფოსტა/პაროლი.';
       case 'OAuthCallback':
-        return 'Google ავტენტიფიკაციის callback შეცდომა.';
+  return 'ავტენტიფიკაციის callback შეცდომა.';
       case 'OAuthCreateAccount':
-        return 'Google ანგარიშის შექმნის შეცდომა.';
+  return 'ანგარიშის შექმნის შეცდომა.';
       case 'EmailCreateAccount':
         return 'ელ. ფოსტით ანგარიშის შექმნის შეცდომა.';
       case 'Callback':
         return 'ავტენტიფიკაციის callback შეცდომა.';
       case 'OAuthAccountNotLinked':
-        return 'ეს Google ანგარიში უკვე დაკავშირებულია სხვა ანგარიშთან.';
+  return 'ეს ანგარიში უკვე დაკავშირებულია სხვა ანგარიშთან.';
       case 'EmailSignin':
         return 'ელ. ფოსტით შესვლის შეცდომა.';
       case 'CredentialsSignin':

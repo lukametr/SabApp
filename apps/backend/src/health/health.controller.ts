@@ -21,8 +21,6 @@ export class HealthController {
       corsOrigin: process.env.CORS_ORIGIN,
       frontendUrl: process.env.FRONTEND_URL,
       hasMongoUri: !!process.env.MONGODB_URI,
-      hasGoogleClientId: !!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
-      googleClientIdLength: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.length || 0,
     };
   }
 } 

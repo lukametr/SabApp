@@ -3,7 +3,6 @@ import { Injectable, ConflictException, NotFoundException } from '@nestjs/common
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User, UserDocument, UserRole, UserStatus } from './schemas/user.schema';
-import { GoogleUserInfo } from './dto/google-auth.dto';
 import * as bcrypt from 'bcryptjs';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 
@@ -13,43 +12,7 @@ export class UsersService {
     @InjectModel(User.name) private userModel: Model<UserDocument>,
   ) {}
 
-  async findByGoogleId(googleId: string): Promise<UserDocument | null> {
-    // Input validation
-    if (!googleId) {
-      console.log('❌ findByGoogleId called with empty googleId');
-      return null;
-    }
-    
-    // Clean and validate the Google ID
-    const cleanGoogleId = String(googleId).trim();
-    if (!cleanGoogleId) {
-      console.log('❌ Invalid Google ID after cleaning');
-      return null;
-    }
-    
-    console.log('🔍 Looking up user by Google ID:', cleanGoogleId);
-    
-    try {
-      // Use lean() for better performance, then convert to document if found
-      const userLean = await this.userModel
-        .findOne({ googleId: cleanGoogleId })
-        .lean()
-        .exec();
-      
-      if (userLean) {
-        console.log('✅ User found by Google ID:', userLean.email);
-        // Convert back to full document
-        const userDoc = await this.userModel.findById(userLean._id).exec();
-        return userDoc;
-      } else {
-        console.log('❌ No user found with Google ID:', cleanGoogleId);
-        return null;
-      }
-    } catch (error) {
-      console.error('❌ Error in findByGoogleId:', error);
-      throw error;
-    }
-  }
+  // Removed Google-specific lookups and links
 
   async findByEmail(email: string): Promise<UserDocument | null> {
     console.log('🔍 Looking up user by email:', email);
@@ -74,111 +37,7 @@ export class UsersService {
   }
 
 
-  async createUser(
-    googleUserInfo: GoogleUserInfo
-  ): Promise<UserDocument> {
-    console.log('🆕 Creating new Google user:', googleUserInfo.email);
-    
-    // Validate input
-    if (!googleUserInfo.email || !googleUserInfo.sub) {
-      console.error('❌ Invalid Google user info:', googleUserInfo);
-      throw new ConflictException('Invalid Google user info: email and sub are required');
-    }
-    
-    // Clean the Google ID
-    const cleanGoogleId = String(googleUserInfo.sub).trim();
-    const cleanEmail = googleUserInfo.email.toLowerCase().trim();
-    
-    if (!cleanGoogleId || !cleanEmail) {
-      throw new ConflictException('Invalid Google credentials');
-    }
-    
-    // Double-check user doesn't exist (race condition protection)
-    const existingByGoogleId = await this.findByGoogleId(cleanGoogleId);
-    if (existingByGoogleId) {
-      console.log('⚠️ User already exists with this Google ID');
-      return existingByGoogleId;
-    }
-    
-    const existingByEmail = await this.findByEmail(cleanEmail);
-    if (existingByEmail) {
-      if (existingByEmail.googleId) {
-        console.log('⚠️ User already exists with this email and has Google ID');
-        return existingByEmail;
-      } else {
-        console.log('🔗 Linking Google ID to existing email user');
-        await this.linkGoogleId(String(existingByEmail._id), cleanGoogleId);
-        const updatedUser = await this.findById(String(existingByEmail._id));
-        return updatedUser as UserDocument;
-      }
-    }
-    
-    // Create new user
-    const now = new Date();
-    const end = new Date(now.getTime() + 1000 * 60 * 60 * 24 * 14); // 14 დღე
-    
-    const userToCreate = {
-      name: googleUserInfo.name || cleanEmail.split('@')[0],
-      email: cleanEmail,
-      googleId: cleanGoogleId,
-      picture: googleUserInfo.picture || undefined,
-      authProvider: 'google',
-      role: UserRole.USER,
-      status: UserStatus.ACTIVE,
-      isEmailVerified: true, // Google users are always verified
-      lastLoginAt: now,
-      subscriptionStatus: 'active',
-      subscriptionStartDate: now,
-      subscriptionEndDate: end,
-      subscriptionDays: 14,
-    };
-
-    console.log('💾 Creating new user document...');
-    const userDoc = new this.userModel(userToCreate);
-    
-    try {
-      const savedUser = await userDoc.save();
-      console.log('✅ New Google user created successfully:', savedUser._id);
-      
-      // Verify save was successful
-      const verifyUser = await this.userModel.findById(savedUser._id).exec();
-      if (!verifyUser) {
-        throw new Error('User save verification failed');
-      }
-      
-      return savedUser;
-    } catch (error) {
-      // Handle duplicate key errors gracefully
-      if (error.code === 11000) {
-        console.log('⚠️ Duplicate key error detected, trying to find existing user');
-        
-        // Check if it's a googleId duplicate
-        if (error.message.includes('googleId')) {
-          const existing = await this.findByGoogleId(cleanGoogleId);
-          if (existing) {
-            console.log('✅ Found existing user by Google ID');
-            return existing;
-          }
-        }
-        
-        // Check if it's an email duplicate
-        if (error.message.includes('email')) {
-          const existing = await this.findByEmail(cleanEmail);
-          if (existing) {
-            console.log('✅ Found existing user by email');
-            if (!existing.googleId) {
-              await this.linkGoogleId(String(existing._id), cleanGoogleId);
-              return await this.findById(String(existing._id)) as UserDocument;
-            }
-            return existing;
-          }
-        }
-      }
-      
-      console.error('❌ Error creating user:', error);
-      throw error;
-    }
-  }
+  // Removed Google user creation
 
   async createEmailUser(userData: {
     email: string;
@@ -268,19 +127,7 @@ export class UsersService {
     console.log('🔒 Password hash updated successfully');
   }
 
-  async linkGoogleId(userId: string, googleId: string): Promise<void> {
-    console.log('🔗 Linking Google ID to existing user:', userId, 'Google ID:', googleId);
-    const result = await this.userModel.findByIdAndUpdate(userId, {
-      googleId: googleId,
-      authProvider: 'google',
-    }, { new: true });
-    console.log('🔗 Google ID linked successfully:', {
-      userId: result?._id,
-      email: result?.email,
-      googleId: result?.googleId,
-      authProvider: result?.authProvider
-    });
-  }
+  // Removed Google linking
 
   async findAll(): Promise<UserDocument[]> {
     return this.userModel.find().select('-__v').exec();
@@ -288,14 +135,13 @@ export class UsersService {
 
   async debugAllUsers(): Promise<void> {
     console.log('🔍 DEBUG: All users in database:');
-    const users = await this.userModel.find().select('email googleId authProvider name').exec();
+    const users = await this.userModel.find().select('email authProvider name').exec();
     users.forEach((user, index) => {
       console.log(`🔍 User ${index + 1}:`, {
         id: user._id,
         email: user.email,
-        googleId: user.googleId,
         authProvider: user.authProvider,
-        name: user.name
+        name: user.name,
       });
     });
     console.log(`🔍 Total users: ${users.length}`);

@@ -36,8 +36,7 @@ function RootLayout(_a) {
         <link rel="preconnect" href="https://fonts.googleapis.com" crossOrigin="anonymous"/>
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous"/>
         
-        {/* Google Sign-In Script */}
-        <script_1.default src="https://accounts.google.com/gsi/client?hl=ka" async defer strategy="beforeInteractive"/>
+  {/* Google Sign-In Script removed */}
       </head>
       <body className={"".concat(inter.className, " font-sans")}>
         <providers_1.Providers>
