@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+const BACKEND_ORIGIN =
+  process.env.BACKEND_INTERNAL_ORIGIN ||
+  (process.env.NEXT_PUBLIC_BACKEND_URL
+    ? process.env.NEXT_PUBLIC_BACKEND_URL.replace(/\/?api\/?$/, '')
+    : '') ||
+  'http://127.0.0.1:10000';
 
 // Force dynamic for standalone mode - required for server-side functionality
 export const dynamic = 'force-dynamic';
@@ -14,7 +19,7 @@ export async function PUT(request: NextRequest) {
 
     const body = await request.json();
 
-    const response = await fetch(`${BACKEND_URL}/api/subscription/revoke`, {
+    const response = await fetch(`${BACKEND_ORIGIN}/api/subscription/revoke`, {
       method: 'PUT',
       headers: {
         Authorization: authHeader,

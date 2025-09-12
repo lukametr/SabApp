@@ -64,7 +64,7 @@ RUN echo '#!/bin/sh' > /app/start.sh && \
   echo 'PORT=$BACKEND_PORT node apps/backend/dist/main.js &' >> /app/start.sh && \
   echo 'sleep 2' >> /app/start.sh && \
   echo 'echo "Starting frontend on PORT=${FRONTEND_PORT} (Next.js)"' >> /app/start.sh && \
-  echo 'NEXT_PUBLIC_BACKEND_URL=http://localhost:$BACKEND_PORT/api API_URL=http://localhost:$BACKEND_PORT/api PORT=$FRONTEND_PORT node apps/frontend/server.js' >> /app/start.sh && \
+  echo 'NEXT_PUBLIC_BACKEND_URL=http://localhost:$BACKEND_PORT API_URL=http://localhost:$BACKEND_PORT PORT=$FRONTEND_PORT node apps/frontend/server.js' >> /app/start.sh && \
   chmod +x /app/start.sh
 
 USER nextjs
