@@ -21,8 +21,8 @@ COPY . .
 
 # Build both apps
 RUN npm install -g pnpm@10 && \
-    pnpm --filter ./apps/backend build && \
-    pnpm --filter ./apps/frontend build
+  pnpm --filter ./apps/backend build && \
+  pnpm --filter ./apps/frontend build
 
 FROM node:20-alpine AS runner
 WORKDIR /app
@@ -45,11 +45,11 @@ ENV NODE_ENV=production
 ENV PORT=3001
 ENV BACKEND_PORT=10000
 
-# Create startup script
+# Create startup script - frontend server.js is from standalone build
 RUN echo '#!/bin/sh' > /app/start.sh && \
-    echo 'node apps/backend/dist/main.js &' >> /app/start.sh && \
-    echo 'HOSTNAME=0.0.0.0 PORT=3001 node apps/frontend/server.js' >> /app/start.sh && \
-    chmod +x /app/start.sh
+  echo 'node apps/backend/dist/main.js &' >> /app/start.sh && \
+  echo 'HOSTNAME=0.0.0.0 PORT=3001 node apps/frontend/server.js' >> /app/start.sh && \
+  chmod +x /app/start.sh
 
 USER nextjs
 
