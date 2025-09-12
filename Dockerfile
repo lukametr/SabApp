@@ -36,9 +36,12 @@ RUN apk add --no-cache libc6-compat dumb-init && \
 RUN addgroup -g 1001 -S nodejs && adduser -S nextjs -u 1001
 
 # Backend files
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nextjs:nodejs /app/apps/backend/dist ./apps/backend/dist
 COPY --from=builder --chown=nextjs:nodejs /app/apps/backend/package.json ./apps/backend/package.json
 COPY --from=deps --chown=nextjs:nodejs /app/apps/backend/node_modules ./apps/backend/node_modules
+COPY --from=builder --chown=nextjs:nodejs /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
+COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
 
 # Frontend standalone build
 COPY --from=builder --chown=nextjs:nodejs /app/apps/frontend/.next/standalone ./
