@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation';
 import { useAuthStore } from '../store/authStore';
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-// Google OAuth removed
 import Image from 'next/image';
 import api from '../lib/api';
 import RegistrationModal from './RegistrationModal';
@@ -27,14 +26,11 @@ interface RegistrationFormData {
   phoneNumber: string;
 }
 
-// No window.google declarations needed
-
 export default function Navigation() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout, login } = useAuthStore();
   const [showRegistration, setShowRegistration] = useState(false);
-  // Google registration flow removed
   const [loading, setLoading] = useState(false);
   const [authError, setAuthError] = useState<string>('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -55,10 +51,6 @@ export default function Navigation() {
       });
     }
   };
-
-  // No need to call loadFromStorage here - handled by AuthProvider
-
-  // Google login removed
 
   const isActive = (path: string) => pathname === path;
 

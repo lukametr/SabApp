@@ -47,7 +47,6 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
     e.preventDefault();
     setLoading(true);
     setError('');
-    setIsGoogleAccount(false);
 
     try {
       console.log('🔐 Login attempt:', { email, passwordLength: password.length });

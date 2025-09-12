@@ -184,7 +184,7 @@ function Navigation() {
       });
     }
   };
-  
+
   // No need to call loadFromStorage here - handled by AuthProvider
   var isActive = function (path) {
     return pathname === path;
