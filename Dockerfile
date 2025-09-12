@@ -55,9 +55,14 @@ ENV HOSTNAME=0.0.0.0
 
 RUN echo '#!/bin/sh' > /app/start.sh && \
   echo 'set -e' >> /app/start.sh && \
-  echo "node apps/backend/dist/main.js &" >> /app/start.sh && \
+  echo 'export BACKEND_PORT=${BACKEND_PORT:-10000}' >> /app/start.sh && \
+  echo 'export FRONTEND_PORT=${FRONTEND_PORT:-3001}' >> /app/start.sh && \
+  echo 'export HOSTNAME=0.0.0.0' >> /app/start.sh && \
+  echo 'echo "Starting backend on PORT=${BACKEND_PORT}"' >> /app/start.sh && \
+  echo 'PORT=$BACKEND_PORT node apps/backend/dist/main.js &' >> /app/start.sh && \
   echo 'sleep 2' >> /app/start.sh && \
-  echo 'HOSTNAME=0.0.0.0 PORT=3001 node apps/frontend/server.js' >> /app/start.sh && \
+  echo 'echo "Starting frontend on PORT=${FRONTEND_PORT} (Next.js)"' >> /app/start.sh && \
+  echo 'NEXT_PUBLIC_BACKEND_URL=http://localhost:$BACKEND_PORT/api API_URL=http://localhost:$BACKEND_PORT/api PORT=$FRONTEND_PORT node apps/frontend/server.js' >> /app/start.sh && \
   chmod +x /app/start.sh
 
 USER nextjs
