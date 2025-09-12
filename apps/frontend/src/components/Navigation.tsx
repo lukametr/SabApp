@@ -417,7 +417,9 @@ export default function Navigation() {
           setShowRegistration(false);
           setAuthError('');
         }}
-        onSubmit={async () => { setShowRegistration(false); }}
+        onSubmit={async () => {
+          setShowRegistration(false);
+        }}
         loading={loading}
         error={authError}
       />

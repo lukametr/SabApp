@@ -2,14 +2,7 @@
 
 import React from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import {
-  Box,
-  Container,
-  Paper,
-  Typography,
-  Button,
-  Alert,
-} from '@mui/material';
+import { Box, Container, Paper, Typography, Button, Alert } from '@mui/material';
 import { Error as ErrorIcon } from '@mui/icons-material';
 
 export default function AuthErrorPage() {
@@ -28,17 +21,17 @@ export default function AuthErrorPage() {
       case 'Default':
         return 'ავტენტიფიკაციის შეცდომა. გთხოვ, სცადეთ ხელახლა.';
       case 'OAuthSignin':
-  return 'შესვლის შეცდომა. სცადეთ ისევ ან გამოიყენეთ ელფოსტა/პაროლი.';
+        return 'შესვლის შეცდომა. სცადეთ ისევ ან გამოიყენეთ ელფოსტა/პაროლი.';
       case 'OAuthCallback':
-  return 'ავტენტიფიკაციის callback შეცდომა.';
+        return 'ავტენტიფიკაციის callback შეცდომა.';
       case 'OAuthCreateAccount':
-  return 'ანგარიშის შექმნის შეცდომა.';
+        return 'ანგარიშის შექმნის შეცდომა.';
       case 'EmailCreateAccount':
         return 'ელ. ფოსტით ანგარიშის შექმნის შეცდომა.';
       case 'Callback':
         return 'ავტენტიფიკაციის callback შეცდომა.';
       case 'OAuthAccountNotLinked':
-  return 'ეს ანგარიში უკვე დაკავშირებულია სხვა ანგარიშთან.';
+        return 'ეს ანგარიში უკვე დაკავშირებულია სხვა ანგარიშთან.';
       case 'EmailSignin':
         return 'ელ. ფოსტით შესვლის შეცდომა.';
       case 'CredentialsSignin':
@@ -51,14 +44,16 @@ export default function AuthErrorPage() {
   };
 
   return (
-    <Box sx={{ 
-      minHeight: '100vh', 
-      backgroundColor: '#f5f5f5',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      py: 4
-    }}>
+    <Box
+      sx={{
+        minHeight: '100vh',
+        backgroundColor: '#f5f5f5',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        py: 4,
+      }}
+    >
       <Container maxWidth="sm">
         <Paper elevation={3} sx={{ p: 4 }}>
           <Box sx={{ textAlign: 'center', mb: 4 }}>
@@ -81,16 +76,10 @@ export default function AuthErrorPage() {
           )}
 
           <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
-            <Button
-              variant="contained"
-              onClick={() => router.push('/auth/login')}
-            >
+            <Button variant="contained" onClick={() => router.push('/auth/login')}>
               შესვლის გვერდზე დაბრუნება
             </Button>
-            <Button
-              variant="outlined"
-              onClick={() => router.push('/')}
-            >
+            <Button variant="outlined" onClick={() => router.push('/')}>
               მთავარ გვერდზე
             </Button>
           </Box>

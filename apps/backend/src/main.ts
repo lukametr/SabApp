@@ -1,7 +1,11 @@
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
-import { ValidationPipe, BadRequestException, RequestMethod } from '@nestjs/common';
+import {
+  ValidationPipe,
+  BadRequestException,
+  RequestMethod,
+} from '@nestjs/common';
 import { json, urlencoded } from 'express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
@@ -14,7 +18,7 @@ async function createDefaultAdmin(app: any) {
   try {
     console.log('👤 Creating default admin user...');
     const usersService = app.get(UsersService);
-    
+
     // Check if admin already exists
     const existingAdmin = await usersService.findByEmail('admin@saba.com');
     if (existingAdmin) {
@@ -35,20 +39,19 @@ async function createDefaultAdmin(app: any) {
       password: 'admin123', // Will be hashed by createEmailUser
       personalNumber: '01234567891',
       organization: 'SabaApp',
-      position: 'System Administrator'
+      position: 'System Administrator',
     };
 
-  console.log('🛠️ Creating admin user document...');
-  const admin = await usersService.createEmailUser(adminData);
-  console.log('🛠️ Admin user saved:', { id: admin.id, email: admin.email });
-    
+    console.log('🛠️ Creating admin user document...');
+    const admin = await usersService.createEmailUser(adminData);
+    console.log('🛠️ Admin user saved:', { id: admin.id, email: admin.email });
+
     // Update role to ADMIN after creation
     await usersService.updateUserRole(admin.id, UserRole.ADMIN);
-    
+
     console.log('✅ Default admin user created successfully!');
     console.log('📧 Email: admin@saba.com');
     console.log('👑 Role: ADMIN');
-    
   } catch (error) {
     console.error('❌ Error creating default admin user:', {
       message: error.message,
@@ -65,9 +68,9 @@ async function bootstrap() {
   console.log('�🔧 Environment variables:', {
     NODE_ENV: process.env.NODE_ENV,
     PORT: process.env.PORT,
-    MONGODB_URI: process.env.MONGODB_URI ? 'SET' : 'MISSING'
+    MONGODB_URI: process.env.MONGODB_URI ? 'SET' : 'MISSING',
   });
-  
+
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: ['error', 'warn', 'log', 'debug', 'verbose'],
     abortOnError: false,
@@ -94,7 +97,7 @@ async function bootstrap() {
         contentType: req.headers['content-type'],
         bodySize: req.body ? Object.keys(req.body).length : 0,
         params: req.params,
-        query: req.query
+        query: req.query,
       });
     }
     next();
@@ -108,42 +111,54 @@ async function bootstrap() {
       const start = Date.now();
       res.on('finish', () => {
         const duration = Date.now() - start;
-        console.log(`${req.method} ${req.url} - ${res.statusCode} - ${duration}ms`);
+        console.log(
+          `${req.method} ${req.url} - ${res.statusCode} - ${duration}ms`,
+        );
       });
       next();
     });
   }
 
   // Security headers
-  app.use(helmet({
-    crossOriginResourcePolicy: { policy: "cross-origin" },
-    crossOriginEmbedderPolicy: false,
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-  scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "blob:"],
-  styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-  styleSrcElem: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-  imgSrc: ["'self'", "data:", "https:"],
-        fontSrc: ["'self'", "https://fonts.gstatic.com"],
-  connectSrc: ["'self'", "data:", "blob:"],
-  frameSrc: ["'none'"],
-        workerSrc: ["blob:"],
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+      crossOriginEmbedderPolicy: false,
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'blob:'],
+          styleSrc: [
+            "'self'",
+            "'unsafe-inline'",
+            'https://fonts.googleapis.com',
+          ],
+          styleSrcElem: [
+            "'self'",
+            "'unsafe-inline'",
+            'https://fonts.googleapis.com',
+          ],
+          imgSrc: ["'self'", 'data:', 'https:'],
+          fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+          connectSrc: ["'self'", 'data:', 'blob:'],
+          frameSrc: ["'none'"],
+          workerSrc: ['blob:'],
+        },
       },
-    },
-  }));
-  
+    }),
+  );
+
   // Compression
   app.use(compression());
 
   // CORS კონფიგურაცია
   const allowedOrigins = [
     'http://localhost:3000',
-    'http://localhost:3001', 
+    'http://localhost:3001',
     'https://sabapp.com',
     'https://www.sabapp.com',
     'https://saba-latest.vercel.app', // თუ Vercel-ზეა
-    process.env.FRONTEND_URL // environment variable-დან
+    process.env.FRONTEND_URL, // environment variable-დან
   ].filter(Boolean) as string[];
 
   app.enableCors({
@@ -154,32 +169,37 @@ async function bootstrap() {
     exposedHeaders: ['Content-Range', 'X-Content-Range'],
     maxAge: 86400, // 24 საათი
     preflightContinue: false,
-    optionsSuccessStatus: 204
+    optionsSuccessStatus: 204,
   });
 
   // Enable validation
-  app.useGlobalPipes(new ValidationPipe({
-    transform: true,
-    whitelist: true,
-    forbidNonWhitelisted: false,
-    transformOptions: {
-      enableImplicitConversion: true,
-    },
-    exceptionFactory: (errors) => {
-      const detailedErrors = errors.map(e => ({
-        property: e.property,
-        value: e.value,
-        constraints: e.constraints,
-        children: e.children
-      }));
-      console.error('❌ VALIDATION FAILED:', JSON.stringify(detailedErrors, null, 2));
-      return new BadRequestException({
-        statusCode: 400,
-        message: 'Validation failed',
-        errors: detailedErrors
-      });
-    }
-  }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: false,
+      transformOptions: {
+        enableImplicitConversion: true,
+      },
+      exceptionFactory: (errors) => {
+        const detailedErrors = errors.map((e) => ({
+          property: e.property,
+          value: e.value,
+          constraints: e.constraints,
+          children: e.children,
+        }));
+        console.error(
+          '❌ VALIDATION FAILED:',
+          JSON.stringify(detailedErrors, null, 2),
+        );
+        return new BadRequestException({
+          statusCode: 400,
+          message: 'Validation failed',
+          errors: detailedErrors,
+        });
+      },
+    }),
+  );
 
   // Setup Swagger
   const config = new DocumentBuilder()
@@ -188,7 +208,7 @@ async function bootstrap() {
     .setVersion('1.0')
     .addBearerAuth()
     .build();
-  
+
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
 
@@ -202,7 +222,7 @@ async function bootstrap() {
       console.warn('⚠️  Invalid PORT value, defaulting to 3001:', portEnv);
     }
 
-  // NOTE: Avoid manual mongoose connect/disconnect here to not interfere with Nest's managed connection
+    // NOTE: Avoid manual mongoose connect/disconnect here to not interfere with Nest's managed connection
 
     // Error handling
     process.on('uncaughtException', (error) => {
@@ -224,73 +244,96 @@ async function bootstrap() {
     // Keep-alive mechanism for Render
     process.on('SIGTERM', () => {
       console.log('SIGTERM received, shutting down gracefully');
-      app.close().then(() => {
-        console.log('Application closed');
-        process.exit(0);
-      }).catch((error) => {
-        console.error('Error during shutdown:', error);
-        process.exit(1);
-      });
+      app
+        .close()
+        .then(() => {
+          console.log('Application closed');
+          process.exit(0);
+        })
+        .catch((error) => {
+          console.error('Error during shutdown:', error);
+          process.exit(1);
+        });
     });
 
     process.on('SIGINT', () => {
       console.log('SIGINT received, shutting down gracefully');
-      app.close().then(() => {
-        console.log('Application closed');
-        process.exit(0);
-      }).catch((error) => {
-        console.error('Error during shutdown:', error);
-        process.exit(1);
-      });
+      app
+        .close()
+        .then(() => {
+          console.log('Application closed');
+          process.exit(0);
+        })
+        .catch((error) => {
+          console.error('Error during shutdown:', error);
+          process.exit(1);
+        });
     });
 
     // Start the application
     console.log(`🚀 Starting application on port ${port}...`);
     await app.listen(port, '0.0.0.0');
     console.log(`✅ Application is running on: http://0.0.0.0:${port}`);
-    
+
     // Test health endpoint immediately
     console.log(`🏥 Testing health endpoint immediately...`);
     try {
       const healthResponse = await fetch(`http://localhost:${port}/health`);
-      console.log(`🏥 Health endpoint test: ${healthResponse.status} - ${await healthResponse.text()}`);
+      console.log(
+        `🏥 Health endpoint test: ${healthResponse.status} - ${await healthResponse.text()}`,
+      );
     } catch (healthError) {
       console.error(`🏥 Health endpoint test failed:`, healthError.message);
     }
-    
+
     // Wait for Mongo connection before attempting default admin creation
     try {
       const conn: any = app.get(getConnectionToken());
-      const states: Record<number, string> = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting' };
+      const states: Record<number, string> = {
+        0: 'disconnected',
+        1: 'connected',
+        2: 'connecting',
+        3: 'disconnecting',
+      };
       const waitStart = Date.now();
       while (conn.readyState !== 1 && Date.now() - waitStart < 10000) {
-        console.log('⏳ Waiting for Mongo connection...', states[conn.readyState] || conn.readyState);
-        await new Promise(r => setTimeout(r, 500));
+        console.log(
+          '⏳ Waiting for Mongo connection...',
+          states[conn.readyState] || conn.readyState,
+        );
+        await new Promise((r) => setTimeout(r, 500));
       }
-      console.log('🧭 Mongo readyState:', states[conn.readyState] || conn.readyState);
+      console.log(
+        '🧭 Mongo readyState:',
+        states[conn.readyState] || conn.readyState,
+      );
       if (conn.readyState === 1) {
         await createDefaultAdmin(app);
       } else {
         console.warn('⚠️ Skipping default admin creation: DB not connected');
       }
     } catch (e: any) {
-      console.warn('⚠️ Could not verify Mongo connection before admin creation:', e?.message);
+      console.warn(
+        '⚠️ Could not verify Mongo connection before admin creation:',
+        e?.message,
+      );
     }
-    console.log(`📚 API Documentation available at: http://0.0.0.0:${port}/docs`);
+    console.log(
+      `📚 API Documentation available at: http://0.0.0.0:${port}/docs`,
+    );
     console.log(`🏥 Health check available at: http://0.0.0.0:${port}/health`);
     console.log(`🌐 CORS enabled for multiple origins`);
     console.log(`🔧 API Routes available at: http://0.0.0.0:${port}/api`);
-    
+
     // Keep the process alive - this is crucial for Render
     console.log('🚀 Application started successfully and keeping alive...');
-    
+
     // Don't call process.stdin.resume() as it can cause issues
     // Instead, just keep the event loop running
     setInterval(() => {
       // Keep alive ping every 30 seconds
       console.log('💓 Keep-alive ping:', new Date().toISOString());
     }, 30000);
-    
   } catch (error) {
     console.error('❌ Failed to start application:', error);
     process.exit(1);

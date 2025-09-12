@@ -1,5 +1,21 @@
-import { Controller, Post, Body, Get, UseGuards, Request, BadRequestException, Query, NotFoundException, Patch } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  UseGuards,
+  Request,
+  BadRequestException,
+  Query,
+  NotFoundException,
+  Patch,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { AuthResponseDto } from '../users/dto/auth-response.dto';
@@ -22,7 +38,10 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current user information' })
-  @ApiResponse({ status: 200, description: 'User information retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'User information retrieved successfully',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'User not found' })
   async getMe(@Request() req: any) {
@@ -31,37 +50,41 @@ export class AuthController {
       id: req.user?.id,
       sub: req.user?.sub,
     });
-    
+
     // JwtStrategy.validate returns an object with `id`, not `sub`.
     // However, keep compatibility with tokens that include `sub`.
     const userId = req.user?.id || req.user?.sub;
     const user = await this.usersService.findById(userId);
-    
+
     if (!user) {
       console.error('❌ User not found for ID:', userId);
       throw new NotFoundException('User not found');
     }
-    
+
     return {
       id: String(user._id),
       email: user.email,
       name: user.name,
       picture: user.picture,
       role: user.role,
-  status: user.status,
-  isEmailVerified: user.isEmailVerified,
-  phoneNumber: user.phoneNumber,
+      status: user.status,
+      isEmailVerified: user.isEmailVerified,
+      phoneNumber: user.phoneNumber,
       organization: user.organization,
       position: user.position,
-  lastLoginAt: user.lastLoginAt,
-  createdAt: user.createdAt,
-  updatedAt: user.updatedAt,
+      lastLoginAt: user.lastLoginAt,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
     };
   }
 
   @Post('register')
   @ApiOperation({ summary: 'Register new user with email and password' })
-  @ApiResponse({ status: 201, description: 'User registered successfully', type: AuthResponseDto })
+  @ApiResponse({
+    status: 201,
+    description: 'User registered successfully',
+    type: AuthResponseDto,
+  })
   @ApiResponse({ status: 400, description: 'Bad Request' })
   @ApiResponse({ status: 409, description: 'User already exists' })
   async register(@Body() registerDto: any): Promise<AuthResponseDto> {
@@ -70,7 +93,11 @@ export class AuthController {
 
   @Post('login')
   @ApiOperation({ summary: 'Login with email and password' })
-  @ApiResponse({ status: 200, description: 'Successfully authenticated', type: AuthResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Successfully authenticated',
+    type: AuthResponseDto,
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async login(@Body() loginDto: any): Promise<AuthResponseDto> {
     console.log('🔐 Login attempt for:', loginDto?.email);
@@ -93,25 +120,28 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get user profile' })
-  @ApiResponse({ status: 200, description: 'User profile retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'User profile retrieved successfully',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getProfile(@Request() req: any) {
     const user = await this.usersService.findById(req.user.id || req.user.sub);
     if (!user) {
       throw new Error('User not found');
     }
-    
+
     return {
-  id: String(user._id),
+      id: String(user._id),
       name: user.name,
       email: user.email,
       picture: user.picture,
       role: user.role,
       status: user.status,
       // ...existing code...
-  phoneNumber: user.phoneNumber,
-  organization: user.organization,
-  position: user.position,
+      phoneNumber: user.phoneNumber,
+      organization: user.organization,
+      position: user.position,
       isEmailVerified: user.isEmailVerified,
       lastLoginAt: user.lastLoginAt,
       createdAt: user.createdAt,
@@ -124,12 +154,18 @@ export class AuthController {
   @Roles(UserRole.ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all users (Admin only)' })
-  @ApiResponse({ status: 200, description: 'Users list retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Users list retrieved successfully',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Admin access required',
+  })
   async getAllUsers() {
     const users = await this.usersService.findAll();
-    return users.map(user => ({
+    return users.map((user) => ({
       id: user._id,
       name: user.name,
       email: user.email,
@@ -161,7 +197,10 @@ export class AuthController {
       }
 
       // Check if token is expired
-      if (user.emailVerificationTokenExpires && user.emailVerificationTokenExpires < new Date()) {
+      if (
+        user.emailVerificationTokenExpires &&
+        user.emailVerificationTokenExpires < new Date()
+      ) {
         throw new BadRequestException('Verification token has expired');
       }
 
@@ -184,10 +223,16 @@ export class AuthController {
   @ApiOperation({ summary: 'Update current user profile' })
   @ApiResponse({ status: 200, description: 'Profile updated successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async updateProfile(@Request() req: any, @Body() updateData: UpdateProfileDto) {
+  async updateProfile(
+    @Request() req: any,
+    @Body() updateData: UpdateProfileDto,
+  ) {
     const userId = req.user.id || req.user.sub;
-    const updatedUser = await this.usersService.updateProfile(userId, updateData);
-    
+    const updatedUser = await this.usersService.updateProfile(
+      userId,
+      updateData,
+    );
+
     // აბრუნე სრული user ობიექტი ყველა ველით
     return {
       id: String(updatedUser._id),
@@ -201,7 +246,7 @@ export class AuthController {
       status: updatedUser.status,
       isEmailVerified: updatedUser.isEmailVerified,
       createdAt: updatedUser.createdAt,
-      updatedAt: updatedUser.updatedAt
+      updatedAt: updatedUser.updatedAt,
     };
   }
 
@@ -210,16 +255,19 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Change user password' })
   @ApiResponse({ status: 200, description: 'Password changed successfully' })
-  @ApiResponse({ status: 401, description: 'Unauthorized or invalid current password' })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized or invalid current password',
+  })
   async changePassword(
     @Request() req: any,
-    @Body() changePasswordDto: ChangePasswordDto
+    @Body() changePasswordDto: ChangePasswordDto,
   ) {
     const userId = req.user.id || req.user.sub;
     return this.authService.changePassword(
       userId,
       changePasswordDto.currentPassword,
-      changePasswordDto.newPassword
+      changePasswordDto.newPassword,
     );
   }
 }

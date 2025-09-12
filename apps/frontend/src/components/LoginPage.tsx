@@ -32,7 +32,6 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [isGoogleAccount, setIsGoogleAccount] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
 
   const handleRetry = () => {
@@ -95,9 +94,6 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
         setError(err.message);
       } else if (err.response?.data?.message) {
         setError(err.response.data.message);
-      } else if (err.response?.data?.code === 'GOOGLE_ACCOUNT_ONLY') {
-        setIsGoogleAccount(true);
-        setError('ეს ანგარიში შექმნილია Google-ით. გთხოვთ, გამოიყენეთ ელფოსტა/პაროლი ან დაგვიკავშირდით მხარდაჭერაში.');
       } else {
         setError('შესვლა ვერ მოხერხდა. სცადეთ მოგვიანებით.');
       }
@@ -143,23 +139,8 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
                   თუ პრობლემა გრძელდება, დაუკავშირდით: info.sabapp@gmail.com
                 </Typography>
               )}
-              {isGoogleAccount && (
-                <Box sx={{ mt: 2 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    საკონტაქტო: info.sabapp@gmail.com
-                  </Typography>
-                </Box>
-              )}
             </Alert>
           )}
-
-          {/* Google login ამოღებულია */}
-
-          <Divider sx={{ my: 3 }}>
-            <Typography variant="body2" color="text.secondary">
-              ან ელ. ფოსტით
-            </Typography>
-          </Divider>
 
           <Box component="form" onSubmit={handleEmailLogin} sx={{ mb: 3 }}>
             <TextField

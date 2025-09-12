@@ -84,7 +84,10 @@ export class DebugController {
       await dropIfExists('googleId_1');
 
       // Ensure sparse indexes
-      await collection.createIndex({ googleId: 1 }, { unique: true, sparse: true });
+      await collection.createIndex(
+        { googleId: 1 },
+        { unique: true, sparse: true },
+      );
 
       const finalIndexes = await collection.indexes();
       return {
@@ -107,15 +110,21 @@ export class DebugController {
     try {
       const { email, authProvider } = body;
       if (!email || !authProvider) {
-        return { status: 'error', message: 'Email and authProvider are required' };
+        return {
+          status: 'error',
+          message: 'Email and authProvider are required',
+        };
       }
 
       const user = await this.usersService.findByEmail(email);
       if (!user) return { status: 'error', message: 'User not found' };
 
-      await this.connection.collection('users').updateOne({ email }, { $set: { authProvider } });
+      await this.connection
+        .collection('users')
+        .updateOne({ email }, { $set: { authProvider } });
       const updatedUser = await this.usersService.findByEmail(email);
-      if (!updatedUser) return { status: 'error', message: 'Failed to retrieve updated user' };
+      if (!updatedUser)
+        return { status: 'error', message: 'Failed to retrieve updated user' };
 
       return {
         status: 'success',
@@ -138,7 +147,8 @@ export class DebugController {
   async searchUserByEmail(@Param('email') email: string) {
     try {
       const cleanEmail = email?.trim()?.toLowerCase();
-      if (!cleanEmail) return { status: 'error', message: 'Email parameter is required' };
+      if (!cleanEmail)
+        return { status: 'error', message: 'Email parameter is required' };
 
       const userByEmail = await this.usersService.findByEmail(cleanEmail);
       return {
@@ -170,17 +180,21 @@ export class DebugController {
   async makeUserAdmin(@Body() body: { userId?: string; email?: string }) {
     try {
       const { userId, email } = body;
-      if (!userId && !email) return { status: 'error', message: 'userId or email is required' };
+      if (!userId && !email)
+        return { status: 'error', message: 'userId or email is required' };
 
       const user = userId
         ? await this.usersService.findById(userId)
         : email
-        ? await this.usersService.findByEmail(email)
-        : null;
+          ? await this.usersService.findByEmail(email)
+          : null;
 
       if (!user) return { status: 'error', message: 'User not found' };
 
-      const updatedUser = await this.usersService.updateUserRole(String(user._id), 'admin' as any);
+      const updatedUser = await this.usersService.updateUserRole(
+        String(user._id),
+        'admin' as any,
+      );
       return {
         status: 'success',
         message: 'User role updated to ADMIN successfully',
@@ -201,4 +215,3 @@ export class DebugController {
     }
   }
 }
-

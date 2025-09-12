@@ -23,4 +23,4 @@ export class HealthController {
       hasMongoUri: !!process.env.MONGODB_URI,
     };
   }
-} 
+}

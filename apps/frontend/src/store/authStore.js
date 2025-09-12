@@ -157,15 +157,6 @@ exports.useAuthStore = (0, zustand_1.create)(function (set, get) { return (__ass
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             console.log('🗃️ localStorage cleared');
-            // Clear any Google session
-            if ((_b = (_a = window.google) === null || _a === void 0 ? void 0 : _a.accounts) === null || _b === void 0 ? void 0 : _b.id) {
-                try {
-                    window.google.accounts.id.disableAutoSelect();
-                }
-                catch (e) {
-                    console.log('🔧 Could not disable Google auto-select:', e);
-                }
-            }
         }
         console.log('✅ Logout complete');
     }, setUser: function (user) { return set({ user: user }); }, setToken: function (token) { return set({ token: token }); }, setError: function (error) { return set({ error: error }); }, setLoading: function (loading) { return set({ loading: loading }); }, loadFromStorage: function () {

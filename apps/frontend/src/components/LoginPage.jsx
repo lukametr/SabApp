@@ -328,38 +328,8 @@ function LoginPage(_a) {
           {error && (
             <material_1.Alert severity="error" sx={{ mb: 3 }}>
               {error}
-              {/* Google account-only notice: Google login disabled */}
             </material_1.Alert>
           )}
-
-          {/* Google Login Button - moved to top */}
-          <material_1.Button
-            fullWidth
-            variant="outlined"
-            size="large"
-            startIcon={<icons_material_1.Google />}
-            onClick={function () {
-              return handleGoogleLogin();
-            }}
-            disabled={loading}
-            sx={{
-              mb: 3,
-              color: '#4285f4',
-              borderColor: '#4285f4',
-              '&:hover': {
-                backgroundColor: 'rgba(66, 133, 244, 0.1)',
-                borderColor: '#4285f4',
-              },
-            }}
-          >
-            Google-ით შესვლა
-          </material_1.Button>
-
-          <material_1.Divider sx={{ my: 3 }}>
-            <material_1.Typography variant="body2" color="text.secondary">
-              ან ელ. ფოსტით
-            </material_1.Typography>
-          </material_1.Divider>
 
           <material_1.Box component="form" onSubmit={handleEmailLogin} sx={{ mb: 3 }}>
             <material_1.TextField

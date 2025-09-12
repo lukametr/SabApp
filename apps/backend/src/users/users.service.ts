@@ -1,30 +1,37 @@
-  // ...existing code...
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+// ...existing code...
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { User, UserDocument, UserRole, UserStatus } from './schemas/user.schema';
+import {
+  User,
+  UserDocument,
+  UserRole,
+  UserStatus,
+} from './schemas/user.schema';
 import * as bcrypt from 'bcryptjs';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @Injectable()
 export class UsersService {
-  constructor(
-    @InjectModel(User.name) private userModel: Model<UserDocument>,
-  ) {}
+  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
 
   // Removed Google-specific lookups and links
 
   async findByEmail(email: string): Promise<UserDocument | null> {
     console.log('🔍 Looking up user by email:', email);
-    
+
     try {
       const user = await this.userModel.findOne({ email }).exec();
       console.log('🔍 User lookup result:', {
         found: !!user,
         email: user?.email,
-        hasPassword: !!user?.password
+        hasPassword: !!user?.password,
       });
-      
+
       return user;
     } catch (error) {
       console.error('🔍 Error finding user by email:', error);
@@ -35,7 +42,6 @@ export class UsersService {
   async findById(id: string): Promise<UserDocument | null> {
     return this.userModel.findById(id).exec();
   }
-
 
   // Removed Google user creation
 
@@ -50,7 +56,7 @@ export class UsersService {
   }): Promise<UserDocument> {
     try {
       console.log('≡ƒöº Creating email user - Starting validation...');
-      
+
       // Check if email is already taken
       const existingEmail = await this.findByEmail(userData.email);
       if (existingEmail) {
@@ -66,9 +72,14 @@ export class UsersService {
       if (!userData.password || userData.password.length < 4) {
         throw new Error('Invalid password for hashing');
       }
-      console.log('🔒 Password hashing starting...', { inputLength: userData.password.length });
+      console.log('🔒 Password hashing starting...', {
+        inputLength: userData.password.length,
+      });
       const hashedPassword = await bcrypt.hash(userData.password, saltRounds);
-      console.log('🔒 Password hashed', { hashPrefix: hashedPassword.substring(0, 7), length: hashedPassword.length });
+      console.log('🔒 Password hashed', {
+        hashPrefix: hashedPassword.substring(0, 7),
+        length: hashedPassword.length,
+      });
 
       console.log('🔧 Creating new user document...');
       const now = new Date();
@@ -97,7 +108,7 @@ export class UsersService {
       console.log('≡ƒöº Saving user to database...');
       const savedUser = await user.save();
       console.log('≡ƒöº User saved successfully with ID:', savedUser._id);
-      
+
       return savedUser;
     } catch (error) {
       console.error('≡ƒöº Error creating email user:', {
@@ -107,7 +118,7 @@ export class UsersService {
         userData: {
           email: userData.email,
           name: userData.name,
-        }
+        },
       });
       throw error;
     }
@@ -119,7 +130,10 @@ export class UsersService {
     });
   }
 
-  async updateUserPassword(userId: string, newPasswordHash: string): Promise<void> {
+  async updateUserPassword(
+    userId: string,
+    newPasswordHash: string,
+  ): Promise<void> {
     console.log('🔒 Updating password hash for user:', userId);
     await this.userModel.findByIdAndUpdate(userId, {
       password: newPasswordHash,
@@ -135,7 +149,10 @@ export class UsersService {
 
   async debugAllUsers(): Promise<void> {
     console.log('🔍 DEBUG: All users in database:');
-    const users = await this.userModel.find().select('email authProvider name').exec();
+    const users = await this.userModel
+      .find()
+      .select('email authProvider name')
+      .exec();
     users.forEach((user, index) => {
       console.log(`🔍 User ${index + 1}:`, {
         id: user._id,
@@ -147,12 +164,13 @@ export class UsersService {
     console.log(`🔍 Total users: ${users.length}`);
   }
 
-  async updateUserStatus(userId: string, status: UserStatus): Promise<UserDocument> {
-    const user = await this.userModel.findByIdAndUpdate(
-      userId,
-      { status },
-      { new: true },
-    ).exec();
+  async updateUserStatus(
+    userId: string,
+    status: UserStatus,
+  ): Promise<UserDocument> {
+    const user = await this.userModel
+      .findByIdAndUpdate(userId, { status }, { new: true })
+      .exec();
 
     if (!user) {
       throw new NotFoundException('User not found');
@@ -162,11 +180,9 @@ export class UsersService {
   }
 
   async updateUserRole(userId: string, role: UserRole): Promise<UserDocument> {
-    const user = await this.userModel.findByIdAndUpdate(
-      userId,
-      { role },
-      { new: true },
-    ).exec();
+    const user = await this.userModel
+      .findByIdAndUpdate(userId, { role }, { new: true })
+      .exec();
 
     if (!user) {
       throw new NotFoundException('User not found');
@@ -198,7 +214,10 @@ export class UsersService {
     console.log('✅ Email verified for user:', userId);
   }
 
-  async updateProfile(userId: string, data: UpdateProfileDto): Promise<UserDocument> {
+  async updateProfile(
+    userId: string,
+    data: UpdateProfileDto,
+  ): Promise<UserDocument> {
     // Normalize inputs and avoid saving empty strings/nulls into unique/sparse indexed fields
     const setData: Record<string, any> = {};
     const unsetData: Record<string, ''> = {};
@@ -233,7 +252,10 @@ export class UsersService {
 
     try {
       const user = await this.userModel
-        .findByIdAndUpdate(userId, updateOps, { new: true, runValidators: true })
+        .findByIdAndUpdate(userId, updateOps, {
+          new: true,
+          runValidators: true,
+        })
         .exec();
 
       if (!user) {
@@ -261,7 +283,11 @@ export class UsersService {
   async updatePassword(userId: string, hashedPassword: string): Promise<void> {
     try {
       const user = await this.userModel
-        .findByIdAndUpdate(userId, { $set: { password: hashedPassword } }, { new: true })
+        .findByIdAndUpdate(
+          userId,
+          { $set: { password: hashedPassword } },
+          { new: true },
+        )
         .exec();
 
       if (!user) {

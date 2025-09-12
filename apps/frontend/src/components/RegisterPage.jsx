@@ -208,9 +208,6 @@ var icons_material_1 = require('@mui/icons-material');
 var navigation_1 = require('next/navigation');
 var auth_service_1 = require('../services/auth.service');
 var authStore_1 = require('../store/authStore');
-// Get Google Client ID from env (runtime check)
-var clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
-console.log('[Google OAuth] NEXT_PUBLIC_GOOGLE_CLIENT_ID:', clientId);
 function RegisterPage(_a) {
   var _this = this;
   var onRegister = _a.onRegister;
@@ -320,18 +317,6 @@ function RegisterPage(_a) {
         }
       });
     });
-  };
-  // Google რეგისტრაცია/შესვლა უკაცრავად Backend-თან
-  var handleGoogleRegister = function () {
-    var _a;
-    // Railway production URL detection
-    var baseUrl =
-      ((_a = process.env.NEXT_PUBLIC_API_URL) === null || _a === void 0
-        ? void 0
-        : _a.replace('/api', '')) || window.location.origin;
-    var googleOAuthUrl = ''.concat(baseUrl, '/api/auth/google');
-    console.log('[Google OAuth] Redirecting to:', googleOAuthUrl);
-    window.location.href = googleOAuthUrl;
   };
   return (
     <material_1.Box
@@ -526,38 +511,6 @@ function RegisterPage(_a) {
               {loading ? <material_1.CircularProgress size={24} /> : 'რეგისტრაცია'}
             </material_1.Button>
           </material_1.Box>
-
-          <material_1.Divider sx={{ my: 3 }}>
-            <material_1.Typography variant="body2" color="text.secondary">
-              ან
-            </material_1.Typography>
-          </material_1.Divider>
-
-          {/* Google Registration Button - moved back to bottom */}
-          <material_1.Button
-            fullWidth
-            variant="outlined"
-            size="large"
-            startIcon={<icons_material_1.Google />}
-            onClick={function () {
-              console.log('🔧 Google Register Button Clicked - Starting...');
-              console.log('🔧 Google Register Button Clicked - clientId:', clientId);
-              console.log('🔧 Google Register Button Clicked - loading:', loading);
-              handleGoogleRegister();
-            }}
-            disabled={loading || !clientId}
-            sx={{
-              mb: 3,
-              color: '#4285f4',
-              borderColor: '#4285f4',
-              '&:hover': {
-                backgroundColor: 'rgba(66, 133, 244, 0.1)',
-                borderColor: '#4285f4',
-              },
-            }}
-          >
-            Google-ით რეგისტრაცია
-          </material_1.Button>
 
           <material_1.Box sx={{ textAlign: 'center' }}>
             <material_1.Typography variant="body2" color="text.secondary">
