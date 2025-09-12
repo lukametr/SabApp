@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
 
-// Note: Using headers makes this route dynamic automatically during static export
-// Cannot use dynamic = 'force-dynamic' with output: 'export'
+// Force dynamic for standalone mode - required for server-side functionality
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
