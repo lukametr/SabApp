@@ -63,8 +63,8 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://sabapp.com/api',
   },
-  // Generate static export for deployment; Dockerfile copies from out/
-  output: 'export',
+  // Use standalone output for deployment - supports API routes unlike static export
+  output: 'standalone',
 };
 
 module.exports = nextConfig;
