@@ -86,11 +86,24 @@ export class AuthService {
         email: registerDto.email,
         name: `${registerDto.firstName} ${registerDto.lastName}`,
         password: hashedPassword,
-        organization: registerDto.organization,
+        // Support both organization and company (fallback if company is used on client)
+        organization: registerDto.organization ?? registerDto.company,
         position: registerDto.position,
         emailVerificationToken,
         emailVerificationTokenExpires,
       });
+
+      // If phone is provided in DTO under different naming, persist it
+      try {
+        const phone = registerDto.phoneNumber ?? registerDto.phone;
+        if (phone) {
+          await this.usersService.updateProfile(String(user._id), {
+            phoneNumber: phone,
+          } as any);
+        }
+      } catch (e) {
+        console.error('☎️ Failed to persist phone number after registration (non-fatal):', (e as any)?.message || e);
+      }
 
       console.log('≡ƒöº Email Registration - Success:', user.email);
       // Send verification email (do not fail registration if email fails)

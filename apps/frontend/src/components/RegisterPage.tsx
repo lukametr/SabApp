@@ -89,12 +89,23 @@ export default function RegisterPage({ onRegister }: RegisterPageProps) {
         position: formData.position,
       });
 
-      await authService.signIn(formData.email, formData.password);
+      // ავტომატური შესვლა წარმატების შემდეგ
+      let loginSuccess = false;
+      try {
+        await authService.signIn(formData.email, formData.password);
+        loginSuccess = true;
+      } catch (e) {
+        loginSuccess = false;
+      }
 
-      setSuccess('რეგისტრაცია და შესვლა წარმატებით დასრულდა!');
-      setTimeout(() => {
+      if (loginSuccess) {
+        setSuccess('რეგისტრაცია წარმატებით დასრულდა!');
         router.push('/dashboard');
-      }, 1000);
+      } else {
+        // თუ login ვერ მოხერხდა, მაინც გადავიდეს login გვერდზე
+        setSuccess('რეგისტრაცია წარმატებულია! გთხოვთ შეხვიდეთ სისტემაში');
+        router.push('/auth/login');
+      }
     } catch (err: any) {
       setError(err.message || 'რეგისტრაციისას დაფიქსირდა შეცდომა');
     } finally {
