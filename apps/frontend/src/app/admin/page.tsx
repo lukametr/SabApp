@@ -23,7 +23,7 @@ export default function AdminPanel() {
   const [grantForm, setGrantForm] = useState({
     days: 30,
     paymentAmount: 0,
-    paymentNote: ''
+    paymentNote: '',
   });
 
   // No need to call loadFromStorage here - handled by AuthProvider
@@ -32,12 +32,12 @@ export default function AdminPanel() {
   useEffect(() => {
     // Don't check until auth loading is complete
     if (authLoading) return;
-    
+
     if (!user || !token) {
       router.push('/auth/login');
       return;
     }
-    
+
     // Check if user is admin
     if (user.role !== 'admin') {
       router.push('/dashboard');
@@ -50,13 +50,14 @@ export default function AdminPanel() {
     const loadUsers = async () => {
       try {
         // In production, call backend API directly since frontend is served as static files
-        const apiUrl = process.env.NODE_ENV === 'production' 
-          ? '/api/subscription/users'  // Backend API endpoint (will be served by the backend)
-          : '/api/subscription/users'; // Local Next.js API route
-          
+        const apiUrl =
+          process.env.NODE_ENV === 'production'
+            ? '/api/subscription/users' // Backend API endpoint (will be served by the backend)
+            : '/api/subscription/users'; // Local Next.js API route
+
         const response = await fetch(apiUrl, {
           headers: {
-            'Authorization': `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
         });
@@ -85,7 +86,7 @@ export default function AdminPanel() {
     try {
       // Try to get the correct user ID - MongoDB uses _id, but it might be mapped to id
       const userId = selectedUser._id || selectedUser.id;
-      
+
       const payload: GrantSubscriptionRequest = {
         userId: userId,
         days: grantForm.days,
@@ -96,7 +97,7 @@ export default function AdminPanel() {
       const response = await fetch('/api/subscription/grant', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
@@ -109,7 +110,9 @@ export default function AdminPanel() {
         window.location.reload();
       } else {
         console.error('Grant failed:', responseData);
-        alert(`Error: ${responseData.message || responseData.error || 'Failed to grant subscription'}`);
+        alert(
+          `Error: ${responseData.message || responseData.error || 'Failed to grant subscription'}`
+        );
       }
     } catch (error) {
       console.error('Error granting subscription:', error);
@@ -128,12 +131,12 @@ export default function AdminPanel() {
       const response = await fetch('/api/subscription/revoke', {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           userId,
-          reason: 'Revoked by admin'
+          reason: 'Revoked by admin',
         }),
       });
 
@@ -181,7 +184,7 @@ export default function AdminPanel() {
         <div className="text-center">
           <h1 className="text-2xl font-bold text-red-600">Access Denied</h1>
           <p className="text-gray-600">Admin access required.</p>
-          <button 
+          <button
             onClick={() => router.push('/dashboard')}
             className="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
           >
@@ -209,9 +212,7 @@ export default function AdminPanel() {
               >
                 ← Dashboard-ზე დაბრუნება
               </button>
-              <div className="text-sm text-gray-500">
-                Welcome, {user.name}
-              </div>
+              <div className="text-sm text-gray-500">Welcome, {user.name}</div>
             </div>
           </div>
         </div>
@@ -228,19 +229,22 @@ export default function AdminPanel() {
           <div className="bg-white rounded-lg shadow p-6">
             <div className="text-sm font-medium text-gray-500">Active Subscriptions</div>
             <div className="text-2xl font-bold text-green-600">
-              {users.filter(u => u.subscription?.isActive).length}
+              {users.filter((u) => u.subscription?.isActive).length}
             </div>
           </div>
           <div className="bg-white rounded-lg shadow p-6">
             <div className="text-sm font-medium text-gray-500">Expired Subscriptions</div>
             <div className="text-2xl font-bold text-red-600">
-              {users.filter(u => u.subscriptionStatus === 'expired').length}
+              {users.filter((u) => u.subscriptionStatus === 'expired').length}
             </div>
           </div>
           <div className="bg-white rounded-lg shadow p-6">
             <div className="text-sm font-medium text-gray-500">No Subscription</div>
             <div className="text-2xl font-bold text-gray-500">
-              {users.filter(u => !u.subscriptionStatus || u.subscriptionStatus === 'pending').length}
+              {
+                users.filter((u) => !u.subscriptionStatus || u.subscriptionStatus === 'pending')
+                  .length
+              }
             </div>
           </div>
         </div>
@@ -293,31 +297,44 @@ export default function AdminPanel() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        user.status === 'active' ? 'bg-green-100 text-green-800' :
-                        user.status === 'blocked' ? 'bg-red-100 text-red-800' :
-                        'bg-yellow-100 text-yellow-800'
-                      }`}>
+                      <span
+                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          user.status === 'active'
+                            ? 'bg-green-100 text-green-800'
+                            : user.status === 'blocked'
+                              ? 'bg-red-100 text-red-800'
+                              : 'bg-yellow-100 text-yellow-800'
+                        }`}
+                      >
                         {user.status}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        user.subscription?.isActive ? 'bg-green-100 text-green-800' :
-                        user.subscriptionStatus === 'expired' ? 'bg-red-100 text-red-800' :
-                        user.subscriptionStatus === 'cancelled' ? 'bg-gray-100 text-gray-800' :
-                        'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {user.subscription?.isActive ? 'Active' : 
-                         user.subscriptionStatus || 'None'}
+                      <span
+                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          user.subscription?.isActive
+                            ? 'bg-green-100 text-green-800'
+                            : user.subscriptionStatus === 'expired'
+                              ? 'bg-red-100 text-red-800'
+                              : user.subscriptionStatus === 'cancelled'
+                                ? 'bg-gray-100 text-gray-800'
+                                : 'bg-yellow-100 text-yellow-800'
+                        }`}
+                      >
+                        {user.subscription?.isActive ? 'Active' : user.subscriptionStatus || 'None'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {user.subscription?.isActive ? `${user.subscription.daysRemaining} days` : '-'}
+                      {user.subscription?.isActive
+                        ? `${user.subscription.daysRemaining} days`
+                        : '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {user.lastPaymentDate ? 
-                        (new Date(user.lastPaymentDate).getTime() ? new Date(user.lastPaymentDate).toLocaleDateString() : 'არავალიდური თარიღი') : '-'}
+                      {user.lastPaymentDate
+                        ? new Date(user.lastPaymentDate).getTime()
+                          ? new Date(user.lastPaymentDate).toLocaleDateString()
+                          : 'არავალიდური თარიღი'
+                        : '-'}
                       {user.paymentAmount ? (
                         <div className="text-xs text-gray-500">₾{user.paymentAmount}</div>
                       ) : null}
@@ -363,17 +380,26 @@ export default function AdminPanel() {
                   <input
                     type="number"
                     value={grantForm.days}
-                    onChange={(e) => setGrantForm(prev => ({ ...prev, days: parseInt(e.target.value) || 0 }))}
+                    onChange={(e) =>
+                      setGrantForm((prev) => ({ ...prev, days: parseInt(e.target.value) || 0 }))
+                    }
                     className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
                     min="1"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Payment Amount (₾)</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Payment Amount (₾)
+                  </label>
                   <input
                     type="number"
                     value={grantForm.paymentAmount}
-                    onChange={(e) => setGrantForm(prev => ({ ...prev, paymentAmount: parseFloat(e.target.value) || 0 }))}
+                    onChange={(e) =>
+                      setGrantForm((prev) => ({
+                        ...prev,
+                        paymentAmount: parseFloat(e.target.value) || 0,
+                      }))
+                    }
                     className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
                     min="0"
                     step="0.01"
@@ -383,7 +409,9 @@ export default function AdminPanel() {
                   <label className="block text-sm font-medium text-gray-700">Payment Note</label>
                   <textarea
                     value={grantForm.paymentNote}
-                    onChange={(e) => setGrantForm(prev => ({ ...prev, paymentNote: e.target.value }))}
+                    onChange={(e) =>
+                      setGrantForm((prev) => ({ ...prev, paymentNote: e.target.value }))
+                    }
                     className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
                     rows={3}
                     placeholder="Payment details or note..."

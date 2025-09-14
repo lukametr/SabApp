@@ -1,6 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { Box, Button, TextField, Typography, Grid, Checkbox, FormControlLabel, Alert, Chip, Dialog, DialogTitle, DialogContent, IconButton, Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
+import {
+  Box,
+  Button,
+  TextField,
+  Typography,
+  Grid,
+  Checkbox,
+  FormControlLabel,
+  Alert,
+  Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  IconButton,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+} from '@mui/material';
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useForm, Controller, ControllerRenderProps } from 'react-hook-form';
@@ -11,13 +28,7 @@ import { CreateDocumentDto } from '../types/document';
 import { useAuthStore } from '../store/authStore';
 import { Delete, Add } from '@mui/icons-material';
 
-const PERSONS = [
-  'დასაქმებული',
-  'ვიზიტორი',
-  'კონტრაქტორი',
-  'სხვა პირი',
-  'ყველა',
-];
+const PERSONS = ['დასაქმებული', 'ვიზიტორი', 'კონტრაქტორი', 'სხვა პირი', 'ყველა'];
 
 interface Props {
   onSubmit: (data: CreateDocumentDto) => void;
@@ -62,12 +73,12 @@ function HazardSection({ hazards, onHazardsChange }: HazardSectionProps) {
 
   console.log('🔄 [HazardSection] Current hazards state:', {
     count: hazards.length,
-    hazards: hazards.map(h => ({
+    hazards: hazards.map((h) => ({
       id: h.id,
       hazardIdentification: h.hazardIdentification || 'EMPTY',
       affectedPersons: h.affectedPersons?.length || 0,
-      photosCount: h.photos?.length || 0
-    }))
+      photosCount: h.photos?.length || 0,
+    })),
   });
 
   const addHazard = () => {
@@ -90,7 +101,7 @@ o ინდივიდუალური დაცვის საშუალ�
       responsiblePerson: '',
       reviewDate: null, // Filled from shared review date in parent
       implementationDeadlines: '', // New property for implementation deadlines
-      photos: []
+      photos: [],
     };
     console.log('✅ Added new hazard:', newHazard.id);
     onHazardsChange([...hazards, newHazard]);
@@ -106,15 +117,15 @@ o ინდივიდუალური დაცვის საშუალ�
   };
 
   const removeHazard = (id: string) => {
-    onHazardsChange(hazards.filter(h => h.id !== id));
+    onHazardsChange(hazards.filter((h) => h.id !== id));
   };
 
   const updateHazard = (id: string, updates: Partial<HazardData>) => {
-    const updatedHazards = hazards.map(h => h.id === id ? { ...h, ...updates } : h);
-    const updatedHazard = updatedHazards.find(h => h.id === id);
-    console.log('🔄 [HazardSection] updateHazard', { 
-      id, 
-      updates, 
+    const updatedHazards = hazards.map((h) => (h.id === id ? { ...h, ...updates } : h));
+    const updatedHazard = updatedHazards.find((h) => h.id === id);
+    console.log('🔄 [HazardSection] updateHazard', {
+      id,
+      updates,
       updatedHazard: {
         id: updatedHazard?.id,
         hazardIdentification: updatedHazard?.hazardIdentification,
@@ -128,8 +139,8 @@ o ინდივიდუალური დაცვის საშუალ�
         initialRisk: updatedHazard?.initialRisk,
         residualRisk: updatedHazard?.residualRisk,
         reviewDate: updatedHazard?.reviewDate,
-        photos: updatedHazard?.photos?.length || 0
-      }
+        photos: updatedHazard?.photos?.length || 0,
+      },
     });
     onHazardsChange(updatedHazards);
   };
@@ -137,39 +148,39 @@ o ინდივიდუალური დაცვის საშუალ�
   const handleCamera = async (hazardId: string, e?: React.MouseEvent) => {
     e?.preventDefault();
     e?.stopPropagation();
-    
+
     if (showCamera) {
       // Stop camera
       if (videoRef.current && videoRef.current.srcObject) {
         const stream = videoRef.current.srcObject as MediaStream;
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach((track) => track.stop());
         videoRef.current.srcObject = null;
       }
       setShowCamera(false);
       setCameraError('');
       return;
     }
-    
+
     // Start camera
     hazardIdRef.current = hazardId;
     setShowCamera(true);
     setCameraError('');
-    
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           width: { ideal: 1920 },
           height: { ideal: 1080 },
-          facingMode: 'environment'
+          facingMode: 'environment',
         },
-        audio: false
+        audio: false,
       });
-      
+
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         // Wait for video to be ready
         videoRef.current.onloadedmetadata = () => {
-          videoRef.current?.play().catch(err => {
+          videoRef.current?.play().catch((err) => {
             console.error('Video play error:', err);
           });
         };
@@ -184,38 +195,42 @@ o ინდივიდუალური დაცვის საშუალ�
   const handleCapturePhoto = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (!videoRef.current) return;
-    
+
     const video = videoRef.current;
     const canvas = document.createElement('canvas');
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     const context = canvas.getContext('2d');
-    
+
     if (context) {
       context.drawImage(video, 0, 0);
-      canvas.toBlob((blob) => {
-        if (blob) {
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            const base64data = reader.result as string;
-            handleFileUpload(hazardIdRef.current, base64data);
-            // არ დახურო კამერა ავტომატურად
-          };
-          reader.readAsDataURL(blob);
-        }
-      }, 'image/jpeg', 0.8);
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              const base64data = reader.result as string;
+              handleFileUpload(hazardIdRef.current, base64data);
+              // არ დახურო კამერა ავტომატურად
+            };
+            reader.readAsDataURL(blob);
+          }
+        },
+        'image/jpeg',
+        0.8
+      );
     }
   };
 
   const handleFileUpload = (hazardId: string, base64data: string) => {
-    const hazard = hazards.find(h => h.id === hazardId);
+    const hazard = hazards.find((h) => h.id === hazardId);
     if (hazard) {
       // Always add to photos array for persistence
       const newPhotos = [...(hazard.photos || []), base64data];
       updateHazard(hazardId, {
-        photos: newPhotos
+        photos: newPhotos,
       });
       console.log('📸 Photo saved:', { hazardId, photoCount: newPhotos.length });
     }
@@ -224,16 +239,19 @@ o ინდივიდუალური დაცვის საშუალ�
   const handleFileChange = (hazardId: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (f) {
-      const hazard = hazards.find(h => h.id === hazardId);
+      const hazard = hazards.find((h) => h.id === hazardId);
       if (hazard) {
         const reader = new FileReader();
         reader.onloadend = () => {
           const base64DataUrl = reader.result as string;
-          console.log('📁 File uploaded:', { fileName: f.name, base64DataUrl: base64DataUrl.substring(0, 50) + '...' });
+          console.log('📁 File uploaded:', {
+            fileName: f.name,
+            base64DataUrl: base64DataUrl.substring(0, 50) + '...',
+          });
           // Add to photos array for persistence (base64 format)
           const newPhotos = [...(hazard.photos || []), base64DataUrl];
           updateHazard(hazardId, {
-            photos: newPhotos
+            photos: newPhotos,
           });
         };
         reader.onerror = (error) => {
@@ -245,7 +263,7 @@ o ინდივიდუალური დაცვის საშუალ�
   };
 
   const handlePersonChange = (hazardId: string, person: string) => {
-    const hazard = hazards.find(h => h.id === hazardId);
+    const hazard = hazards.find((h) => h.id === hazardId);
     if (hazard) {
       let updated: string[] = [];
       if (person === 'ყველა') {
@@ -265,7 +283,7 @@ o ინდივიდუალური დაცვის საშუალ�
         } else {
           // ჩვეულებრივი ლოგიკა
           updated = hazard.affectedPersons.includes(person)
-            ? hazard.affectedPersons.filter(p => p !== person)
+            ? hazard.affectedPersons.filter((p) => p !== person)
             : [...hazard.affectedPersons, person];
         }
       }
@@ -278,7 +296,7 @@ o ინდივიდუალური დაცვის საშუალ�
     return () => {
       if (videoRef.current && videoRef.current.srcObject) {
         const stream = videoRef.current.srcObject as MediaStream;
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach((track) => track.stop());
       }
     };
   }, []);
@@ -289,11 +307,7 @@ o ინდივიდუალური დაცვის საშუალ�
         <Typography variant="h6" fontWeight={600}>
           საფრთხეთა იდენტიფიკაცია
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={addHazard}
-        >
+        <Button variant="contained" startIcon={<Add />} onClick={addHazard}>
           ახალი საფრთხე
         </Button>
       </Box>
@@ -332,76 +346,95 @@ o ინდივიდუალური დაცვის საშუალ�
                   rows={2}
                   value={hazard.hazardIdentification}
                   onChange={(e) => {
-                    console.log('[HazardSection] hazardIdentification change', { id: hazard.id, value: e.target.value });
+                    console.log('[HazardSection] hazardIdentification change', {
+                      id: hazard.id,
+                      value: e.target.value,
+                    });
                     updateHazard(hazard.id, { hazardIdentification: e.target.value });
                   }}
-                  inputRef={(el: HTMLTextAreaElement) => { idInputRefs.current[hazard.id] = el; }}
+                  inputRef={(el: HTMLTextAreaElement) => {
+                    idInputRefs.current[hazard.id] = el;
+                  }}
                 />
               </Grid>
 
               <Grid item xs={12}>
-                <Typography fontWeight={500} mb={1}>ამსახველი ფოტო/ვიდეო მასალა</Typography>
+                <Typography fontWeight={500} mb={1}>
+                  ამსახველი ფოტო/ვიდეო მასალა
+                </Typography>
                 <Box display="flex" gap={2} alignItems="center">
-                  <Button 
-                    variant="outlined" 
-                    onClick={(e) => handleCamera(hazard.id, e)} 
-                    startIcon={<PhotoCamera />} 
+                  <Button
+                    variant="outlined"
+                    onClick={(e) => handleCamera(hazard.id, e)}
+                    startIcon={<PhotoCamera />}
                     sx={{ minWidth: 0 }}
                   >
                     კამერა
                   </Button>
-                  <Button 
-                    variant="outlined" 
-                    onClick={() => fileInputRef.current?.click()} 
+                  <Button
+                    variant="outlined"
+                    onClick={() => fileInputRef.current?.click()}
                     sx={{ minWidth: 0 }}
                   >
                     ატვირთვა
                   </Button>
-                  <input 
-                    type="file" 
-                    ref={fileInputRef} 
-                    accept="image/*,video/*" 
-                    style={{ display: 'none' }} 
-                    onChange={(e) => handleFileChange(hazard.id, e)} 
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file && !file.type.startsWith('image/')) {
+                        alert('გთხოვთ ატვირთოთ მხოლოდ სურათის ტიპის ფაილი (PNG/JPEG)');
+                        e.target.value = '';
+                        return;
+                      }
+                      handleFileChange(hazard.id, e);
+                    }}
                   />
                 </Box>
                 {hazard.photos && hazard.photos.length > 0 && (
                   <Box mt={2}>
-                    <Typography variant="body2" mb={1}>შენახული ფოტოები:</Typography>
+                    <Typography variant="body2" mb={1}>
+                      შენახული ფოტოები:
+                    </Typography>
                     <Grid container spacing={1}>
                       {hazard.photos.map((base64Photo: string, index: number) => (
                         <Grid item xs={6} sm={4} md={3} key={index}>
                           <Box position="relative" sx={{ width: '100%' }}>
-                            <Image 
+                            <Image
                               src={base64Photo} // base64 data URL
                               alt={`ფოტო ${index + 1}`}
                               width={150}
                               height={120}
                               unoptimized
-                              style={{ 
-                                width: '100%', 
+                              style={{
+                                width: '100%',
                                 height: '120px',
-                                borderRadius: 8, 
+                                borderRadius: 8,
                                 objectFit: 'cover',
-                                display: 'block'
+                                display: 'block',
                               }}
                             />
                             <IconButton
                               size="small"
                               onClick={() => {
-                                const updatedPhotos = hazard.photos.filter((_: string, i: number) => i !== index);
+                                const updatedPhotos = hazard.photos.filter(
+                                  (_: string, i: number) => i !== index
+                                );
                                 updateHazard(hazard.id, { photos: updatedPhotos } as any);
                               }}
                               sx={{
                                 position: 'absolute',
                                 top: 2,
-                              right: 2,
-                              bgcolor: 'rgba(255, 255, 255, 0.8)',
-                              '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.9)' }
-                            }}
-                          >
-                            <Delete fontSize="small" />
-                          </IconButton>
+                                right: 2,
+                                bgcolor: 'rgba(255, 255, 255, 0.8)',
+                                '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.9)' },
+                              }}
+                            >
+                              <Delete fontSize="small" />
+                            </IconButton>
                           </Box>
                         </Grid>
                       ))}
@@ -411,15 +444,17 @@ o ინდივიდუალური დაცვის საშუალ�
               </Grid>
 
               <Grid item xs={12}>
-                <Typography fontWeight={500} mb={1}>პირთა წრე</Typography>
+                <Typography fontWeight={500} mb={1}>
+                  პირთა წრე
+                </Typography>
                 <Box display="flex" flexWrap="wrap" gap={1}>
-                  {PERSONS.map(person => (
+                  {PERSONS.map((person) => (
                     <FormControlLabel
                       key={person}
                       control={
-                        <Checkbox 
+                        <Checkbox
                           checked={hazard.affectedPersons.includes(person)}
-                          onChange={() => handlePersonChange(hazard.id, person)} 
+                          onChange={() => handlePersonChange(hazard.id, person)}
                         />
                       }
                       label={person}
@@ -436,7 +471,10 @@ o ინდივიდუალური დაცვის საშუალ�
                   rows={2}
                   value={hazard.injuryDescription}
                   onChange={(e) => {
-                    console.log('[HazardSection] injuryDescription change', { id: hazard.id, value: e.target.value });
+                    console.log('[HazardSection] injuryDescription change', {
+                      id: hazard.id,
+                      value: e.target.value,
+                    });
                     updateHazard(hazard.id, { injuryDescription: e.target.value });
                   }}
                 />
@@ -450,30 +488,39 @@ o ინდივიდუალური დაცვის საშუალ�
                   rows={2}
                   value={hazard.existingControlMeasures}
                   onChange={(e) => {
-                    console.log('[HazardSection] existingControlMeasures change', { id: hazard.id, value: e.target.value });
+                    console.log('[HazardSection] existingControlMeasures change', {
+                      id: hazard.id,
+                      value: e.target.value,
+                    });
                     updateHazard(hazard.id, { existingControlMeasures: e.target.value });
                   }}
                 />
               </Grid>
 
               <Grid item xs={12}>
-        <Typography fontWeight={500} mb={1}>საწყისი რისკი</Typography>
+                <Typography fontWeight={500} mb={1}>
+                  საწყისი რისკი
+                </Typography>
                 <Box display="flex" gap={2}>
                   <TextField
                     select
-          label="ალბათობა"
+                    label="ალბათობა"
                     SelectProps={{ native: true }}
                     sx={{ minWidth: 100 }}
                     value={hazard.initialRisk.probability}
                     onChange={(e) => {
                       const prob = Number(e.target.value);
                       const total = prob * hazard.initialRisk.severity;
-                      updateHazard(hazard.id, { 
-                        initialRisk: { ...hazard.initialRisk, probability: prob, total } 
+                      updateHazard(hazard.id, {
+                        initialRisk: { ...hazard.initialRisk, probability: prob, total },
                       });
                     }}
                   >
-                    {riskOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                    {riskOptions.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
                   </TextField>
                   <TextField
                     select
@@ -484,18 +531,22 @@ o ინდივიდუალური დაცვის საშუალ�
                     onChange={(e) => {
                       const sev = Number(e.target.value);
                       const total = hazard.initialRisk.probability * sev;
-                      updateHazard(hazard.id, { 
-                        initialRisk: { ...hazard.initialRisk, severity: sev, total } 
+                      updateHazard(hazard.id, {
+                        initialRisk: { ...hazard.initialRisk, severity: sev, total },
                       });
                     }}
                   >
-                    {riskOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                    {riskOptions.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
                   </TextField>
-                  <TextField 
-                    label="რისკი" 
-                    value={hazard.initialRisk.total} 
-                    InputProps={{ readOnly: true }} 
-                    sx={{ minWidth: 100 }} 
+                  <TextField
+                    label="რისკი"
+                    value={hazard.initialRisk.total}
+                    InputProps={{ readOnly: true }}
+                    sx={{ minWidth: 100 }}
                   />
                 </Box>
               </Grid>
@@ -508,7 +559,10 @@ o ინდივიდუალური დაცვის საშუალ�
                   rows={5}
                   value={hazard.additionalControlMeasures}
                   onChange={(e) => {
-                    console.log('[HazardSection] additionalControlMeasures change', { id: hazard.id, value: e.target.value });
+                    console.log('[HazardSection] additionalControlMeasures change', {
+                      id: hazard.id,
+                      value: e.target.value,
+                    });
                     updateHazard(hazard.id, { additionalControlMeasures: e.target.value });
                   }}
                   placeholder={`o საფრთხის აღმოფხვრა- 
@@ -520,23 +574,29 @@ o ინდივიდუალური დაცვის საშუალ�
               </Grid>
 
               <Grid item xs={12}>
-        <Typography fontWeight={500} mb={1}>ნარჩენი რისკი</Typography>
+                <Typography fontWeight={500} mb={1}>
+                  ნარჩენი რისკი
+                </Typography>
                 <Box display="flex" gap={2}>
                   <TextField
                     select
-          label="ალბათობა"
+                    label="ალბათობა"
                     SelectProps={{ native: true }}
                     sx={{ minWidth: 100 }}
                     value={hazard.residualRisk.probability}
                     onChange={(e) => {
                       const prob = Number(e.target.value);
                       const total = prob * hazard.residualRisk.severity;
-                      updateHazard(hazard.id, { 
-                        residualRisk: { ...hazard.residualRisk, probability: prob, total } 
+                      updateHazard(hazard.id, {
+                        residualRisk: { ...hazard.residualRisk, probability: prob, total },
                       });
                     }}
                   >
-                    {riskOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                    {riskOptions.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
                   </TextField>
                   <TextField
                     select
@@ -547,18 +607,22 @@ o ინდივიდუალური დაცვის საშუალ�
                     onChange={(e) => {
                       const sev = Number(e.target.value);
                       const total = hazard.residualRisk.probability * sev;
-                      updateHazard(hazard.id, { 
-                        residualRisk: { ...hazard.residualRisk, severity: sev, total } 
+                      updateHazard(hazard.id, {
+                        residualRisk: { ...hazard.residualRisk, severity: sev, total },
                       });
                     }}
                   >
-                    {riskOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                    {riskOptions.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
                   </TextField>
-                  <TextField 
-                    label="რისკი" 
-                    value={hazard.residualRisk.total} 
-                    InputProps={{ readOnly: true }} 
-                    sx={{ minWidth: 100 }} 
+                  <TextField
+                    label="რისკი"
+                    value={hazard.residualRisk.total}
+                    InputProps={{ readOnly: true }}
+                    sx={{ minWidth: 100 }}
                   />
                 </Box>
                 {hazard.residualRisk.total >= 9 && (
@@ -576,7 +640,10 @@ o ინდივიდუალური დაცვის საშუალ�
                   rows={2}
                   value={hazard.requiredMeasures}
                   onChange={(e) => {
-                    console.log('[HazardSection] requiredMeasures change', { id: hazard.id, value: e.target.value });
+                    console.log('[HazardSection] requiredMeasures change', {
+                      id: hazard.id,
+                      value: e.target.value,
+                    });
                     updateHazard(hazard.id, { requiredMeasures: e.target.value });
                   }}
                 />
@@ -590,12 +657,15 @@ o ინდივიდუალური დაცვის საშუალ�
                   fullWidth
                   value={hazard.responsiblePerson}
                   onChange={(e) => {
-                    console.log('[HazardSection] responsiblePerson change', { id: hazard.id, value: e.target.value });
+                    console.log('[HazardSection] responsiblePerson change', {
+                      id: hazard.id,
+                      value: e.target.value,
+                    });
                     updateHazard(hazard.id, { responsiblePerson: e.target.value });
                   }}
                 />
               </Grid>
-              
+
               <Grid item xs={12}>
                 <TextField
                   label="შესრულების ვადები"
@@ -607,7 +677,10 @@ o ინდივიდუალური დაცვის საშუალ�
                     const value = e.target.value;
                     // Basic validation: limit length and prevent only whitespace
                     if (value.length <= 500) {
-                      console.log('[HazardSection] implementationDeadlines change', { id: hazard.id, value });
+                      console.log('[HazardSection] implementationDeadlines change', {
+                        id: hazard.id,
+                        value,
+                      });
                       updateHazard(hazard.id, { implementationDeadlines: value });
                     }
                   }}
@@ -623,48 +696,47 @@ o ინდივიდუალური დაცვის საშუალ�
 
       {/* ახალი საფრთხის დამატების ღილაკი ბოლოში */}
       <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-        <Button
-          variant="outlined"
-          startIcon={<Add />}
-          onClick={addHazard}
-          sx={{ minWidth: 200 }}
-        >
+        <Button variant="outlined" startIcon={<Add />} onClick={addHazard} sx={{ minWidth: 200 }}>
           ახალი საფრთხის დამატება
         </Button>
       </Box>
 
       {/* Camera Modal */}
       {showCamera && (
-        <Box sx={{ 
-          position: 'fixed', 
-          top: 0, 
-          left: 0, 
-          right: 0, 
-          bottom: 0, 
-          bgcolor: 'rgba(0,0,0,0.8)', 
-          zIndex: 1300,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          p: 2
-        }}>
-          <Box sx={{ 
-            bgcolor: 'white', 
-            borderRadius: 2, 
-            p: 3, 
-            maxWidth: '500px', 
-            width: '100%' 
-          }}>
+        <Box
+          sx={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            bgcolor: 'rgba(0,0,0,0.8)',
+            zIndex: 1300,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            p: 2,
+          }}
+        >
+          <Box
+            sx={{
+              bgcolor: 'white',
+              borderRadius: 2,
+              p: 3,
+              maxWidth: '500px',
+              width: '100%',
+            }}
+          >
             <Typography variant="h6" gutterBottom>
               ფოტოს გადაღება
             </Typography>
-            
+
             {cameraError && (
               <Alert severity="error" sx={{ mb: 2 }}>
                 {cameraError}
               </Alert>
             )}
-            
+
             <video
               ref={videoRef}
               autoPlay
@@ -675,10 +747,10 @@ o ინდივიდუალური დაცვის საშუალ�
                 height: 'auto',
                 backgroundColor: '#000',
                 borderRadius: '8px',
-                marginBottom: '16px'
+                marginBottom: '16px',
               }}
             />
-            
+
             <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
               <Button
                 variant="contained"
@@ -688,10 +760,7 @@ o ინდივიდუალური დაცვის საშუალ�
               >
                 გადაღება
               </Button>
-              <Button
-                variant="outlined"
-                onClick={(e) => handleCamera('', e)}
-              >
+              <Button variant="outlined" onClick={(e) => handleCamera('', e)}>
                 გაუქმება
               </Button>
             </Box>
@@ -702,14 +771,26 @@ o ინდივიდუალური დაცვის საშუალ�
   );
 }
 
-export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, defaultValues, open, onClose }: Props) {
+export default function DocumentForm({
+  onSubmit: handleFormSubmit,
+  onCancel,
+  defaultValues,
+  open,
+  onClose,
+}: Props) {
   const [hazards, setHazards] = useState<HazardData[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [sharedReviewDate, setSharedReviewDate] = useState<Date | null>(null);
   const { user } = useAuthStore();
 
-  const { control, handleSubmit: submitForm, formState: { errors }, reset, getValues } = useForm<CreateDocumentDto>({
+  const {
+    control,
+    handleSubmit: submitForm,
+    formState: { errors },
+    reset,
+    getValues,
+  } = useForm<CreateDocumentDto>({
     defaultValues: {
       evaluatorName: '',
       evaluatorLastName: '',
@@ -718,7 +799,7 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
       date: new Date(),
       time: new Date(),
       hazards: [],
-      photos: []
+      photos: [],
     },
   });
 
@@ -726,49 +807,54 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
   useEffect(() => {
     if (open && !isInitialized) {
       setIsInitialized(true);
-      
+
       if (defaultValues) {
         console.log('🔄 DocumentForm received defaultValues:', defaultValues);
         console.log('🔄 Hazards from defaultValues:', defaultValues.hazards);
         // Convert hazards to internal format
-        const formattedHazards: HazardData[] = (defaultValues.hazards || []).map((hazard: any, index: number) => {
-          console.log(`🔄 Processing hazard ${index}:`, hazard);
-          console.log(`🔄 Initial risk:`, hazard.initialRisk);
-          console.log(`🔄 Residual risk:`, hazard.residualRisk);
-          
-          return {
-            id: hazard.id || `hazard_${Date.now()}_${Math.random()}`,
-            hazardIdentification: hazard.hazardIdentification || '',
-            affectedPersons: hazard.affectedPersons || [],
-            injuryDescription: hazard.injuryDescription || '',
-            existingControlMeasures: hazard.existingControlMeasures || '',
-            // Preserve existing risk values exactly as they are, don't reset to 0
-            initialRisk: hazard.initialRisk && typeof hazard.initialRisk === 'object' 
-              ? { 
-                  probability: hazard.initialRisk.probability || 0, 
-                  severity: hazard.initialRisk.severity || 0, 
-                  total: hazard.initialRisk.total || 0 
-                }
-              : { probability: 0, severity: 0, total: 0 },
-            additionalControlMeasures: hazard.additionalControlMeasures || '',
-            residualRisk: hazard.residualRisk && typeof hazard.residualRisk === 'object'
-              ? { 
-                  probability: hazard.residualRisk.probability || 0, 
-                  severity: hazard.residualRisk.severity || 0, 
-                  total: hazard.residualRisk.total || 0 
-                }
-              : { probability: 0, severity: 0, total: 0 },
-            requiredMeasures: hazard.requiredMeasures || '',
-            responsiblePerson: hazard.responsiblePerson || '',
-            implementationDeadlines: hazard.implementationDeadlines || '',
-            reviewDate: hazard.reviewDate instanceof Date 
-              ? hazard.reviewDate 
-              : hazard.reviewDate 
-                ? new Date(hazard.reviewDate) 
-                : null, // will be normalized to shared below
-            photos: hazard.photos || []
-          };
-        });
+        const formattedHazards: HazardData[] = (defaultValues.hazards || []).map(
+          (hazard: any, index: number) => {
+            console.log(`🔄 Processing hazard ${index}:`, hazard);
+            console.log(`🔄 Initial risk:`, hazard.initialRisk);
+            console.log(`🔄 Residual risk:`, hazard.residualRisk);
+
+            return {
+              id: hazard.id || `hazard_${Date.now()}_${Math.random()}`,
+              hazardIdentification: hazard.hazardIdentification || '',
+              affectedPersons: hazard.affectedPersons || [],
+              injuryDescription: hazard.injuryDescription || '',
+              existingControlMeasures: hazard.existingControlMeasures || '',
+              // Preserve existing risk values exactly as they are, don't reset to 0
+              initialRisk:
+                hazard.initialRisk && typeof hazard.initialRisk === 'object'
+                  ? {
+                      probability: hazard.initialRisk.probability || 0,
+                      severity: hazard.initialRisk.severity || 0,
+                      total: hazard.initialRisk.total || 0,
+                    }
+                  : { probability: 0, severity: 0, total: 0 },
+              additionalControlMeasures: hazard.additionalControlMeasures || '',
+              residualRisk:
+                hazard.residualRisk && typeof hazard.residualRisk === 'object'
+                  ? {
+                      probability: hazard.residualRisk.probability || 0,
+                      severity: hazard.residualRisk.severity || 0,
+                      total: hazard.residualRisk.total || 0,
+                    }
+                  : { probability: 0, severity: 0, total: 0 },
+              requiredMeasures: hazard.requiredMeasures || '',
+              responsiblePerson: hazard.responsiblePerson || '',
+              implementationDeadlines: hazard.implementationDeadlines || '',
+              reviewDate:
+                hazard.reviewDate instanceof Date
+                  ? hazard.reviewDate
+                  : hazard.reviewDate
+                    ? new Date(hazard.reviewDate)
+                    : null, // will be normalized to shared below
+              photos: hazard.photos || [],
+            };
+          }
+        );
         setHazards(formattedHazards);
         // Derive shared review date from first hazard (if present)
         const derivedReview = formattedHazards[0]?.reviewDate || null;
@@ -781,17 +867,17 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
           workDescription: defaultValues.workDescription || '',
           date: defaultValues.date ? new Date(defaultValues.date) : new Date(),
           time: defaultValues.time ? new Date(defaultValues.time) : new Date(),
-          reviewDate: defaultValues.reviewDate 
-            ? new Date(defaultValues.reviewDate) 
-            : derivedReview 
-              ? new Date(derivedReview) 
+          reviewDate: defaultValues.reviewDate
+            ? new Date(defaultValues.reviewDate)
+            : derivedReview
+              ? new Date(derivedReview)
               : new Date(),
-          photos: defaultValues.photos || []
+          photos: defaultValues.photos || [],
         });
         console.log('✅ Form reset with values:', {
           evaluatorName: defaultValues.evaluatorName,
           hazardsCount: formattedHazards.length,
-          photosCount: defaultValues.photos?.length || 0
+          photosCount: defaultValues.photos?.length || 0,
         });
       } else {
         // Reset to empty form for new document
@@ -809,12 +895,12 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
           date: new Date(),
           time: new Date(),
           reviewDate: new Date(),
-          photos: []
+          photos: [],
         });
         setSharedReviewDate(null);
       }
     }
-    
+
     // Reset initialization flag when dialog closes
     if (!open && isInitialized) {
       setIsInitialized(false);
@@ -829,8 +915,12 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
     }
 
     // ველების ვალიდაცია
-    if (!data.evaluatorName?.trim() || !data.evaluatorLastName?.trim() || 
-        !data.objectName?.trim() || !data.workDescription?.trim()) {
+    if (
+      !data.evaluatorName?.trim() ||
+      !data.evaluatorLastName?.trim() ||
+      !data.objectName?.trim() ||
+      !data.workDescription?.trim()
+    ) {
       alert('გთხოვთ შეავსოთ ყველა სავალდებულო ველი');
       return;
     }
@@ -840,7 +930,7 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
 
     // საფრთხის გარეშეც შეიძლება დოკუმენტის შექმნა
     // Apply shared review date to all hazards before submit
-    const hazardsWithSharedReview = hazards.map(h => ({
+    const hazardsWithSharedReview = hazards.map((h) => ({
       ...h,
       reviewDate: sharedReviewDate || h.reviewDate || null,
     }));
@@ -854,7 +944,7 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
       formDataHazards: formattedData.hazards?.length || 0,
       actualHazardsCount: hazards.length,
       hasHazards: !!formattedData.hazards,
-      detailedHazards: hazards.map(h => ({
+      detailedHazards: hazards.map((h) => ({
         id: h.id,
         hazardIdentification: h.hazardIdentification || 'EMPTY',
         affectedPersons: h.affectedPersons?.length || 0,
@@ -869,8 +959,8 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
         reviewDate: h.reviewDate,
         photosCount: h.photos?.length || 0,
         hasMediaFile: !!(h as any).mediaFile,
-        hasMediaPreview: !!(h as any).mediaPreview
-      }))
+        hasMediaPreview: !!(h as any).mediaPreview,
+      })),
     });
 
     try {
@@ -898,17 +988,21 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
     setIsSubmitting(false);
     // შეამოწმე არის თუ არა ცვლილებები
     const hasChanges = hazards.length > 0 || isFormDirty();
-    
+
     if (hasChanges) {
       const confirmed = window.confirm(
         'გსურთ ფაილის შენახვა? შენახვის გარეშე ყველა ცვლილება დაიკარგება.'
       );
-      
+
       if (confirmed) {
         // სცადე შენახვა
         const formData = getFormData();
-        if (formData.evaluatorName?.trim() && formData.evaluatorLastName?.trim() && 
-            formData.objectName?.trim() && formData.workDescription?.trim()) {
+        if (
+          formData.evaluatorName?.trim() &&
+          formData.evaluatorLastName?.trim() &&
+          formData.objectName?.trim() &&
+          formData.workDescription?.trim()
+        ) {
           handleFormSubmitInternal(formData);
           return;
         } else {
@@ -917,7 +1011,7 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
         }
       }
     }
-    
+
     // წაშალე მონაცემები მხოლოდ დასტურის შემდეგ
     setHazards([]);
     setIsInitialized(false);
@@ -929,7 +1023,7 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
       date: new Date(),
       time: new Date(),
       hazards: [],
-      photos: []
+      photos: [],
     });
     onClose();
   };
@@ -937,8 +1031,12 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
   // დამხმარე ფუნქციები ცვლილებების შესამოწმებლად
   const isFormDirty = () => {
     const currentValues = getValues();
-    return !!(currentValues.evaluatorName || currentValues.evaluatorLastName || 
-              currentValues.objectName || currentValues.workDescription);
+    return !!(
+      currentValues.evaluatorName ||
+      currentValues.evaluatorLastName ||
+      currentValues.objectName ||
+      currentValues.workDescription
+    );
   };
 
   const getFormData = () => {
@@ -957,8 +1055,8 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
   };
 
   return (
-    <Dialog 
-      open={open} 
+    <Dialog
+      open={open}
       onClose={handleCloseWithCleanup}
       maxWidth="md"
       fullWidth
@@ -968,105 +1066,208 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
       <DialogTitle id="document-form-dialog">
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Typography variant="h5" fontWeight={600}>
-        {defaultValues ? 'დოკუმენტის რედაქტირება' : 'ახალი დოკუმენტი'}
+            {defaultValues ? 'დოკუმენტის რედაქტირება' : 'ახალი დოკუმენტი'}
           </Typography>
         </Box>
       </DialogTitle>
       <DialogContent>
-  <Box 
-          component="form" 
+        <Box
+          component="form"
           onSubmit={submitForm(handleFormSubmitInternal)}
-          noValidate 
+          noValidate
           sx={{ mt: 2 }}
           role="form"
           tabIndex={-1}
         >
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
-              <Controller name="evaluatorName" control={control} rules={{ required: true }} render={({ field }: { field: ControllerRenderProps<CreateDocumentDto, 'evaluatorName'> }) => (
-                <TextField {...field} label="შემფასებლის სახელი" fullWidth required error={!!errors.evaluatorName} />
-              )} />
+              <Controller
+                name="evaluatorName"
+                control={control}
+                rules={{ required: true }}
+                render={({
+                  field,
+                }: {
+                  field: ControllerRenderProps<CreateDocumentDto, 'evaluatorName'>;
+                }) => (
+                  <TextField
+                    {...field}
+                    label="შემფასებლის სახელი"
+                    fullWidth
+                    required
+                    error={!!errors.evaluatorName}
+                  />
+                )}
+              />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <Controller name="evaluatorLastName" control={control} rules={{ required: true }} render={({ field }: { field: ControllerRenderProps<CreateDocumentDto, 'evaluatorLastName'> }) => (
-                <TextField {...field} label="შემფასებლის გვარი" fullWidth required error={!!errors.evaluatorLastName} />
-              )} />
+              <Controller
+                name="evaluatorLastName"
+                control={control}
+                rules={{ required: true }}
+                render={({
+                  field,
+                }: {
+                  field: ControllerRenderProps<CreateDocumentDto, 'evaluatorLastName'>;
+                }) => (
+                  <TextField
+                    {...field}
+                    label="შემფასებლის გვარი"
+                    fullWidth
+                    required
+                    error={!!errors.evaluatorLastName}
+                  />
+                )}
+              />
             </Grid>
             <Grid item xs={12}>
-              <Controller name="objectName" control={control} rules={{ required: true }} render={({ field }: { field: ControllerRenderProps<CreateDocumentDto, 'objectName'> }) => (
-                <TextField {...field} label="ობიექტის დასახელება" fullWidth required error={!!errors.objectName} />
-              )} />
+              <Controller
+                name="objectName"
+                control={control}
+                rules={{ required: true }}
+                render={({
+                  field,
+                }: {
+                  field: ControllerRenderProps<CreateDocumentDto, 'objectName'>;
+                }) => (
+                  <TextField
+                    {...field}
+                    label="ობიექტის დასახელება"
+                    fullWidth
+                    required
+                    error={!!errors.objectName}
+                  />
+                )}
+              />
             </Grid>
             <Grid item xs={12}>
-              <Controller name="workDescription" control={control} rules={{ required: true }} render={({ field }: { field: ControllerRenderProps<CreateDocumentDto, 'workDescription'> }) => (
-                <TextField {...field} label="სამუშაოს მოკლე აღწერა" fullWidth required multiline rows={2} error={!!errors.workDescription} />
-              )} />
+              <Controller
+                name="workDescription"
+                control={control}
+                rules={{ required: true }}
+                render={({
+                  field,
+                }: {
+                  field: ControllerRenderProps<CreateDocumentDto, 'workDescription'>;
+                }) => (
+                  <TextField
+                    {...field}
+                    label="სამუშაოს მოკლე აღწერა"
+                    fullWidth
+                    required
+                    multiline
+                    rows={2}
+                    error={!!errors.workDescription}
+                  />
+                )}
+              />
             </Grid>
             <Grid item xs={12}>
               <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ka}>
-        <Controller name="reviewDate" control={control} rules={{ required: true }} render={({ field }: { field: ControllerRenderProps<CreateDocumentDto, 'reviewDate'> }) => (
-                  <DatePicker
-          label="გადახედვის სავარაუდო დრო (აუცილებელია)"
-                    {...field}
-                    value={field.value || null}
-                    onChange={(date) => {
-                      field.onChange(date);
-                      setSharedReviewDate(date);
-                      setHazards(prev => prev.map(h => ({ ...h, reviewDate: date })));
-                    }}
-                    slotProps={{
-                      textField: {
-                        fullWidth: true,
-                        required: true,
-                        error: !!errors.reviewDate
-                      }
-                    }}
-                  />
-                )} />
+                <Controller
+                  name="reviewDate"
+                  control={control}
+                  rules={{ required: true }}
+                  render={({
+                    field,
+                  }: {
+                    field: ControllerRenderProps<CreateDocumentDto, 'reviewDate'>;
+                  }) => (
+                    <DatePicker
+                      label="გადახედვის სავარაუდო დრო (აუცილებელია)"
+                      {...field}
+                      value={field.value || null}
+                      onChange={(date) => {
+                        field.onChange(date);
+                        setSharedReviewDate(date);
+                        setHazards((prev) => prev.map((h) => ({ ...h, reviewDate: date })));
+                      }}
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          required: true,
+                          error: !!errors.reviewDate,
+                        },
+                      }}
+                    />
+                  )}
+                />
               </LocalizationProvider>
             </Grid>
             <Grid item xs={6}>
               <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ka}>
-                <Controller name="date" control={control} rules={{ required: true }} render={({ field }: { field: ControllerRenderProps<CreateDocumentDto, 'date'> }) => (
-                  <DatePicker 
-                    label="თარიღი" 
-                    {...field} 
-                    slotProps={{
-                      textField: {
-                        fullWidth: true,
-                        required: true,
-                        error: !!errors.date
-                      }
-                    }}
-                  />
-                )} />
+                <Controller
+                  name="date"
+                  control={control}
+                  rules={{ required: true }}
+                  render={({
+                    field,
+                  }: {
+                    field: ControllerRenderProps<CreateDocumentDto, 'date'>;
+                  }) => (
+                    <DatePicker
+                      label="თარიღი"
+                      {...field}
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          required: true,
+                          error: !!errors.date,
+                        },
+                      }}
+                    />
+                  )}
+                />
               </LocalizationProvider>
             </Grid>
             <Grid item xs={6}>
               <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ka}>
-                <Controller name="time" control={control} rules={{ required: true }} render={({ field }: { field: ControllerRenderProps<CreateDocumentDto, 'time'> }) => (
-                  <TimePicker 
-                    label="დრო" 
-                    {...field}
-                    ampm={false}
-                    slotProps={{
-                      textField: {
-                        fullWidth: true,
-                        required: true,
-                        error: !!errors.time
-                      }
-                    }}
-                  />
-                )} />
+                <Controller
+                  name="time"
+                  control={control}
+                  rules={{ required: true }}
+                  render={({
+                    field,
+                  }: {
+                    field: ControllerRenderProps<CreateDocumentDto, 'time'>;
+                  }) => (
+                    <TimePicker
+                      label="დრო"
+                      {...field}
+                      ampm={false}
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          required: true,
+                          error: !!errors.time,
+                        },
+                      }}
+                    />
+                  )}
+                />
               </LocalizationProvider>
             </Grid>
             <Grid item xs={12}>
               <HazardSection hazards={hazards} onHazardsChange={setHazards} />
             </Grid>
             <Grid item xs={12}>
-              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2, alignItems: 'center' }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  gap: 2,
+                  justifyContent: 'flex-end',
+                  mt: 2,
+                  alignItems: 'center',
+                }}
+              >
                 {/** Inline validation hint near the submit button when required fields are missing */}
-                {(!!errors.evaluatorName || !!errors.evaluatorLastName || !!errors.objectName || !!errors.workDescription || !!errors.date || !!errors.time || !!errors.reviewDate) && (
+                {(!!errors.evaluatorName ||
+                  !!errors.evaluatorLastName ||
+                  !!errors.objectName ||
+                  !!errors.workDescription ||
+                  !!errors.date ||
+                  !!errors.time ||
+                  !!errors.reviewDate) && (
                   <Typography variant="body2" color="error" sx={{ mr: 'auto' }}>
                     გთხოვთ შეავსოთ ყველა სავალდებულო ველი
                   </Typography>
@@ -1074,12 +1275,8 @@ export default function DocumentForm({ onSubmit: handleFormSubmit, onCancel, def
                 <Button variant="outlined" onClick={handleCancel}>
                   გაუქმება
                 </Button>
-                <Button 
-                  type="submit" 
-                  variant="contained"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? 'იშენახება...' : (defaultValues ? 'განახლება' : 'შენახვა')}
+                <Button type="submit" variant="contained" disabled={isSubmitting}>
+                  {isSubmitting ? 'იშენახება...' : defaultValues ? 'განახლება' : 'შენახვა'}
                 </Button>
               </Box>
             </Grid>
